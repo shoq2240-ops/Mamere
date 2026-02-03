@@ -29,6 +29,14 @@ const AnimatedRoutes = ({ addToCart }) => {
         <Route path="/product/:id" element={<PageWrapper><ProductDetail addToCart={addToCart} /></PageWrapper>} />
         <Route path="/collection" element={<PageWrapper><CollectionPage /></PageWrapper>} />
         <Route path="/login" element={<PageWrapper><LoginPage /></PageWrapper>} />
+        <Route path="/" element={<PageWrapper><LandingPage addToCart={addToCart} /></PageWrapper>} />
+  <Route path="/shop" element={<PageWrapper><ShopPage addToCart={addToCart} /></PageWrapper>} />
+  <Route path="/cart" element={<PageWrapper><div>Cart Page (준비중)</div></PageWrapper>} />
+  <Route path="/shop/men" element={<PageWrapper><ShopPage category="men" addToCart={addToCart} /></PageWrapper>} />
+  <Route path="/shop/women" element={<PageWrapper><ShopPage category="women" addToCart={addToCart} /></PageWrapper>} />
+  
+  <Route path="/collection" element={<PageWrapper><CollectionPage /></PageWrapper>} />
+  <Route path="/login" element={<PageWrapper><LoginPage /></PageWrapper>} />
       </Routes>
     </AnimatePresence>
   );
