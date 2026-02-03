@@ -1,42 +1,42 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { ANTWERP_COLLECTION } from '../data/productData';
 
-const ShopPage = () => {
+const ShopPage = ({ addToCart }) => {
+  const [products, setProducts] = useState([]);
+
+  useEffect(() => {
+    // 피셔-예이츠 셔플 알고리즘으로 랜덤하게 섞기
+    const shuffled = [...ANTWERP_COLLECTION].sort(() => Math.random() - 0.5);
+    setProducts(shuffled);
+  }, []);
+
   return (
-    <div className="pt-40 pb-20 px-8 min-h-screen bg-black text-white">
-      <div className="max-w-7xl mx-auto">
-        <div className="mb-20">
-          <h1 className="text-6xl font-black italic uppercase tracking-tighter">
-            Shop <span className="text-purple-500">Archive</span>
-          </h1>
-          <p className="text-neutral-500 mt-4 tracking-[0.3em] uppercase text-xs">
-            Double Negative : Season 01 Reconstruction
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12">
-          {/* 상품 카드 예시 */}
-          {[1, 2, 3].map((item) => (
-            <div key={item} className="group cursor-pointer">
-              <div className="aspect-[3/4] bg-neutral-900 border border-white/5 overflow-hidden relative">
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="text-neutral-700 font-black italic text-4xl group-hover:text-purple-500/20 transition-colors">
-                    LOADING
-                  </span>
-                </div>
-              </div>
-              <div className="mt-6 flex justify-between items-end">
-                <div>
-                  <h3 className="text-sm font-bold uppercase tracking-widest">Archive Item #0{item}</h3>
-                  <p className="text-purple-500 text-xs mt-2">COMING SOON</p>
-                </div>
-                <span className="text-[10px] text-neutral-600 font-mono">2026.02.02</span>
-              </div>
+    <div className="pt-32 px-8 bg-black min-h-screen">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+        {products.map((item) => (
+          <div key={item.id} className="group cursor-pointer">
+            <div className="relative aspect-[3/4] overflow-hidden bg-neutral-900 border border-white/5">
+              <img 
+                src={item.image} 
+                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
+                alt={item.name} 
+              />
+              <button 
+                onClick={() => addToCart()}
+                className="absolute bottom-4 left-4 right-4 bg-white text-black py-3 opacity-0 group-hover:opacity-100 transition-opacity font-bold text-[10px] uppercase"
+              >
+                Add to Cart
+              </button>
             </div>
-          ))}
-        </div>
+            <div className="mt-4 flex justify-between items-start">
+              <h3 className="text-[11px] font-bold tracking-tighter uppercase">{item.name}</h3>
+              <span className="text-[11px] font-mono text-neutral-500">{item.price}</span>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );
 };
 
-export default ShopPage; // 이 줄이 반드시 있어야 합니다!
+export default ShopPage;
