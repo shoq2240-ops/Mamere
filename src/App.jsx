@@ -1,7 +1,7 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import { CartProvider } from "./Context/CartContext";
+import { CartProvider } from "./context/CartContext";
 
 // 컴포넌트 및 페이지 임포트
 import Navbar from "./components/Navbar";
