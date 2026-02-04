@@ -105,5 +105,5 @@ const Navbar = ({ cartCount = 0 }) => {
     </>
   );
 };
-
+<nav className="fixed top-0 left-0 w-full z-[100] bg-red-500 ..."></nav>
 export default Navbar;
