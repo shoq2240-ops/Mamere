@@ -22,20 +22,34 @@ const Navbar = () => {
     { name: 'Philosophy', path: '/philosophy' },
   ];
 
+  // 로고 일렁임(Glitch) 애니메이션 설정
+  const logoVariants = {
+    hover: {
+      skewX: [0, -10, 10, -5, 5, 0],
+      x: [0, -2, 2, -1, 1, 0],
+      transition: { duration: 0.3, repeat: Infinity }
+    }
+  };
+
   return (
-    <>
+    <div className="font-['Noto_Sans_KR'] antialiased"> {/* 전체 폰트 적용 */}
       <nav className="fixed top-0 left-0 w-full z-[110] bg-black/80 backdrop-blur-xl border-b border-white/10 text-white">
-        <div className="max-w-[1800px] mx-auto h-16 flex items-center px-6 relative">
+        <div className="max-w-[1800px] mx-auto h-20 flex items-center px-8 relative">
           
           {/* [데스크톱] 로고 + 메뉴 */}
-          <div className="flex items-center gap-12">
-            <Link to="/" className="hidden md:block text-[14px] font-black italic tracking-[0.4em] uppercase">
-              Double <span className="text-purple-500">Negative</span>
-            </Link>
-            <div className="hidden md:flex items-center gap-8 text-[10px] font-bold tracking-[0.2em] uppercase">
-              <Link to="/shop" className="hover:text-purple-500 transition-colors">Shop</Link>
+          <div className="flex items-center gap-16">
+            <motion.div whileHover="hover" variants={logoVariants}>
+              <Link to="/" className="hidden md:block text-[20px] font-black italic tracking-[0.3em] uppercase">
+                Double <span className="text-purple-500">Negative</span>
+              </Link>
+            </motion.div>
+
+            <div className="hidden md:flex items-center gap-10 text-[11px] font-light tracking-[0.2em] uppercase">
+              <Link to="/shop" className="hover:font-bold hover:text-purple-500 transition-all">Shop</Link>
               {navLinks.map((link) => (
-                <Link key={link.name} to={link.path} className="hover:text-purple-500 transition-colors">{link.name}</Link>
+                <Link key={link.name} to={link.path} className="hover:font-bold hover:text-purple-500 transition-all">
+                  {link.name}
+                </Link>
               ))}
             </div>
           </div>
@@ -45,94 +59,89 @@ const Navbar = () => {
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} 
             className="md:hidden w-10 h-10 -ml-2 flex flex-col justify-center items-center gap-[6px] z-[210]"
           >
-            <motion.span animate={isMobileMenuOpen ? { rotate: 45, y: 7, backgroundColor: "#A855F7" } : { rotate: 0, y: 0, backgroundColor: "#FFFFFF" }} className="w-5 h-[1px] block" />
-            <motion.span animate={isMobileMenuOpen ? { opacity: 0 } : { opacity: 1 }} className="w-5 h-[1px] bg-white block" />
-            <motion.span animate={isMobileMenuOpen ? { rotate: -45, y: -7, backgroundColor: "#A855F7" } : { rotate: 0, y: 0, backgroundColor: "#FFFFFF" }} className="w-5 h-[1px] block" />
+            <motion.span animate={isMobileMenuOpen ? { rotate: 45, y: 7, backgroundColor: "#A855F7" } : { rotate: 0, y: 0, backgroundColor: "#FFFFFF" }} className="w-6 h-[1px] block" />
+            <motion.span animate={isMobileMenuOpen ? { opacity: 0 } : { opacity: 1 }} className="w-6 h-[1px] bg-white block" />
+            <motion.span animate={isMobileMenuOpen ? { rotate: -45, y: -7, backgroundColor: "#A855F7" } : { rotate: 0, y: 0, backgroundColor: "#FFFFFF" }} className="w-6 h-[1px] block" />
           </button>
 
           {/* [모바일] 중앙 로고 */}
-          <Link to="/" className="md:hidden absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-[10px] font-black italic tracking-[0.4em] uppercase z-[210]">
+          <Link to="/" className="md:hidden absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-[12px] font-black italic tracking-[0.4em] uppercase z-[210]">
             Double <span className="text-purple-500">Negative</span>
           </Link>
 
-          {/* [공통] 우측 Search & Cart */}
-          <div className="ml-auto flex items-center gap-1 z-[210]">
-            <Link to="/login" className="hidden md:block text-[10px] font-bold tracking-widest uppercase mr-4 hover:text-purple-500">Account</Link>
+          {/* [우측] 유틸리티 */}
+          <div className="ml-auto flex items-center gap-2 z-[210]">
+            <Link to="/login" className="hidden md:block text-[11px] font-light tracking-widest uppercase mr-6 hover:font-bold hover:text-purple-500">Account</Link>
             <button onClick={() => { setIsSearchOpen(true); setIsMobileMenuOpen(false); }} className="w-10 h-10 flex items-center justify-center hover:text-purple-500 transition-colors">
-              <svg className="w-[18px] h-[18px]" fill="none" stroke="currentColor" strokeWidth="1.2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" /></svg>
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" /></svg>
             </button>
             <Link to="/cart" className="w-10 h-10 flex items-center justify-center relative hover:text-purple-500">
-              <svg className="w-[18px] h-[18px]" fill="none" stroke="currentColor" strokeWidth="1.2" viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" /><path d="M3 6h18" /><path d="M16 10a4 4 0 0 1-8 0" /></svg>
-              {cartCount > 0 && <span className="absolute top-2 right-1.5 bg-purple-600 text-white text-[8px] w-3.5 h-3.5 rounded-full flex items-center justify-center font-mono">{cartCount}</span>}
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" /><path d="M3 6h18" /><path d="M16 10a4 4 0 0 1-8 0" /></svg>
+              {cartCount > 0 && <span className="absolute top-2 right-1.5 bg-purple-600 text-white text-[9px] w-4 h-4 rounded-full flex items-center justify-center font-bold">{cartCount}</span>}
             </Link>
           </div>
         </div>
       </nav>
 
-      {/* 모바일 메뉴 */}
+      {/* 모바일 메뉴부 (Back 기능 포함) */}
       <AnimatePresence>
         {isMobileMenuOpen && (
           <motion.div 
             initial={{ x: "-100%" }} animate={{ x: 0 }} exit={{ x: "-100%" }}
             transition={{ type: "spring", damping: 25, stiffness: 200 }}
-            className="fixed inset-0 bg-black z-[200] flex flex-col pt-32 pb-12 px-8 text-white md:hidden"
+            className="fixed inset-0 bg-black z-[200] flex flex-col pt-24 pb-12 px-10 text-white md:hidden font-['Noto_Sans_KR']"
           >
-            <div className="flex-1 flex flex-col space-y-8">
-              
-              {/* 메인 카테고리 (모두 동일한 크기) */}
-              <div className="flex flex-col space-y-6">
+            <div className="mb-10">
+              <button onClick={() => isShopOpen ? setIsShopOpen(false) : setIsMobileMenuOpen(false)} className="flex items-center gap-2 text-[12px] font-light tracking-[0.3em] uppercase text-white/40">
+                <span className="text-xl">←</span> {isShopOpen ? 'Back to Menu' : 'Back'}
+              </button>
+            </div>
+
+            <div className="flex-1 flex flex-col justify-between">
+              <div className="flex flex-col space-y-8">
                 <div>
-                  <button 
-                    onClick={() => setIsShopOpen(!isShopOpen)}
-                    className="text-4xl font-bold tracking-tight uppercase text-left hover:text-purple-500 flex items-center gap-4"
-                  >
-                    Shop <span className="text-xl opacity-30">{isShopOpen ? '−' : '+'}</span>
+                  <button onClick={() => setIsShopOpen(!isShopOpen)} className="text-5xl font-bold tracking-tighter uppercase text-left flex items-center justify-between w-full">
+                    Shop <span className="text-2xl font-light opacity-20">{isShopOpen ? '−' : '+'}</span>
                   </button>
                   <AnimatePresence>
                     {isShopOpen && (
-                      <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="flex flex-col space-y-4 mt-4 ml-4 overflow-hidden border-l border-white/10 pl-4">
-                        <button onClick={() => handleMenuClick('/shop/men')} className="text-xl uppercase text-white/60 text-left">Men</button>
-                        <button onClick={() => handleMenuClick('/shop/women')} className="text-xl uppercase text-white/60 text-left">Women</button>
+                      <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="flex flex-col space-y-6 mt-8 ml-4 border-l border-purple-500/20 pl-6">
+                        <button onClick={() => handleMenuClick('/shop/men')} className="text-3xl font-light uppercase text-white/80 text-left">Men</button>
+                        <button onClick={() => handleMenuClick('/shop/women')} className="text-3xl font-light uppercase text-white/80 text-left">Women</button>
                       </motion.div>
                     )}
                   </AnimatePresence>
                 </div>
-
-                {navLinks.map((item) => (
-                  <button key={item.name} onClick={() => handleMenuClick(item.path)} className="text-4xl font-bold tracking-tight uppercase text-left hover:text-purple-500">
+                {!isShopOpen && navLinks.map((item) => (
+                  <button key={item.name} onClick={() => handleMenuClick(item.path)} className="text-5xl font-bold tracking-tighter uppercase text-left hover:text-purple-500">
                     {item.name}
                   </button>
                 ))}
               </div>
 
-              {/* 하단 유틸리티 섹션 (일렬 배치) */}
-              <div className="pt-12 border-t border-white/10 flex flex-wrap items-center gap-x-6 gap-y-4">
-                <button onClick={() => handleMenuClick('/login')} className="text-[11px] font-black tracking-[0.2em] uppercase text-white/40 hover:text-white">Login</button>
-                <button onClick={() => handleMenuClick('/signup')} className="text-[11px] font-black tracking-[0.2em] uppercase text-white/40 hover:text-white">Join Now</button>
-                <button 
-                  onClick={() => handleMenuClick('/cart')} 
-                  className="text-[11px] font-black tracking-[0.2em] uppercase text-purple-500 flex items-center gap-2"
-                >
-                  Shopping Bag <span className="bg-purple-500 text-black px-1.5 py-0.5 rounded-sm text-[9px] font-mono leading-none">{cartCount}</span>
+              <div className="mt-auto pt-12 border-t border-white/10 flex flex-col space-y-6">
+                <button onClick={() => handleMenuClick('/cart')} className="text-[14px] font-bold tracking-[0.2em] uppercase text-purple-500 flex justify-between">
+                  Shopping Bag <span>[{cartCount}]</span>
                 </button>
+                <button onClick={() => handleMenuClick('/login')} className="text-[14px] font-light tracking-[0.2em] uppercase text-white/40 text-left">Login</button>
+                <button onClick={() => handleMenuClick('/signup')} className="text-[14px] font-light tracking-[0.2em] uppercase text-white/40 text-left">Join Now</button>
               </div>
             </div>
           </motion.div>
         )}
+        {cartCount > 0 && (
+    <motion.span 
+      key={cartCount} // 👈 숫자가 바뀔 때마다 애니메이션 실행
+      initial={{ scale: 0.5, opacity: 0 }}
+      animate={{ scale: 1, opacity: 1 }}
+      exit={{ scale: 1.5, opacity: 0 }}
+      className="absolute top-2 right-1.5 bg-purple-600 text-white text-[8px] w-3.5 h-3.5 rounded-full flex items-center justify-center font-bold"
+    >
+      {cartCount}
+    </motion.span>
+  )}
       </AnimatePresence>
-
-      {/* 검색 모달 */}
-      <AnimatePresence>
-        {isSearchOpen && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/95 z-[300] flex flex-col items-center pt-40 px-6">
-            <div className="w-full max-w-2xl relative">
-              <input autoFocus type="text" placeholder="SEARCH ARCHIVE" className="w-full bg-transparent border-b border-purple-500 py-4 text-3xl font-black italic uppercase outline-none text-white placeholder-white/10" />
-              <button onClick={() => setIsSearchOpen(false)} className="absolute right-0 top-1/2 -translate-y-1/2 text-purple-500 font-bold text-xs uppercase tracking-widest">Close</button>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </>
+    </div>
   );
 };
 
