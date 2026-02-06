@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState } from 'react'; // React 선언은 이 한 줄이면 충분합니다.
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
-import { useCart } from '../store/CartContext';
+import { useCart } from '../store/CartContext'; 
+
+// 그 아래 products 데이터와 ShopPage 컴포넌트 코드가 이어지면 됩니다.
 
 const products = [
   { id: 1, name: "Double Negative Archive Jacket", price: 549000, img: "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?q=80&w=1000&auto=format&fit=crop" },
@@ -14,6 +16,11 @@ const ShopPage = () => {
   const { addToCart } = useCart();
   const navigate = useNavigate();
   const [showToast, setShowToast] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const filteredProducts = products.filter(product =>
+    product.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   const handleAddToCart = (product) => {
     addToCart(product);
@@ -24,6 +31,16 @@ const ShopPage = () => {
 
   return (
     <div className="font-['Noto_Sans_KR'] bg-black min-h-screen pt-24 pb-20 antialiased relative">
+      {/* 검색 바 (우영미 스타일의 미니멀한 검색창) */}
+      <div className="px-8 mb-12">
+        <input 
+          type="text"
+          placeholder="SEARCH ARCHIVE..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="w-full bg-transparent border-b border-white/10 py-4 text-[12px] font-light tracking-[0.2em] uppercase outline-none focus:border-purple-500 transition-colors placeholder:text-white/10"
+        />
+      </div>
       
       {/* 1. 헤더 */}
       <div className="px-8 mb-16 flex justify-between items-end">
@@ -37,20 +54,39 @@ const ShopPage = () => {
       </div>
 
       {/* 2. 상품 그리드 */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-[1px] gap-y-20 border-t border-white/10">
+{/* 2. 상품 그리드 (우영미 스타일 & Noto Sans 위계) */}
+<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-[1px] gap-y-20 border-t border-white/10 font-['Noto_Sans_KR']">
         {products.map((product) => (
-          <div key={product.id} className="group relative flex flex-col border-r border-b border-white/10 transition-colors duration-700 hover:bg-zinc-900/40">
+          <div 
+            key={product.id} 
+            className="group relative flex flex-col border-r border-b border-white/10 transition-colors duration-700 hover:bg-zinc-900/40"
+          >
+            {/* 상품 이미지 구역: aspect-ratio 3/4 고정 */}
             <Link to={`/product/${product.id}`} className="relative aspect-[3/4] overflow-hidden bg-zinc-900">
-              <img src={product.img} alt={product.name} className="w-full h-full object-cover opacity-80 transition-all duration-1000 group-hover:scale-[1.03] group-hover:opacity-100" />
+              <img 
+                src={product.img} 
+                alt={product.name} 
+                className="w-full h-full object-cover opacity-80 transition-all duration-1000 group-hover:scale-[1.03] group-hover:opacity-100" 
+              />
+              {/* 호버 시 나타나는 얕은 회색 오버레이 */}
               <div className="absolute inset-0 bg-white/[0.02] opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
             </Link>
 
-            <div className="p-8 space-y-3">
+            {/* 상품 정보 및 버튼 구역 */}
+            <div className="p-8 space-y-4">
               <div className="space-y-1">
-                <h3 className="text-[11px] font-bold tracking-widest uppercase text-white/70 group-hover:text-white transition-colors">{product.name}</h3>
-                <p className="text-[13px] font-light tracking-widest text-purple-500/80">₩{product.price.toLocaleString()}</p>
+                {/* 상품명: Bold(700) / 11px */}
+                <h3 className="text-[11px] font-bold tracking-widest uppercase text-white/70 group-hover:text-white transition-colors">
+                  {product.name}
+                </h3>
+                {/* 가격: Light(300) / 13px */}
+                <p className="text-[13px] font-light tracking-widest text-purple-500/80 group-hover:text-purple-500 transition-colors">
+                  ₩{product.price.toLocaleString()}
+                </p>
               </div>
-              <div className="pt-6 opacity-0 group-hover:opacity-100 transition-all duration-500 transform translate-y-2 group-hover:translate-y-0">
+
+              {/* Add to Archive 버튼: 호버 시 아래에서 위로 등장 */}
+              <div className="pt-4 opacity-0 group-hover:opacity-100 transition-all duration-500 transform translate-y-2 group-hover:translate-y-0">
                 <button 
                   onClick={() => handleAddToCart(product)}
                   className="w-full border border-white/10 py-4 text-[9px] font-bold tracking-[0.3em] uppercase text-white/50 hover:bg-white hover:text-black hover:border-white transition-all duration-300"
