@@ -5,7 +5,7 @@ const Footer = () => {
     <footer className="bg-black text-neutral-500 py-20 px-8 border-t border-white/5 mt-20">
       <div className="max-w-7xl mx-auto">
         {/* 상단 메뉴: NOTICE, GUIDE 등 */}
-        <div className="flex flex-wrap gap-x-8 gap-y-4 text-[10px] font-bold uppercase tracking-[0.2em] mb-12 text-neutral-300">
+        <div className="flex flex-wrap gap-x-8 gap-y-4 text-[10px] font-bold uppercase tracking-extra-wide mb-12 text-neutral-300">
           <button className="hover:text-purple-500 transition-colors">Notice</button>
           <button className="hover:text-purple-500 transition-colors">Agreement</button>
           <button className="hover:text-purple-500 transition-colors">Guide</button>
@@ -38,7 +38,7 @@ const Footer = () => {
 
         {/* 카피라이트 */}
         <div className="mt-12 pt-8 border-t border-white/5 flex justify-between items-center">
-          <p className="text-[9px] font-mono tracking-[0.3em] uppercase">
+          <p className="text-[9px] font-mono tracking-ultra-wide uppercase">
             © DOUBLE NEGATIVE All rights reserved.
           </p>
           <div className="flex space-x-4 opacity-50">

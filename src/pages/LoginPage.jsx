@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 
 const LoginPage = () => {
   return (
-    <div className="min-h-screen bg-black flex items-center justify-center px-8 pt-20">
+    <div className="min-h-screen bg-black flex items-center justify-center px-8 pt-20 antialiased">
       {/* 1. 로그인 박스 애니메이션 */}
       <motion.div 
         initial={{ opacity: 0, y: 30 }}
@@ -14,7 +14,7 @@ const LoginPage = () => {
         {/* 헤더 부분 */}
         <div className="text-center space-y-4">
           <h1 className="text-5xl font-black italic uppercase tracking-tighter text-white">Login</h1>
-          <p className="text-[10px] text-neutral-500 tracking-[0.4em] uppercase font-mono">Enter the void</p>
+          <p className="text-[10px] text-neutral-500 tracking-mega-wide uppercase font-mono">Enter the void</p>
         </div>
         
         {/* 로그인 폼 */}
@@ -31,7 +31,7 @@ const LoginPage = () => {
           />
           <button 
             type="submit"
-            className="w-full bg-white text-black py-5 text-[11px] font-black uppercase tracking-[0.2em] hover:bg-purple-600 hover:text-white transition-all duration-500"
+            className="w-full bg-white text-black py-5 text-[11px] font-black uppercase tracking-extra-wide hover:bg-purple-600 hover:text-white transition-all duration-500"
           >
             Sign In
           </button>

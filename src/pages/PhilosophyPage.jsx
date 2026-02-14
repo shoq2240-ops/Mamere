@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 
 const PhilosophyPage = () => {
   return (
-    <div className="font-['Noto_Sans_KR'] bg-black text-white min-h-screen pt-32 pb-20 px-6">
+    <div className="bg-black text-white min-h-screen pt-32 pb-20 px-6 antialiased">
       <div className="max-w-4xl mx-auto">
         {/* 제목 섹션 */}
         <motion.div 
@@ -12,7 +12,7 @@ const PhilosophyPage = () => {
           transition={{ duration: 0.8 }}
           className="mb-20 md:mb-32"
         >
-          <h1 className="text-[10px] tracking-[0.5em] uppercase text-purple-500 font-bold mb-4">
+          <h1 className="text-[10px] tracking-mega-wide uppercase text-purple-500 font-bold mb-4">
             Philosophy
           </h1>
           <h2 className="text-3xl md:text-5xl font-black italic tracking-tighter uppercase leading-tight">

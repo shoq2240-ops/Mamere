@@ -7,7 +7,7 @@ const CartPage = () => {
   const totalPrice = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 
   return (
-    <div className="pt-32 pb-20 px-6 min-h-screen bg-black text-white">
+    <div className="pt-32 pb-20 px-6 min-h-screen bg-black text-white antialiased">
       <div className="max-w-3xl mx-auto">
         <h1 className="text-4xl font-black italic tracking-tighter uppercase mb-12">
           Your <span className="text-purple-500">Archive</span> [{cartCount}]

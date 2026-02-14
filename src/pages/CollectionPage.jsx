@@ -20,12 +20,12 @@ const CollectionPage = () => {
   ];
 
   return (
-    <div className="bg-black text-white min-h-screen pt-32 pb-20 px-8">
+    <div className="bg-black text-white min-h-screen pt-32 pb-20 px-8 antialiased">
       <div className="max-w-7xl mx-auto">
         {/* 헤드라인 */}
         <header className="mb-20 border-l border-purple-500 pl-6">
           <h1 className="text-4xl font-black italic tracking-tighter uppercase">Collections</h1>
-          <p className="text-[10px] text-neutral-500 tracking-[0.3em] mt-2">ARCHIVE OF DOUBLE NEGATIVE</p>
+          <p className="text-[10px] text-neutral-500 tracking-ultra-wide mt-2">ARCHIVE OF DOUBLE NEGATIVE</p>
         </header>
 
         {/* 콜렉션 그리드 */}
@@ -47,7 +47,7 @@ const CollectionPage = () => {
                 <h3 className="text-lg font-bold tracking-tighter uppercase group-hover:text-purple-500 transition-colors">
                   {item.title}
                 </h3>
-                <p className="text-[10px] text-neutral-600 tracking-[0.2em] uppercase font-mono">
+                <p className="text-[10px] text-neutral-600 tracking-extra-wide uppercase font-mono">
                   {item.subtitle}
                 </p>
               </div>

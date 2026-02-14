@@ -15,11 +15,11 @@ const ShopPage = () => {
   const { addToCart } = useCart(); // 👈 최상단에서 함수 가져오기
 
   return (
-    <div className="font-['Noto_Sans_KR'] bg-black min-h-screen pt-24 pb-20 antialiased">
+    <div className="bg-black min-h-screen pt-24 pb-20 antialiased">
       {/* 1. 헤더 구역 (정적 디자인) */}
       <div className="px-6 mb-12 flex justify-between items-end">
         <div>
-          <h1 className="text-[10px] tracking-[0.5em] uppercase text-purple-500 font-bold mb-2">Collection</h1>
+          <h1 className="text-[10px] tracking-mega-wide uppercase text-purple-500 font-bold mb-2">Collection</h1>
           <h2 className="text-4xl md:text-6xl font-black italic tracking-tighter uppercase text-white">
             Shop <span className="font-light text-white/50">/ All</span>
           </h2>
@@ -59,7 +59,7 @@ const ShopPage = () => {
               <div className="pt-4 opacity-0 group-hover:opacity-100 transition-all duration-500 transform translate-y-2 group-hover:translate-y-0">
                 <button 
                   onClick={() => addToCart(product)} // 👈 클릭 시 해당 상품 데이터 전달
-                  className="w-full border border-white/10 py-3 text-[9px] font-bold tracking-[0.3em] uppercase text-white/60 hover:bg-white hover:text-black hover:border-white transition-all"
+                  className="w-full border border-white/10 py-3 text-[9px] font-bold tracking-ultra-wide uppercase text-white/60 hover:bg-white hover:text-black hover:border-white transition-all"
                 >
                   Add to Archive
                 </button>

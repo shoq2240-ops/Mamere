@@ -27,7 +27,7 @@ const lookbookItems = [
 
 const LookbookPage = () => {
   return (
-    <div className="bg-black text-white pt-32 pb-40 overflow-hidden">
+    <div className="bg-black text-white pt-32 pb-40 overflow-hidden antialiased">
       {/* 헤더 섹션 */}
       <div className="px-8 mb-24">
         <motion.h1 
@@ -37,7 +37,7 @@ const LookbookPage = () => {
         >
           Lookbook<span className="text-purple-500">.</span>
         </motion.h1>
-        <p className="mt-4 text-neutral-500 tracking-[0.4em] uppercase text-[10px]">Archive 2026 Collection</p>
+        <p className="mt-4 text-neutral-500 tracking-mega-wide uppercase text-[10px]">Archive 2026 Collection</p>
       </div>
 
       {/* 룩북 그리드 */}
@@ -66,7 +66,7 @@ const LookbookPage = () => {
             {/* 텍스트 섹션 */}
             <div className="flex-1 space-y-4 text-center md:text-left">
               <span className="text-purple-500 font-mono text-xs italic tracking-widest uppercase">0{idx + 1}</span>
-              <h2 className="text-3xl font-black italic uppercase font-['Inter']">{item.title}</h2>
+              <h2 className="text-3xl font-black italic uppercase">{item.title}</h2>
               <p className="text-neutral-400 font-light text-sm leading-relaxed break-keep max-w-xs mx-auto md:mx-0">
                 {item.description}
               </p>
@@ -85,7 +85,7 @@ const LookbookPage = () => {
 
       {/* 푸터 문구 */}
       <div className="mt-60 text-center">
-        <p className="text-[9px] text-neutral-700 tracking-[1em] uppercase">
+        <p className="text-[9px] text-neutral-700 tracking-mega-wide uppercase">
           Reconstruction through Negation
         </p>
       </div>

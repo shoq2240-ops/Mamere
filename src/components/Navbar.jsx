@@ -64,8 +64,8 @@ const Navbar = () => {
   };
 
   return (
-    <div className="font-['Noto_Sans_KR'] antialiased" onMouseLeave={() => setHoveredMenu(null)}>
-      <nav className="fixed top-0 left-0 w-full z-[110] bg-black/80 backdrop-blur-xl border-b border-white/10 text-white">
+    <div className="antialiased" onMouseLeave={() => setHoveredMenu(null)}>
+      <nav className="fixed top-0 left-0 w-full z-[110] bg-black/80 backdrop-blur-xl border-b border-white/5 text-white">
         <div className="max-w-[1800px] mx-auto h-20 flex items-center px-8 relative">
           
           <div className="flex items-center gap-16">
@@ -77,7 +77,7 @@ const Navbar = () => {
             </motion.div>
 
             {/* 데스크톱 메뉴 */}
-            <div className="hidden md:flex items-center gap-10 text-[11px] font-light tracking-[0.2em] uppercase h-20">
+            <div className="hidden md:flex items-center gap-10 text-[11px] font-light tracking-extra-wide uppercase h-20">
               {navLinks.map((link) => (
                 <div 
                   key={link.name}
@@ -97,7 +97,7 @@ const Navbar = () => {
                           <Link 
                             key={sub.name} 
                             to={sub.path} 
-                            className="text-[9px] font-bold text-white/40 hover:text-purple-500 transition-colors tracking-[0.2em]"
+                            className="text-[9px] font-bold text-white/40 hover:text-purple-500 transition-colors tracking-extra-wide"
                           >
                             {sub.name}
                           </Link>
@@ -146,9 +146,9 @@ const Navbar = () => {
       {/* 모바일 메뉴 (기존 백 기능 완벽 유지) */}
       <AnimatePresence>
         {isMobileMenuOpen && (
-          <motion.div initial={{ x: "-100%" }} animate={{ x: 0 }} exit={{ x: "-100%" }} transition={{ type: "spring", damping: 25, stiffness: 200 }} className="fixed inset-0 bg-black z-[200] flex flex-col pt-24 pb-12 px-10 text-white md:hidden font-['Noto_Sans_KR']">
+          <motion.div initial={{ x: "-100%" }} animate={{ x: 0 }} exit={{ x: "-100%" }} transition={{ type: "spring", damping: 25, stiffness: 200 }} className="fixed inset-0 bg-black z-[200] flex flex-col pt-24 pb-12 px-10 text-white md:hidden">
             <div className="mb-10 text-left">
-              <button onClick={() => isShopOpen ? setIsShopOpen(false) : setIsMobileMenuOpen(false)} className="flex items-center gap-2 text-[12px] font-light tracking-[0.3em] uppercase text-white/40">
+              <button onClick={() => isShopOpen ? setIsShopOpen(false) : setIsMobileMenuOpen(false)} className="flex items-center gap-2 text-[12px] font-light tracking-ultra-wide uppercase text-white/40">
                 <span className="text-xl">←</span> {isShopOpen ? 'Back to Menu' : 'Back'}
               </button>
             </div>
@@ -172,9 +172,9 @@ const Navbar = () => {
                 ))}
               </div>
               <div className="mt-auto pt-12 border-t border-white/10 flex flex-col space-y-6 text-[14px]">
-                <button onClick={() => handleMenuClick('/cart')} className="font-bold tracking-[0.2em] uppercase text-purple-500 flex justify-between">Shopping Bag <span>[{cartCount}]</span></button>
-                <button onClick={() => handleMenuClick('/login')} className="font-light tracking-[0.2em] uppercase text-white/40 text-left">Login</button>
-                <button onClick={() => handleMenuClick('/signup')} className="font-light tracking-[0.2em] uppercase text-white/40 text-left">Join Now</button>
+                <button onClick={() => handleMenuClick('/cart')} className="font-bold tracking-extra-wide uppercase text-purple-500 flex justify-between">Shopping Bag <span>[{cartCount}]</span></button>
+                <button onClick={() => handleMenuClick('/login')} className="font-light tracking-extra-wide uppercase text-white/40 text-left">Login</button>
+                <button onClick={() => handleMenuClick('/signup')} className="font-light tracking-extra-wide uppercase text-white/40 text-left">Join Now</button>
               </div>
             </div>
           </motion.div>
@@ -184,7 +184,7 @@ const Navbar = () => {
       {/* 검색 모달 (기존 로직 유지) */}
       <AnimatePresence>
         {isSearchOpen && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/95 z-[300] flex flex-col items-center pt-40 px-6 font-['Noto_Sans_KR']">
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/95 z-[300] flex flex-col items-center pt-40 px-6">
             <form onSubmit={handleSearch} className="w-full max-w-2xl relative">
               <input autoFocus type="text" value={searchInput} onChange={(e) => setSearchInput(e.target.value)} placeholder="SEARCH ARCHIVE" className="w-full bg-transparent border-b border-purple-500 py-4 text-3xl md:text-5xl font-bold italic uppercase outline-none text-white placeholder-white/10" />
               <button type="submit" className="hidden">Search</button>

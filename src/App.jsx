@@ -1,7 +1,8 @@
-import React from "react";
+import React, { useState } from "react"; // 👈 useState 추가
 import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import { CartProvider } from "./store/CartContext";
+import { CartProvider, useCart } from "./store/CartContext"; // 👈 useCart 추가
+import ScrollToTop from "./components/ScrollToTop"; // 👈 추가
 
 // 컴포넌트 및 페이지 임포트
 import Navbar from "./components/Navbar";
@@ -13,16 +14,18 @@ import LookbookPage from "./pages/LookbookPage";
 import ProductDetail from "./pages/ProductDetail";
 import CollectionPage from './pages/CollectionPage';
 import LoginPage from './pages/LoginPage';
-import CartPage from './pages/CartPage'; // 새로 만들 페이지라고 가정
+import CartPage from './pages/CartPage';
 
 const AnimatedRoutes = () => {
   const location = useLocation();
+  const { addToCart } = useCart(); // 👈 Context에서 함수를 직접 가져옵니다.
 
   return (
     <AnimatePresence mode="wait">
-      {/* 이제 addToCart를 props로 일일이 넘길 필요가 없습니다! */}
       <Routes location={location} key={location.pathname}>
-        <Route path="/" element={<PageWrapper><LandingPage /></PageWrapper>} />
+        {/* LandingPage에 Context의 addToCart 함수를 전달합니다. */}
+        <Route path="/" element={<PageWrapper><LandingPage addToCart={addToCart} /></PageWrapper>} />
+        
         <Route path="/philosophy" element={<PageWrapper><PhilosophyPage /></PageWrapper>} />
         <Route path="/shop" element={<PageWrapper><ShopPage /></PageWrapper>} />
         <Route path="/lookbook" element={<PageWrapper><LookbookPage /></PageWrapper>} />
@@ -39,7 +42,7 @@ const AnimatedRoutes = () => {
   );
 };
 
-// 노이즈 레이어 (유지)
+// 노이즈 레이어 및 페이지 전환 애니메이션
 const PageWrapper = ({ children }) => (
   <motion.div
     initial={{ opacity: 0 }}
@@ -61,14 +64,12 @@ const PageWrapper = ({ children }) => (
 
 function App() {
   return (
-    <CartProvider> {/* 1. 앱 전체를 장바구니 컨텍스트로 감쌉니다 */}
+    <CartProvider>
       <Router>
-        <div className="bg-black text-white min-h-screen selection:bg-purple-500">
-          {/* 2. Navbar에 cartCount를 직접 넘기지 않아도 Navbar 내부에서 useCart()로 가져옵니다 */}
+        <ScrollToTop />
+        <div className="bg-black text-white min-h-screen antialiased">
           <Navbar />
-          
           <AnimatedRoutes />
-          
           <Footer />
         </div>
       </Router>
@@ -77,4 +78,3 @@ function App() {
 }
 
 export default App;
-

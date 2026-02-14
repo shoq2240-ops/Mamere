@@ -2,16 +2,58 @@
 @tailwind components;
 @tailwind utilities;
 
-.noise-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-image: url('https://grainy-gradients.vercel.app/noise.svg');
-  animation: noise-anim 0.2s infinite;
-  pointer-events: none;
-  z-index: 9999;
+@layer base {
+  /* 미니멀리즘 기본 설정 */
+  * {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    @apply bg-black text-white;
+    font-family: 'Noto Sans KR', sans-serif;
+    overflow-x: hidden;
+  }
+
+  /* 선택 영역 스타일 */
+  ::selection {
+    background-color: rgba(168, 85, 247, 0.3);
+    color: white;
+  }
+
+  /* 스크롤바 숨기기 (미니멀한 UI) */
+  .scrollbar-hide::-webkit-scrollbar,
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .scrollbar-hide,
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+
+@layer components {
+  /* 노이즈 오버레이 애니메이션 */
+  .noise-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: url('https://grainy-gradients.vercel.app/noise.svg');
+    animation: noise-anim 0.2s infinite;
+    pointer-events: none;
+    z-index: 9999;
+  }
+}
+
+@layer utilities {
+  /* 커스텀 유틸리티 */
+  .text-balance {
+    text-wrap: balance;
+  }
 }
 
 @keyframes noise-anim {
