@@ -1,6 +1,6 @@
 // 제품 데이터를 가져오는 커스텀 훅
 import { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
+import { supabase, publicTable } from '../lib/supabase';
 
 export const useProducts = () => {
   const [products, setProducts] = useState([]);
@@ -11,8 +11,7 @@ export const useProducts = () => {
   const fetchProducts = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
-        .from('products')
+      const { data, error } = await publicTable('products')
         .select('*')
         .order('created_at', { ascending: false });
 

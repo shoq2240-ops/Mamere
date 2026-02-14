@@ -2,13 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../store/AuthContext';
-import { supabase } from '../lib/supabase';
+import { publicTable, checkSupabaseConnection } from '../lib/supabase';
+import AddressInput, { combineAddress, splitAddress } from '../components/AddressInput';
 
 const ProfilePage = () => {
   const navigate = useNavigate();
   const { user, isLoggedIn, loading: authLoading } = useAuth();
   const [name, setName] = useState('');
   const [address, setAddress] = useState('');
+  const [addressDetail, setAddressDetail] = useState('');
   const [phone, setPhone] = useState('');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -29,9 +31,14 @@ const ProfilePage = () => {
     const loadProfile = async () => {
       setLoading(true);
       setError('');
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('name, address, phone')
+      const conn = await checkSupabaseConnection();
+      if (!conn.ok) {
+        setLoading(false);
+        setError(conn.error || 'Supabase 연결을 확인할 수 없습니다.');
+        return;
+      }
+      const { data, error } = await publicTable('profiles')
+        .select('full_name, address, phone')
         .eq('id', user.id)
         .maybeSingle();
 
@@ -41,8 +48,10 @@ const ProfilePage = () => {
         return;
       }
       if (data) {
-        setName(data.name ?? '');
-        setAddress(data.address ?? '');
+        setName(data.full_name ?? '');
+        const { base, detail } = splitAddress(data.address ?? '');
+        setAddress(base);
+        setAddressDetail(detail);
         setPhone(data.phone ?? '');
       }
     };
@@ -58,13 +67,13 @@ const ProfilePage = () => {
     setError('');
     setMessage('');
 
-    const { error } = await supabase
-      .from('profiles')
+    const fullAddress = combineAddress(address, addressDetail);
+    const { error } = await publicTable('profiles')
       .upsert(
         {
           id: user.id,
-          name: name.trim() || null,
-          address: address.trim() || null,
+          full_name: name.trim() || null,
+          address: fullAddress || null,
           phone: phone.trim() || null,
         },
         { onConflict: 'id' }
@@ -128,12 +137,14 @@ const ProfilePage = () => {
               <label className="block text-[10px] font-bold tracking-widest uppercase text-white/50 mb-2">
                 주소
               </label>
-              <input
-                type="text"
-                value={address}
-                onChange={(e) => setAddress(e.target.value)}
-                placeholder="주소"
-                className="w-full bg-neutral-900/30 border border-white/5 px-6 py-4 text-[11px] text-white outline-none focus:border-purple-500/50 transition-all placeholder:text-neutral-600"
+              <AddressInput
+                addressValue={address}
+                onAddressChange={setAddress}
+                detailValue={addressDetail}
+                onDetailChange={setAddressDetail}
+                addressPlaceholder="기본 주소 (주소 찾기)"
+                detailPlaceholder="상세 주소 (동, 호수 등)"
+                inputClassName="bg-neutral-900/30 px-6 py-4"
               />
             </div>
 

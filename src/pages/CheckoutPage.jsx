@@ -4,11 +4,12 @@ import { Link, useNavigate } from 'react-router-dom';
 import * as PortOne from '@portone/browser-sdk/v2';
 import { useAuth } from '../store/AuthContext';
 import { useCart } from '../store/CartContext';
-import { supabase } from '../lib/supabase';
+import { supabase, publicTable } from '../lib/supabase';
+import AddressInput, { combineAddress, splitAddress } from '../components/AddressInput';
 
-// 포트원 테스트 결제 설정 (가맹점: TC0ONETIME, PG: 카카오페이 테스트)
-const PORTONE_STORE_ID = import.meta.env.VITE_PORTONE_STORE_ID || 'TC0ONETIME';
-const PORTONE_CHANNEL_KEY = import.meta.env.VITE_PORTONE_CHANNEL_KEY || 'kakaopay.TC0ONETIME';
+// 포트원 결제 설정 (.env의 VITE_PORTONE_* 사용)
+const PORTONE_STORE_ID = import.meta.env.VITE_PORTONE_STORE_ID;
+const PORTONE_CHANNEL_KEY = import.meta.env.VITE_PORTONE_CHANNEL_KEY;
 
 // 가격이 "₩890,000" 문자열이거나 숫자일 수 있음
 const parsePrice = (price) => {
@@ -27,6 +28,7 @@ const CheckoutPage = () => {
 
   const [shippingName, setShippingName] = useState('');
   const [shippingAddress, setShippingAddress] = useState('');
+  const [shippingAddressDetail, setShippingAddressDetail] = useState('');
   const [shippingPhone, setShippingPhone] = useState('');
   const [initialProfile, setInitialProfile] = useState(null);
   const [saveAsDefault, setSaveAsDefault] = useState(false);
@@ -56,23 +58,23 @@ const CheckoutPage = () => {
 
     const loadProfile = async () => {
       setProfileLoading(true);
-      const { data } = await supabase
-        .from('profiles')
-        .select('name, address, phone')
+      const { data } = await publicTable('profiles')
+        .select('full_name, address, phone')
         .eq('id', user.id)
         .maybeSingle();
 
       setProfileLoading(false);
       if (data) {
-        const name = data.name ?? '';
-        const address = data.address ?? '';
+        const name = data.full_name ?? '';
+        const { base, detail } = splitAddress(data.address ?? '');
         const phone = data.phone ?? '';
         setShippingName(name);
-        setShippingAddress(address);
+        setShippingAddress(base);
+        setShippingAddressDetail(detail);
         setShippingPhone(phone);
-        setInitialProfile({ name, address, phone });
+        setInitialProfile({ name, address: base, addressDetail: detail, phone });
       } else {
-        setInitialProfile({ name: '', address: '', phone: '' });
+        setInitialProfile({ name: '', address: '', addressDetail: '', phone: '' });
       }
     };
 
@@ -80,10 +82,14 @@ const CheckoutPage = () => {
   }, [user?.id]);
 
   const trim = (s) => (s ?? '').trim();
+  const currentAddressFull = combineAddress(shippingAddress, shippingAddressDetail);
+  const initialAddressFull = initialProfile
+    ? combineAddress(initialProfile.address, initialProfile.addressDetail)
+    : '';
   const hasShippingChanged =
     initialProfile &&
     (trim(shippingName) !== trim(initialProfile.name) ||
-      trim(shippingAddress) !== trim(initialProfile.address) ||
+      trim(currentAddressFull) !== trim(initialAddressFull) ||
       trim(shippingPhone) !== trim(initialProfile.phone));
   const showSaveAsDefaultCheckbox = hasShippingChanged === true;
 
@@ -92,10 +98,15 @@ const CheckoutPage = () => {
     if (!user?.id || cart.length === 0) return;
 
     const name = shippingName.trim();
-    const address = shippingAddress.trim();
+    const addressFull = combineAddress(shippingAddress, shippingAddressDetail);
     const phone = shippingPhone.trim();
-    if (!name || !address || !phone) {
-      setError('이름, 주소, 전화번호를 모두 입력해주세요.');
+    if (!name || !shippingAddress.trim() || !phone) {
+      setError('이름, 기본 주소, 전화번호를 모두 입력해주세요.');
+      return;
+    }
+
+    if (!PORTONE_STORE_ID || !PORTONE_CHANNEL_KEY) {
+      setError('결제 설정이 완료되지 않았습니다. .env에 VITE_PORTONE_STORE_ID, VITE_PORTONE_CHANNEL_KEY를 확인해주세요.');
       return;
     }
 
@@ -103,11 +114,11 @@ const CheckoutPage = () => {
     setError('');
 
     if (saveAsDefault && user?.id) {
-      const { error: profileError } = await supabase.from('profiles').upsert(
+      const { error: profileError } = await publicTable('profiles').upsert(
         {
           id: user.id,
-          name: name || null,
-          address: address || null,
+          full_name: name || null,
+          address: addressFull || null,
           phone: phone || null,
         },
         { onConflict: 'id' }
@@ -127,7 +138,7 @@ const CheckoutPage = () => {
       image: item.image,
     }));
 
-    // 포트원 결제 요청 (테스트: 카카오페이)
+    // 포트원 결제창 호출
     const paymentId = `dn-${Date.now()}-${crypto.randomUUID().slice(0, 8)}`;
     const orderName = cart.length === 1
       ? cart[0].name
@@ -156,9 +167,8 @@ const CheckoutPage = () => {
       }
 
       // 결제 성공 → profiles에서 이름/주소 조회 후 주문 저장
-      const { data: profile, error: profileFetchError } = await supabase
-        .from('profiles')
-        .select('name, address, phone')
+      const { data: profile, error: profileFetchError } = await publicTable('profiles')
+        .select('full_name, address, phone')
         .eq('id', user.id)
         .maybeSingle();
 
@@ -168,8 +178,8 @@ const CheckoutPage = () => {
         return;
       }
 
-      const shippingNameFromProfile = profile.name ?? name;
-      const shippingAddressFromProfile = profile.address ?? address;
+      const shippingNameFromProfile = profile.full_name ?? name;
+      const shippingAddressFromProfile = profile.address ?? addressFull;
       const shippingPhoneFromProfile = profile.phone ?? phone;
 
       if (!shippingNameFromProfile || !shippingAddressFromProfile || !shippingPhoneFromProfile) {
@@ -178,7 +188,7 @@ const CheckoutPage = () => {
         return;
       }
 
-      const { error: orderError } = await supabase.from('orders').insert({
+      const { error: orderError } = await publicTable('orders').insert({
         user_id: user.id,
         shipping_name: shippingNameFromProfile,
         shipping_address: shippingAddressFromProfile,
@@ -210,11 +220,8 @@ const CheckoutPage = () => {
         <h1 className="text-4xl font-black italic tracking-tighter uppercase mb-2">
           Checkout
         </h1>
-        <p className="text-[10px] text-white/40 tracking-widest uppercase mb-4">
+        <p className="text-[10px] text-white/40 tracking-widest uppercase mb-10">
           배송지 정보를 확인하고 결제를 완료하세요
-        </p>
-        <p className="text-[10px] text-amber-500/80 tracking-wide mb-10">
-          ※ 테스트 결제 환경 (실제 결제 발생 안 함)
         </p>
 
         <motion.form
@@ -244,12 +251,13 @@ const CheckoutPage = () => {
                 </div>
                 <div>
                   <label className="block text-[10px] font-bold tracking-widest uppercase text-white/50 mb-2">주소</label>
-                  <input
-                    type="text"
-                    value={shippingAddress}
-                    onChange={(e) => setShippingAddress(e.target.value)}
-                    placeholder="배송 주소"
-                    className="w-full bg-neutral-900/50 border border-white/5 px-4 py-3 text-[11px] text-white outline-none focus:border-purple-500/50 placeholder:text-neutral-600"
+                  <AddressInput
+                    addressValue={shippingAddress}
+                    onAddressChange={setShippingAddress}
+                    detailValue={shippingAddressDetail}
+                    onDetailChange={setShippingAddressDetail}
+                    addressPlaceholder="기본 주소 (주소 찾기)"
+                    detailPlaceholder="상세 주소 (동, 호수 등)"
                   />
                 </div>
                 <div>

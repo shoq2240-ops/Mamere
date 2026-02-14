@@ -75,8 +75,8 @@
   100% { transform: translate(5%, 0); }
 }
 
-/* 마키: 좌측 무한 스크롤 (동일 텍스트 2개 기준, 한 블록 너비만큼 이동 후 루프) */
+/* 마키: 오른쪽 끝에서 시작하여 좌측 무한 스크롤 */
 @keyframes marquee-scroll {
-  from { transform: translateX(0); }
-  to { transform: translateX(-50%); }
+  from { transform: translateX(calc(100vw - 100%)); }
+  to { transform: translateX(calc(100vw - 150%)); }
 }
