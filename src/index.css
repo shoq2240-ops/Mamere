@@ -3,7 +3,28 @@
 @tailwind utilities;
 
 @layer base {
-  /* 미니멀리즘 기본 설정 */
+  /* ========================================
+     우영미 스타일 가이드 (Wooyoungmi Style Guide)
+     ========================================
+     - 폰트: Pretendard / Noto Sans KR (Light 300)
+     - 자간: 0.05em ~ 0.08em
+     - 정렬: 왼쪽 정렬 또는 정교한 중앙 정렬
+     - 색상: 정제된 검정 #1a1a1a, 연한 회색 #525252
+  */
+  :root {
+    --font-sans: 'Pretendard', 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-weight-light: 300;
+    --font-weight-regular: 400;
+    --font-weight-medium: 500;
+    --text-on-dark: rgba(232, 232, 232, 0.98);
+    --text-on-dark-muted: rgba(232, 232, 232, 0.7);
+    --text-on-dark-subtle: rgba(232, 232, 232, 0.5);
+    --text-on-light: #1a1a1a;
+    --text-on-light-muted: #525252;
+    --letter-spacing-elegant: 0.05em;
+    --letter-spacing-wide: 0.08em;
+  }
+
   * {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -11,14 +32,18 @@
 
   html {
     @apply bg-black text-white;
-    font-family: 'Noto Sans KR', sans-serif;
+    font-family: var(--font-sans);
+    font-weight: var(--font-weight-light);
+    color: var(--text-on-dark);
+    letter-spacing: var(--letter-spacing-elegant);
     overflow-x: hidden;
     height: 100%;
   }
 
   body {
-    @apply bg-black text-white;
     font-family: inherit;
+    color: inherit;
+    letter-spacing: inherit;
     overflow-x: hidden;
     height: 100%;
     margin: 0;
@@ -27,6 +52,14 @@
   #root {
     min-height: 100%;
     overflow-x: hidden;
+  }
+
+  /* 우영미 스타일 유틸리티 */
+  .font-elegant {
+    letter-spacing: 0.05em;
+  }
+  .font-italic-accent {
+    font-style: italic;
   }
 
   /* 선택 영역 스타일 */
@@ -45,6 +78,13 @@
   .no-scrollbar {
     -ms-overflow-style: none;
     scrollbar-width: none;
+  }
+
+  /* 모바일: 우영미 스타일 유지 */
+  @media (max-width: 768px) {
+    html {
+      font-size: 15px;
+    }
   }
 }
 

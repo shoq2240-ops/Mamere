@@ -7,7 +7,11 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['Noto Sans KR', 'sans-serif'],
+        sans: ['Pretendard', 'Noto Sans KR', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+      },
+      fontWeight: {
+        light: '300',
+        'woo-medium': '500',
       },
       colors: {
         primary: {
@@ -24,6 +28,7 @@ export default {
         },
       },
       letterSpacing: {
+        'elegant': '0.05em',
         'extra-wide': '0.2em',
         'ultra-wide': '0.3em',
         'mega-wide': '0.5em',

@@ -58,11 +58,11 @@ const ShopPage = ({ category }) => {
         <div>
           <h1 className="text-[10px] tracking-mega-wide uppercase text-purple-500 font-bold mb-3 italic">Selection</h1>
           <h2 className="text-4xl md:text-6xl font-black italic tracking-tighter uppercase text-white leading-none">
-            Shop <span className="font-light text-white/40">/ {searchTerm ? 'Result' : category === 'men' ? 'Men' : category === 'women' ? 'Women' : 'All'}</span>
+            Shop <span className="font-light text-white/40">/ 모두 보기</span>
           </h2>
         </div>
         <span className="text-[10px] font-light text-white/30 tracking-extra-wide uppercase mb-2">
-          {loading ? '...' : `${filteredProducts.length} Items Found`}
+          {loading ? '...' : `${filteredProducts.length} 개 상품`}
         </span>
       </div>
 

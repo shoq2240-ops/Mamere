@@ -76,7 +76,7 @@ const LandingPage = () => {
         <div className="px-8 md:px-12 mb-8 flex flex-col md:flex-row md:items-end md:justify-between gap-4">
           <div>
             <p className="text-purple-500 text-[9pt] font-black tracking-widest uppercase italic mb-2">Seasonal Focus</p>
-            <h2 className="text-3xl md:text-5xl font-black italic uppercase tracking-tighter leading-none">New Arrivals</h2>
+            <h2 className="text-xl md:text-2xl font-light uppercase tracking-tight leading-none">신상품</h2>
           </div>
           {/* 남성/여성 탭 + 더 많은 상품보기 (선택된 성별만 노출) */}
           <div className="flex items-center gap-6">
@@ -171,10 +171,14 @@ const LandingPage = () => {
         )}
       </section>
 
-      {/* 3. BEST SELLERS (우영미 스타일: 작은 박스) */}
+      {/* 3. 가장 주목 받는 상품 (우영미 스타일) */}
       <section className="py-20 md:py-28 bg-[#080808] border-y border-white/5 relative group/best">
         <div className="px-8 md:px-12 mb-8">
-          <h2 className="text-2xl md:text-3xl font-black italic uppercase tracking-tighter">Most Loved Archive</h2>
+          <h2 className="text-xl md:text-2xl font-light uppercase tracking-tight">가장 주목 받는 상품</h2>
+          {/* [매뉴얼] 아래 DESCRIPTION 수정: 작은 연한 회색 설명 문구. 브랜드 스토리/컬렉션 소개를 자유롭게 작성하세요. */}
+          <p className="mt-3 text-[11px] font-light text-white/50 tracking-[0.05em] leading-relaxed max-w-2xl">
+            두 번의 삭제를 통해 거부하며, 그 과정에서 본연의 형체를 드러냅니다. Double Negative는 일상 속에서 빛나는 감각적인 실루엣을 제안합니다.
+          </p>
         </div>
 
         {loading && (

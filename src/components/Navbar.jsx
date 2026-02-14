@@ -8,8 +8,10 @@ import { supabase } from '../lib/supabase';
 const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [isShopOpen, setIsShopOpen] = useState(false);
+  const [isWomenOpen, setIsWomenOpen] = useState(false);
+  const [isMenOpen, setIsMenOpen] = useState(false);
   const [hoveredMenu, setHoveredMenu] = useState(null);
+  const [accountOpen, setAccountOpen] = useState(false);
   const [searchInput, setSearchInput] = useState("");
   const { cartCount } = useCart();
   const { email, isLoggedIn } = useAuth();
@@ -23,7 +25,8 @@ const Navbar = () => {
 
   const handleMenuClick = (path) => {
     setIsMobileMenuOpen(false);
-    setIsShopOpen(false);
+    setIsWomenOpen(false);
+    setIsMenOpen(false);
     setHoveredMenu(null);
     navigate(path);
   };
@@ -37,31 +40,26 @@ const Navbar = () => {
     }
   };
 
-  // 메뉴 데이터 구조 (하위 카테고리 포함)
+  // 메뉴 데이터 구조: 여성, 남성, 컬렉션, 스토리 (호버 시 모두 보기, 신상품)
   const navLinks = [
     { 
-      name: 'Shop', 
-      path: '/shop',
+      name: '여성', 
+      path: '/shop/women',
       sub: [
-        { name: 'Men', path: '/shop/men' },
-        { name: 'Women', path: '/shop/women' },
-        { name: 'Archive', path: '/shop' }
+        { name: '모두 보기', path: '/shop/women' },
+        { name: '신상품', path: '/shop/women' }
       ]
     },
     { 
-      name: 'Collection', 
-      path: '/collection',
+      name: '남성', 
+      path: '/shop/men',
       sub: [
-        { name: '2026 SS', path: '/collection/26ss' },
-        { name: '2025 AW', path: '/collection/25aw' }
+        { name: '모두 보기', path: '/shop/men' },
+        { name: '신상품', path: '/shop/men' }
       ]
     },
-    { 
-      name: 'Lookbook', 
-      path: '/lookbook',
-
-    },
-    { name: 'Philosophy', path: '/philosophy' },
+    { name: '컬렉션', path: '/collection' },
+    { name: '스토리', path: '/philosophy' },
   ];
 
   const logoVariants = {
@@ -95,18 +93,18 @@ const Navbar = () => {
                 >
                   <Link to={link.path} className="hover:text-purple-500 transition-all">{link.name}</Link>
                   
-                  {/* 데스크톱 하위 메뉴 드롭다운 */}
+                  {/* 데스크톱 하위 메뉴 드롭다운 (흰 배경, 얇은 언더라인) */}
                   <AnimatePresence>
                     {hoveredMenu === link.name && link.sub && (
                       <motion.div 
                         initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 5 }}
-                        className="absolute top-full left-0 min-w-[120px] bg-black/90 border border-white/10 py-4 px-6 flex flex-col gap-3 backdrop-blur-md"
+                        className="absolute top-full left-0 min-w-[140px] bg-white py-4 px-6 flex flex-col gap-3"
                       >
                         {link.sub.map((sub) => (
                           <Link 
                             key={sub.name} 
                             to={sub.path} 
-                            className="text-[9px] font-bold text-white/40 hover:text-purple-500 transition-colors tracking-extra-wide"
+                            className="text-[9pt] font-light text-black/70 hover:text-black border-b border-black/10 hover:border-black/30 transition-colors tracking-[0.08em] uppercase"
                           >
                             {sub.name}
                           </Link>
@@ -131,24 +129,43 @@ const Navbar = () => {
           </Link>
 
           <div className="ml-auto flex items-center gap-4 md:gap-2 z-[210]">
-            {isLoggedIn ? (
-              <>
-                <Link to="/orders" className="hidden md:block text-[11px] font-light tracking-widest uppercase mr-4 hover:text-purple-500 transition-all">
-                  주문내역
+            {/* 계정 영역: 로그인 시 MY PAGE, 비로그인 시 사람 아이콘 */}
+            <div className="hidden md:block relative">
+              {isLoggedIn ? (
+                <>
+                  <button
+                    onClick={() => setAccountOpen(!accountOpen)}
+                    className="text-[10px] font-light tracking-[0.15em] uppercase hover:text-purple-500 transition-all"
+                  >
+                    MY PAGE
+                  </button>
+                  <AnimatePresence>
+                    {accountOpen && (
+                      <>
+                        <div className="fixed inset-0 z-[105]" onClick={() => setAccountOpen(false)} aria-hidden="true" />
+                        <motion.div
+                          initial={{ opacity: 0, y: -8 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -8 }}
+                          className="absolute right-0 top-full mt-2 py-4 px-6 bg-black/95 border border-white/10 min-w-[160px] z-[120] flex flex-col gap-3"
+                        >
+                          <Link to="/orders" onClick={() => setAccountOpen(false)} className="text-[10px] font-light text-white/70 hover:text-white transition-colors tracking-[0.15em] uppercase">ORDERS</Link>
+                          <Link to="/profile" onClick={() => setAccountOpen(false)} className="text-[10px] font-light text-white/70 hover:text-white transition-colors tracking-[0.15em] uppercase">PROFILE</Link>
+                          <button type="button" onClick={() => { handleLogout(); setAccountOpen(false); }} className="text-[10px] font-light text-white/70 hover:text-purple-500 transition-colors tracking-[0.15em] uppercase text-left">LOGOUT</button>
+                        </motion.div>
+                      </>
+                    )}
+                  </AnimatePresence>
+                </>
+              ) : (
+                <Link to="/login" className="flex items-center justify-center w-10 h-10 hover:text-purple-500 transition-colors">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="1.2" viewBox="0 0 24 24">
+                    <circle cx="12" cy="8" r="3.5" stroke="currentColor" />
+                    <path d="M6 21c0-4 2.5-7 6-7s6 3 6 7" stroke="currentColor" strokeLinecap="round" />
+                  </svg>
                 </Link>
-                <Link to="/profile" className="hidden md:block text-[11px] font-light tracking-widest uppercase mr-4 hover:text-purple-500 transition-all">
-                  Profile
-                </Link>
-                <span className="hidden md:block text-[10px] font-light tracking-widest uppercase mr-2 text-white/70 truncate max-w-[140px]" title={email}>
-                  {email}
-                </span>
-                <button type="button" onClick={handleLogout} className="hidden md:block text-[11px] font-light tracking-widest uppercase mr-4 hover:text-purple-500 transition-all">
-                  Logout
-                </button>
-              </>
-            ) : (
-              <Link to="/login" className="hidden md:block text-[11px] font-light tracking-widest uppercase mr-6 hover:text-purple-500 transition-all">Account</Link>
-            )}
+              )}
+            </div>
             <button onClick={() => { setIsSearchOpen(true); setIsMobileMenuOpen(false); }} className="w-10 h-10 ml-2 flex items-center justify-center hover:text-purple-500 transition-colors">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" /></svg>
             </button>
@@ -174,37 +191,42 @@ const Navbar = () => {
         {isMobileMenuOpen && (
           <motion.div initial={{ x: "-100%" }} animate={{ x: 0 }} exit={{ x: "-100%" }} transition={{ type: "spring", damping: 25, stiffness: 200 }} className="fixed inset-0 bg-black z-[200] flex flex-col pt-24 pb-12 px-10 text-white md:hidden">
             <div className="mb-10 text-left">
-              <button onClick={() => isShopOpen ? setIsShopOpen(false) : setIsMobileMenuOpen(false)} className="flex items-center gap-2 text-[12px] font-light tracking-ultra-wide uppercase text-white/40">
-                <span className="text-xl">←</span> {isShopOpen ? 'Back to Menu' : 'Back'}
+              <button onClick={() => (isWomenOpen || isMenOpen) ? (setIsWomenOpen(false), setIsMenOpen(false)) : setIsMobileMenuOpen(false)} className="flex items-center gap-2 text-[12px] font-light tracking-ultra-wide uppercase text-white/40">
+                <span className="text-xl">←</span> {(isWomenOpen || isMenOpen) ? 'Back to Menu' : 'Back'}
               </button>
             </div>
             <div className="flex-1 flex flex-col justify-between">
               <div className="flex flex-col space-y-8">
-                <div>
-                  <button onClick={() => setIsShopOpen(!isShopOpen)} className="text-5xl font-bold tracking-tighter uppercase text-left flex items-center justify-between w-full">
-                    Shop <span className="text-2xl font-light opacity-20">{isShopOpen ? '−' : '+'}</span>
-                  </button>
-                  <AnimatePresence>
-                    {isShopOpen && (
-                      <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="flex flex-col space-y-6 mt-8 ml-4 border-l border-purple-500/20 pl-6 text-left text-3xl font-light uppercase text-white/80">
-                        <button onClick={() => handleMenuClick('/shop/men')}>Men</button>
-                        <button onClick={() => handleMenuClick('/shop/women')}>Women</button>
-                      </motion.div>
+                {navLinks.map((item) => (
+                  <div key={item.name}>
+                    {item.sub ? (
+                      <>
+                        <button onClick={() => { setIsWomenOpen(item.name === '여성' ? !isWomenOpen : false); setIsMenOpen(item.name === '남성' ? !isMenOpen : false); }} className="text-5xl font-bold tracking-tighter uppercase text-left flex items-center justify-between w-full hover:text-purple-500">
+                          {item.name} <span className="text-2xl font-light opacity-20">{(item.name === '여성' ? isWomenOpen : isMenOpen) ? '−' : '+'}</span>
+                        </button>
+                        <AnimatePresence>
+                          {(item.name === '여성' ? isWomenOpen : isMenOpen) && (
+                            <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="flex flex-col space-y-6 mt-8 ml-4 border-l border-purple-500/20 pl-6 text-left text-3xl font-light uppercase text-white/80">
+                              {item.sub.map((sub) => (
+                                <button key={sub.name} onClick={() => handleMenuClick(sub.path)}>{sub.name}</button>
+                              ))}
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </>
+                    ) : (
+                      <button onClick={() => handleMenuClick(item.path)} className="text-5xl font-bold tracking-tighter uppercase text-left hover:text-purple-500">{item.name}</button>
                     )}
-                  </AnimatePresence>
-                </div>
-                {navLinks.slice(1).map((item) => (
-                  <button key={item.name} onClick={() => handleMenuClick(item.path)} className="text-5xl font-bold tracking-tighter uppercase text-left hover:text-purple-500">{item.name}</button>
+                  </div>
                 ))}
               </div>
               <div className="mt-auto pt-12 border-t border-white/10 flex flex-col space-y-6 text-[14px]">
                 <button onClick={() => handleMenuClick('/cart')} className="font-bold tracking-extra-wide uppercase text-purple-500 flex justify-between">Shopping Bag <span>[{cartCount}]</span></button>
                 {isLoggedIn ? (
                   <>
-                    <button onClick={() => handleMenuClick('/orders')} className="font-light tracking-extra-wide uppercase text-white/60 text-left">주문내역</button>
-                    <button onClick={() => handleMenuClick('/profile')} className="font-light tracking-extra-wide uppercase text-white/60 text-left">Profile</button>
-                    <p className="font-light tracking-extra-wide uppercase text-white/60 text-left text-[12px] truncate" title={email}>{email}</p>
-                    <button onClick={handleLogout} className="font-light tracking-extra-wide uppercase text-white/40 text-left">Logout</button>
+                    <button onClick={() => handleMenuClick('/orders')} className="font-light tracking-[0.15em] uppercase text-white/60 text-left" style={{ fontWeight: 300 }}>ORDERS</button>
+                    <button onClick={() => handleMenuClick('/profile')} className="font-light tracking-[0.15em] uppercase text-white/60 text-left" style={{ fontWeight: 300 }}>PROFILE</button>
+                    <button onClick={handleLogout} className="font-light tracking-[0.15em] uppercase text-white/40 text-left" style={{ fontWeight: 300 }}>LOGOUT</button>
                   </>
                 ) : (
                   <>
