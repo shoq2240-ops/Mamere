@@ -1,10 +1,28 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useCart } from '../store/CartContext';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
+
+const parsePrice = (price) => {
+  if (typeof price === 'number') return price;
+  if (typeof price === 'string') {
+    const num = parseInt(price.replace(/[^\d]/g, ''), 10);
+    return isNaN(num) ? 0 : num;
+  }
+  return 0;
+};
 
 const CartPage = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [showOrderSuccess, setShowOrderSuccess] = useState(false);
   const { cart, removeFromCart, updateQuantity, cartCount } = useCart();
-  const totalPrice = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  const totalPrice = cart.reduce((sum, item) => sum + parsePrice(item.price) * item.quantity, 0);
+
+  useEffect(() => {
+    if (searchParams.get('order') === 'success') {
+      setShowOrderSuccess(true);
+      setSearchParams({}, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
 
   return (
     <div className="pt-32 pb-20 px-6 min-h-screen bg-black text-white antialiased">
@@ -12,6 +30,12 @@ const CartPage = () => {
         <h1 className="text-4xl font-black italic tracking-tighter uppercase mb-12">
           Your <span className="text-purple-500">Archive</span> [{cartCount}]
         </h1>
+
+        {showOrderSuccess && (
+          <div className="mb-8 p-4 border border-purple-500/30 bg-purple-950/20 text-center">
+            <p className="text-purple-400 text-sm font-medium">결제가 완료되었습니다.</p>
+          </div>
+        )}
 
         {cart.length === 0 ? (
           <div className="py-20 text-center border-t border-white/10">
@@ -33,7 +57,7 @@ const CartPage = () => {
                       <h3 className="text-lg font-bold tracking-tight uppercase">{item.name}</h3>
                       <button onClick={() => removeFromCart(item.id)} className="text-[10px] uppercase text-white/30 hover:text-purple-500">Remove</button>
                     </div>
-                    <p className="text-purple-500 text-sm mt-1">₩{item.price?.toLocaleString()}</p>
+                    <p className="text-purple-500 text-sm mt-1">₩{parsePrice(item.price).toLocaleString()}</p>
                   </div>
                   <div className="flex items-center gap-4 mt-4">
                     <button onClick={() => updateQuantity(item.id, -1)} className="w-6 h-6 border border-white/20 flex items-center justify-center text-xs">-</button>
@@ -48,9 +72,12 @@ const CartPage = () => {
                 <span className="text-xs uppercase tracking-widest text-white/40">Total Amount</span>
                 <span className="text-2xl font-black italic text-purple-500">₩{totalPrice.toLocaleString()}</span>
               </div>
-              <button className="w-full bg-purple-600 py-4 font-black italic uppercase tracking-widest hover:bg-purple-500 transition-colors">
+              <Link
+                to="/checkout"
+                className="block w-full bg-purple-600 py-4 font-black italic uppercase tracking-widest hover:bg-purple-500 transition-colors text-center"
+              >
                 Proceed to Checkout
-              </button>
+              </Link>
             </div>
           </div>
         )}

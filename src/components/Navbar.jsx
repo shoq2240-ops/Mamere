@@ -1,16 +1,25 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useCart } from '../store/CartContext'; 
+import { useCart } from '../store/CartContext';
+import { useAuth } from '../store/AuthContext';
+import { supabase } from '../lib/supabase';
 
 const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [isShopOpen, setIsShopOpen] = useState(false); // 모바일 아코디언용
-  const [hoveredMenu, setHoveredMenu] = useState(null); // 데스크톱 드롭다운용
+  const [isShopOpen, setIsShopOpen] = useState(false);
+  const [hoveredMenu, setHoveredMenu] = useState(null);
   const [searchInput, setSearchInput] = useState("");
   const { cartCount } = useCart();
+  const { email, isLoggedIn } = useAuth();
   const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    setIsMobileMenuOpen(false);
+    navigate('/', { replace: true });
+  };
 
   const handleMenuClick = (path) => {
     setIsMobileMenuOpen(false);
@@ -65,7 +74,7 @@ const Navbar = () => {
 
   return (
     <div className="antialiased" onMouseLeave={() => setHoveredMenu(null)}>
-      <nav className="fixed top-0 left-0 w-full z-[110] bg-black/80 backdrop-blur-xl border-b border-white/5 text-white">
+      <nav className="relative w-full z-[110] bg-black/80 backdrop-blur-xl border-b border-white/5 text-white">
         <div className="max-w-[1800px] mx-auto h-20 flex items-center px-8 relative">
           
           <div className="flex items-center gap-16">
@@ -121,8 +130,22 @@ const Navbar = () => {
             Double <span className="text-purple-500">Negative</span>
           </Link>
 
-          <div className="ml-auto flex items-center gap-4 md:gap-2 z-[210]"> 
-            <Link to="/login" className="hidden md:block text-[11px] font-light tracking-widest uppercase mr-6 hover:text-purple-500 transition-all">Account</Link>
+          <div className="ml-auto flex items-center gap-4 md:gap-2 z-[210]">
+            {isLoggedIn ? (
+              <>
+                <Link to="/profile" className="hidden md:block text-[11px] font-light tracking-widest uppercase mr-4 hover:text-purple-500 transition-all">
+                  Profile
+                </Link>
+                <span className="hidden md:block text-[10px] font-light tracking-widest uppercase mr-2 text-white/70 truncate max-w-[140px]" title={email}>
+                  {email}
+                </span>
+                <button type="button" onClick={handleLogout} className="hidden md:block text-[11px] font-light tracking-widest uppercase mr-4 hover:text-purple-500 transition-all">
+                  Logout
+                </button>
+              </>
+            ) : (
+              <Link to="/login" className="hidden md:block text-[11px] font-light tracking-widest uppercase mr-6 hover:text-purple-500 transition-all">Account</Link>
+            )}
             <button onClick={() => { setIsSearchOpen(true); setIsMobileMenuOpen(false); }} className="w-10 h-10 ml-2 flex items-center justify-center hover:text-purple-500 transition-colors">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" /></svg>
             </button>
@@ -173,8 +196,18 @@ const Navbar = () => {
               </div>
               <div className="mt-auto pt-12 border-t border-white/10 flex flex-col space-y-6 text-[14px]">
                 <button onClick={() => handleMenuClick('/cart')} className="font-bold tracking-extra-wide uppercase text-purple-500 flex justify-between">Shopping Bag <span>[{cartCount}]</span></button>
-                <button onClick={() => handleMenuClick('/login')} className="font-light tracking-extra-wide uppercase text-white/40 text-left">Login</button>
-                <button onClick={() => handleMenuClick('/signup')} className="font-light tracking-extra-wide uppercase text-white/40 text-left">Join Now</button>
+                {isLoggedIn ? (
+                  <>
+                    <button onClick={() => handleMenuClick('/profile')} className="font-light tracking-extra-wide uppercase text-white/60 text-left">Profile</button>
+                    <p className="font-light tracking-extra-wide uppercase text-white/60 text-left text-[12px] truncate" title={email}>{email}</p>
+                    <button onClick={handleLogout} className="font-light tracking-extra-wide uppercase text-white/40 text-left">Logout</button>
+                  </>
+                ) : (
+                  <>
+                    <button onClick={() => handleMenuClick('/login')} className="font-light tracking-extra-wide uppercase text-white/40 text-left">Login</button>
+                    <button onClick={() => handleMenuClick('/signup')} className="font-light tracking-extra-wide uppercase text-white/40 text-left">Join Now</button>
+                  </>
+                )}
               </div>
             </div>
           </motion.div>

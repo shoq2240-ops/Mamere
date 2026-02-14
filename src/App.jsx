@@ -1,11 +1,12 @@
-import React, { useState } from "react"; // 👈 useState 추가
+import React, { useState } from "react";
 import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import { CartProvider, useCart } from "./store/CartContext"; // 👈 useCart 추가
-import ScrollToTop from "./components/ScrollToTop"; // 👈 추가
+import { CartProvider, useCart } from "./store/CartContext";
+import { AuthProvider } from "./store/AuthContext";
+import ScrollToTop from "./components/ScrollToTop";
 
-// 컴포넌트 및 페이지 임포트
 import Navbar from "./components/Navbar";
+import Marquee from "./components/Marquee";
 import Footer from './components/Footer';
 import LandingPage from "./pages/LandingPage";
 import PhilosophyPage from './pages/PhilosophyPage';
@@ -14,7 +15,10 @@ import LookbookPage from "./pages/LookbookPage";
 import ProductDetail from "./pages/ProductDetail";
 import CollectionPage from './pages/CollectionPage';
 import LoginPage from './pages/LoginPage';
+import SignupPage from './pages/SignupPage';
+import ProfilePage from './pages/ProfilePage';
 import CartPage from './pages/CartPage';
+import CheckoutPage from './pages/CheckoutPage';
 
 const AnimatedRoutes = () => {
   const location = useLocation();
@@ -32,7 +36,10 @@ const AnimatedRoutes = () => {
         <Route path="/product/:id" element={<PageWrapper><ProductDetail /></PageWrapper>} />
         <Route path="/collection" element={<PageWrapper><CollectionPage /></PageWrapper>} />
         <Route path="/login" element={<PageWrapper><LoginPage /></PageWrapper>} />
+        <Route path="/signup" element={<PageWrapper><SignupPage /></PageWrapper>} />
+        <Route path="/profile" element={<PageWrapper><ProfilePage /></PageWrapper>} />
         <Route path="/cart" element={<PageWrapper><CartPage /></PageWrapper>} />
+        <Route path="/checkout" element={<PageWrapper><CheckoutPage /></PageWrapper>} />
         
         {/* 카테고리별 쇼핑 페이지 */}
         <Route path="/shop/men" element={<PageWrapper><ShopPage category="men" /></PageWrapper>} />
@@ -64,16 +71,23 @@ const PageWrapper = ({ children }) => (
 
 function App() {
   return (
-    <CartProvider>
-      <Router>
-        <ScrollToTop />
-        <div className="bg-black text-white min-h-screen antialiased">
-          <Navbar />
-          <AnimatedRoutes />
-          <Footer />
-        </div>
-      </Router>
-    </CartProvider>
+    <AuthProvider>
+      <CartProvider>
+        <Router>
+          <ScrollToTop />
+          <div className="flex flex-col min-h-screen bg-black text-white antialiased overflow-y-auto overflow-x-hidden">
+            <header className="sticky top-0 z-[100] flex flex-col flex-none shrink-0">
+              <Marquee />
+              <Navbar />
+            </header>
+            <main className="flex-1 shrink-0">
+              <AnimatedRoutes />
+              <Footer />
+            </main>
+          </div>
+        </Router>
+      </CartProvider>
+    </AuthProvider>
   );
 }
 

@@ -9,10 +9,15 @@
     -moz-osx-font-smoothing: grayscale;
   }
 
-  body {
+  html, body {
     @apply bg-black text-white;
     font-family: 'Noto Sans KR', sans-serif;
     overflow-x: hidden;
+    height: 100%;
+  }
+
+  #root {
+    min-height: 100%;
   }
 
   /* 선택 영역 스타일 */
@@ -68,4 +73,10 @@
   80% { transform: translate(-15%, 0); }
   90% { transform: translate(10%, 5%); }
   100% { transform: translate(5%, 0); }
+}
+
+/* 마키: 좌측 무한 스크롤 (동일 텍스트 2개 기준, 한 블록 너비만큼 이동 후 루프) */
+@keyframes marquee-scroll {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
 }
