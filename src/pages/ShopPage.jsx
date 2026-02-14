@@ -5,8 +5,8 @@ import { useCart } from '../store/CartContext';
 import { useProducts } from '../hooks/useProducts';
 import { ProductGridSkeleton, LoadingMessage } from '../components/ProductSkeleton'; 
 
-// 데이터 소스: Supabase products 테이블만 사용. 더미/로컬 데이터 없음.
-const ShopPage = () => {
+// 데이터 소스: Supabase products 테이블만 사용. category = 'men' | 'women' 시 해당 카테고리만 필터.
+const ShopPage = ({ category }) => {
   const { addToCart } = useCart();
   const navigate = useNavigate();
   
@@ -22,9 +22,11 @@ const ShopPage = () => {
     setSearchTerm(query);
   }, [query]);
 
-  const filteredProducts = products.filter(product =>
-    product.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // 1) 카테고리 필터: category가 있으면 Supabase products.category와 일치하는 것만
+  // 2) 검색어 필터: product.name에 searchTerm 포함
+  const filteredProducts = products
+    .filter(product => !category || (product.category && product.category.toLowerCase() === category.toLowerCase()))
+    .filter(product => product.name.toLowerCase().includes(searchTerm.toLowerCase()));
 
   // 팝업을 띄우는 핵심 함수
   const handleAddToCart = (product) => {
@@ -56,7 +58,7 @@ const ShopPage = () => {
         <div>
           <h1 className="text-[10px] tracking-mega-wide uppercase text-purple-500 font-bold mb-3 italic">Selection</h1>
           <h2 className="text-4xl md:text-6xl font-black italic tracking-tighter uppercase text-white leading-none">
-            Shop <span className="font-light text-white/40">/ {searchTerm ? 'Result' : 'All'}</span>
+            Shop <span className="font-light text-white/40">/ {searchTerm ? 'Result' : category === 'men' ? 'Men' : category === 'women' ? 'Women' : 'All'}</span>
           </h2>
         </div>
         <span className="text-[10px] font-light text-white/30 tracking-extra-wide uppercase mb-2">
@@ -112,9 +114,23 @@ const ShopPage = () => {
           <div className="col-span-full py-40 text-center space-y-4 px-6">
             <p className="text-[12px] font-bold tracking-mega-wide text-purple-500 uppercase">Archive Empty</p>
             <p className="text-[11px] font-light tracking-extra-wide text-white/30 uppercase leading-relaxed break-keep">
-              찾으시는 제품 "{searchTerm}"이(가) 현재 아카이브에 존재하지 않습니다.
+              {searchTerm
+                ? `찾으시는 제품 "${searchTerm}"이(가) 현재 아카이브에 존재하지 않습니다.`
+                : category === 'men'
+                  ? '남성 카테고리에 등록된 제품이 없습니다.'
+                  : category === 'women'
+                    ? '여성 카테고리에 등록된 제품이 없습니다.'
+                    : '등록된 제품이 없습니다.'}
             </p>
-            <button onClick={() => { setSearchTerm(""); setSearchParams({}); }} className="mt-6 text-[10px] border-b border-white/20 pb-1 text-white/50 hover:text-white transition-colors uppercase tracking-widest">Show All Products</button>
+            {category ? (
+              <Link to="/shop" className="mt-6 inline-block text-[10px] border-b border-white/20 pb-1 text-white/50 hover:text-white transition-colors uppercase tracking-widest">
+                Show All Products
+              </Link>
+            ) : (
+              <button onClick={() => { setSearchTerm(""); setSearchParams({}); }} className="mt-6 text-[10px] border-b border-white/20 pb-1 text-white/50 hover:text-white transition-colors uppercase tracking-widest">
+                Show All Products
+              </button>
+            )}
           </div>
         )}
         </div>
