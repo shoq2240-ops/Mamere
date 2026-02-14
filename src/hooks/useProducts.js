@@ -15,10 +15,6 @@ export const useProducts = () => {
         .select('*')
         .order('created_at', { ascending: false });
 
-      // 배포 환경에서 Supabase 응답 확인용 (브라우저 콘솔에서 확인)
-      console.log('[Supabase products] data:', data);
-      console.log('[Supabase products] error:', error);
-
       if (error) throw error;
 
       // 가격 포맷팅 (Supabase에서는 숫자로 저장, UI에서는 ₩890,000 형식으로 표시)
@@ -54,9 +50,7 @@ export const useProducts = () => {
           schema: 'public',
           table: 'products'
         },
-        (payload) => {
-          console.log('📦 제품 데이터 변경 감지:', payload);
-          // 데이터 변경 시 새로고침
+        () => {
           fetchProducts();
         }
       )

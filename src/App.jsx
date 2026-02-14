@@ -19,6 +19,7 @@ import SignupPage from './pages/SignupPage';
 import ProfilePage from './pages/ProfilePage';
 import CartPage from './pages/CartPage';
 import CheckoutPage from './pages/CheckoutPage';
+import OrdersPage from './pages/OrdersPage';
 
 const AnimatedRoutes = () => {
   const location = useLocation();
@@ -40,6 +41,7 @@ const AnimatedRoutes = () => {
         <Route path="/profile" element={<PageWrapper><ProfilePage /></PageWrapper>} />
         <Route path="/cart" element={<PageWrapper><CartPage /></PageWrapper>} />
         <Route path="/checkout" element={<PageWrapper><CheckoutPage /></PageWrapper>} />
+        <Route path="/orders" element={<PageWrapper><OrdersPage /></PageWrapper>} />
         
         {/* 카테고리별 쇼핑 페이지 */}
         <Route path="/shop/men" element={<PageWrapper><ShopPage category="men" /></PageWrapper>} />
@@ -75,12 +77,12 @@ function App() {
       <CartProvider>
         <Router>
           <ScrollToTop />
-          <div className="flex flex-col min-h-screen bg-black text-white antialiased overflow-y-auto overflow-x-hidden">
+          <div className="flex flex-col h-screen max-h-[100dvh] bg-black text-white antialiased overflow-hidden flex">
             <header className="sticky top-0 z-[100] flex flex-col flex-none shrink-0">
               <Marquee />
               <Navbar />
             </header>
-            <main className="flex-1 shrink-0">
+            <main className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden">
               <AnimatedRoutes />
               <Footer />
             </main>

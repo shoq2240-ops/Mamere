@@ -34,6 +34,9 @@ const CartPage = () => {
         {showOrderSuccess && (
           <div className="mb-8 p-4 border border-purple-500/30 bg-purple-950/20 text-center">
             <p className="text-purple-400 text-sm font-medium">결제가 완료되었습니다.</p>
+            <Link to="/orders" className="mt-2 inline-block text-[10px] font-bold tracking-widest uppercase text-purple-500 hover:text-purple-400">
+              주문 내역 확인 →
+            </Link>
           </div>
         )}
 

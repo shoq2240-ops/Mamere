@@ -36,7 +36,8 @@ const CheckoutPage = () => {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
 
-  const totalAmount = cart.reduce((sum, item) => sum + parsePrice(item.price) * item.quantity, 0);
+  // 클라이언트 기준 표시용 합계 (UI용)
+  const displayTotal = cart.reduce((sum, item) => sum + parsePrice(item.price) * item.quantity, 0);
 
   // 비로그인 → 로그인 페이지
   useEffect(() => {
@@ -113,6 +114,38 @@ const CheckoutPage = () => {
     setSubmitting(true);
     setError('');
 
+    // [보안] products 테이블에서 실제 가격 조회 후 총액 검증 (클라이언트 조작 방지)
+    const cartIds = [...new Set(cart.map((i) => i.id))];
+    const { data: serverProducts, error: productsError } = await publicTable('products')
+      .select('id, price, name')
+      .in('id', cartIds);
+
+    if (productsError) {
+      setSubmitting(false);
+      setError('상품 정보를 불러올 수 없습니다. ' + productsError.message);
+      return;
+    }
+
+    const priceMap = Object.fromEntries((serverProducts ?? []).map((p) => [p.id, p.price]));
+    const missingIds = cartIds.filter((id) => priceMap[id] == null);
+    if (missingIds.length > 0) {
+      setSubmitting(false);
+      setError('장바구니에 유효하지 않은 상품이 포함되어 있습니다. 장바구니를 비우고 다시 시도해주세요.');
+      return;
+    }
+
+    // 서버 가격 기준으로 총액 계산
+    const totalAmount = cart.reduce(
+      (sum, item) => sum + (priceMap[item.id] ?? 0) * Math.max(1, item.quantity),
+      0
+    );
+
+    if (totalAmount <= 0) {
+      setSubmitting(false);
+      setError('결제할 상품이 없습니다.');
+      return;
+    }
+
     if (saveAsDefault && user?.id) {
       const { error: profileError } = await publicTable('profiles').upsert(
         {
@@ -130,11 +163,12 @@ const CheckoutPage = () => {
       }
     }
 
+    // 주문 저장 시 서버 가격 사용 (클라이언트 조작 방지)
     const items = cart.map((item) => ({
       id: item.id,
       name: item.name,
-      price: parsePrice(item.price),
-      quantity: item.quantity,
+      price: priceMap[item.id] ?? parsePrice(item.price),
+      quantity: Math.max(1, item.quantity),
       image: item.image,
     }));
 
@@ -302,7 +336,7 @@ const CheckoutPage = () => {
             </ul>
             <div className="flex justify-between items-center border-t border-white/10 pt-4">
               <span className="text-[11px] font-bold tracking-widest uppercase text-white/70">총 결제 금액</span>
-              <span className="text-xl font-black italic text-purple-500">₩{totalAmount.toLocaleString()}</span>
+              <span className="text-xl font-black italic text-purple-500">₩{displayTotal.toLocaleString()}</span>
             </div>
           </section>
 

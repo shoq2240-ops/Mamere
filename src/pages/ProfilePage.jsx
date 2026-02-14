@@ -171,7 +171,13 @@ const ProfilePage = () => {
           </form>
         )}
 
-        <div className="mt-8 text-center">
+        <div className="mt-8 flex justify-center gap-6">
+          <Link
+            to="/orders"
+            className="text-[10px] font-bold tracking-widest uppercase text-purple-500 hover:text-purple-400 transition-colors"
+          >
+            주문 내역
+          </Link>
           <Link
             to="/"
             className="text-[10px] font-light tracking-widest uppercase text-white/40 hover:text-purple-500 transition-colors"

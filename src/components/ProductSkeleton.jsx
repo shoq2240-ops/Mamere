@@ -44,19 +44,25 @@ export const ProductGridSkeleton = ({ count = 8 }) => (
   </div>
 );
 
-// 캐러셀용 스켈레톤 (Landing New Arrivals)
-export const ProductCarouselSkeleton = ({ count = 6, variant = 'large' }) => (
-  <div className={`flex gap-12 px-12 overflow-hidden ${variant === 'large' ? 'gap-12' : 'gap-6'}`}>
-    {Array.from({ length: count }).map((_, i) => (
-      <div
-        key={i}
-        className={`flex-shrink-0 ${variant === 'large' ? 'min-w-[85%] md:min-w-[calc(33.333%-32px)]' : 'min-w-[46%] md:min-w-[calc(16.666%-20px)]'}`}
-      >
-        <ProductCardSkeleton variant={variant === 'large' ? 'default' : 'compact'} />
-      </div>
-    ))}
-  </div>
-);
+// 캐러셀용 스켈레톤 (Landing New Arrivals / Best Sellers)
+export const ProductCarouselSkeleton = ({ count = 6, variant = 'large' }) => {
+  const isLarge = variant === 'large';
+  const isCompact = variant === 'compact';
+  const cardClass = isLarge
+    ? 'min-w-[85%] md:min-w-[calc(33.333%-32px)]'
+    : isCompact
+      ? 'min-w-[42%] sm:min-w-[30%] md:min-w-[calc(25%-18px)]'
+      : 'min-w-[38%] sm:min-w-[28%] md:min-w-[calc(20%-16px)]';
+  return (
+    <div className={`flex gap-6 md:gap-8 px-8 md:px-12 overflow-hidden ${isLarge ? 'gap-12' : ''}`}>
+      {Array.from({ length: count }).map((_, i) => (
+        <div key={i} className={`flex-shrink-0 ${cardClass}`}>
+          <ProductCardSkeleton variant={isLarge ? 'default' : 'compact'} />
+        </div>
+      ))}
+    </div>
+  );
+};
 
 // 로딩 메시지 (미니멀 스타일)
 export const LoadingMessage = () => (

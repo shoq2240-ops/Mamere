@@ -9,15 +9,24 @@
     -moz-osx-font-smoothing: grayscale;
   }
 
-  html, body {
+  html {
     @apply bg-black text-white;
     font-family: 'Noto Sans KR', sans-serif;
     overflow-x: hidden;
     height: 100%;
   }
 
+  body {
+    @apply bg-black text-white;
+    font-family: inherit;
+    overflow-x: hidden;
+    height: 100%;
+    margin: 0;
+  }
+
   #root {
     min-height: 100%;
+    overflow-x: hidden;
   }
 
   /* 선택 영역 스타일 */

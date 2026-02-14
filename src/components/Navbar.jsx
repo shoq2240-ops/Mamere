@@ -75,7 +75,7 @@ const Navbar = () => {
   return (
     <div className="antialiased" onMouseLeave={() => setHoveredMenu(null)}>
       <nav className="relative w-full z-[110] bg-black/80 backdrop-blur-xl border-b border-white/5 text-white">
-        <div className="max-w-[1800px] mx-auto h-20 flex items-center px-8 relative">
+        <div className="max-w-[1800px] mx-auto h-14 flex items-center px-6 relative">
           
           <div className="flex items-center gap-16">
             {/* 로고: 글리치 애니메이션 */}
@@ -86,7 +86,7 @@ const Navbar = () => {
             </motion.div>
 
             {/* 데스크톱 메뉴 */}
-            <div className="hidden md:flex items-center gap-10 text-[11px] font-light tracking-extra-wide uppercase h-20">
+            <div className="hidden md:flex items-center gap-8 text-[9pt] font-light tracking-widest uppercase h-14">
               {navLinks.map((link) => (
                 <div 
                   key={link.name}
@@ -133,6 +133,9 @@ const Navbar = () => {
           <div className="ml-auto flex items-center gap-4 md:gap-2 z-[210]">
             {isLoggedIn ? (
               <>
+                <Link to="/orders" className="hidden md:block text-[11px] font-light tracking-widest uppercase mr-4 hover:text-purple-500 transition-all">
+                  주문내역
+                </Link>
                 <Link to="/profile" className="hidden md:block text-[11px] font-light tracking-widest uppercase mr-4 hover:text-purple-500 transition-all">
                   Profile
                 </Link>
@@ -198,6 +201,7 @@ const Navbar = () => {
                 <button onClick={() => handleMenuClick('/cart')} className="font-bold tracking-extra-wide uppercase text-purple-500 flex justify-between">Shopping Bag <span>[{cartCount}]</span></button>
                 {isLoggedIn ? (
                   <>
+                    <button onClick={() => handleMenuClick('/orders')} className="font-light tracking-extra-wide uppercase text-white/60 text-left">주문내역</button>
                     <button onClick={() => handleMenuClick('/profile')} className="font-light tracking-extra-wide uppercase text-white/60 text-left">Profile</button>
                     <p className="font-light tracking-extra-wide uppercase text-white/60 text-left text-[12px] truncate" title={email}>{email}</p>
                     <button onClick={handleLogout} className="font-light tracking-extra-wide uppercase text-white/40 text-left">Logout</button>

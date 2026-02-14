@@ -20,7 +20,7 @@ const Marquee = ({
 
   return (
     <motion.section
-      className={`relative w-full flex-none overflow-hidden bg-black py-4 border-b border-white/10 ${className}`}
+      className={`relative w-full flex-none overflow-hidden bg-black py-[6px] border-b border-white/10 ${className}`}
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
       initial={{ opacity: 0.98 }}
@@ -28,16 +28,16 @@ const Marquee = ({
       transition={{ duration: 0.3 }}
     >
       <div
-        className="flex w-max gap-[3em]"
+        className="flex w-max gap-[2em]"
         style={{
           animation: `marquee-scroll ${speed}s linear infinite`,
           animationPlayState: isPaused ? 'paused' : 'running',
         }}
       >
-        <span className={`whitespace-nowrap text-base font-semibold tracking-[0.25em] uppercase text-white antialiased select-none ${textClassName}`}>
+        <span className={`whitespace-nowrap text-[9pt] font-medium tracking-[0.2em] uppercase text-white/90 antialiased select-none ${textClassName}`}>
           {text}
         </span>
-        <span className={`whitespace-nowrap text-base font-semibold tracking-[0.25em] uppercase text-white antialiased select-none ${textClassName}`} aria-hidden>
+        <span className={`whitespace-nowrap text-[9pt] font-medium tracking-[0.2em] uppercase text-white/90 antialiased select-none ${textClassName}`} aria-hidden>
           {text}
         </span>
       </div>

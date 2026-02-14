@@ -10,9 +10,12 @@ const LandingPage = () => {
   const { addToCart } = useCart();
   const [showPopup, setShowPopup] = useState(false);
   const [popupItem, setPopupItem] = useState("");
-  
+  const [newArrivalTab, setNewArrivalTab] = useState('men'); // 'men' | 'women'
+
   const { products, loading, error } = useProducts();
-  const newArrivals = products.slice(0, 6); 
+  const menProducts = products.filter((p) => (p.category || '').toLowerCase() === 'men');
+  const womenProducts = products.filter((p) => (p.category || '').toLowerCase() === 'women');
+  const newArrivalsByTab = newArrivalTab === 'men' ? menProducts.slice(0, 12) : womenProducts.slice(0, 12);
   const bestSellers = products.slice(0, 12); 
 
   const newRef = useRef(null);
@@ -68,83 +71,112 @@ const LandingPage = () => {
         </motion.h1>
       </section>
 
-      {/* 2. NEW ARRIVALS (Shop 페이지 디자인 이식) */}
-      <section className="py-40 relative group/new">
-        <div className="px-12 mb-16">
-          <p className="text-purple-500 text-[12px] font-black tracking-mega-wide uppercase italic mb-4">Seasonal Focus</p>
-          <h2 className="text-5xl md:text-7xl font-black italic uppercase tracking-tighter leading-none">New Arrivals</h2>
+      {/* 2. NEW ARRIVALS (우영미 스타일: 작은 박스, 남/여 탭, 더 많은 상품보기) */}
+      <section className="py-24 md:py-32 relative group/new">
+        <div className="px-8 md:px-12 mb-8 flex flex-col md:flex-row md:items-end md:justify-between gap-4">
+          <div>
+            <p className="text-purple-500 text-[9pt] font-black tracking-widest uppercase italic mb-2">Seasonal Focus</p>
+            <h2 className="text-3xl md:text-5xl font-black italic uppercase tracking-tighter leading-none">New Arrivals</h2>
+          </div>
+          {/* 남성/여성 탭 + 더 많은 상품보기 (선택된 성별만 노출) */}
+          <div className="flex items-center gap-6">
+            <div className="flex border-b border-white/20">
+              <button
+                type="button"
+                onClick={() => setNewArrivalTab('men')}
+                className={`px-4 py-2 text-[9pt] font-medium tracking-widest uppercase transition-colors ${
+                  newArrivalTab === 'men' ? 'text-white border-b-2 border-white -mb-[2px]' : 'text-white/50 hover:text-white/80'
+                }`}
+              >
+                남성
+              </button>
+              <button
+                type="button"
+                onClick={() => setNewArrivalTab('women')}
+                className={`px-4 py-2 text-[9pt] font-medium tracking-widest uppercase transition-colors ${
+                  newArrivalTab === 'women' ? 'text-white border-b-2 border-white -mb-[2px]' : 'text-white/50 hover:text-white/80'
+                }`}
+              >
+                여성
+              </button>
+            </div>
+            {newArrivalTab === 'men' ? (
+              <Link to="/shop/men" className="text-[9pt] font-medium tracking-widest uppercase text-white/70 hover:text-white border-b border-white/30 hover:border-white/60 transition-colors whitespace-nowrap">
+                남성 더 많은 상품 보기
+              </Link>
+            ) : (
+              <Link to="/shop/women" className="text-[9pt] font-medium tracking-widest uppercase text-white/70 hover:text-white border-b border-white/30 hover:border-white/60 transition-colors whitespace-nowrap">
+                여성 더 많은 상품 보기
+              </Link>
+            )}
+          </div>
         </div>
 
         {/* 로딩 스켈레톤 */}
         {loading && (
           <div className="relative">
             <LoadingMessage />
-            <ProductCarouselSkeleton count={6} variant="large" />
+            <ProductCarouselSkeleton count={6} variant="compact" />
           </div>
         )}
 
-        {/* DB 연결 실패: 제품 영역 비우고 에러만 표시 */}
+        {/* DB 연결 실패 */}
         {error && (
-          <div className="min-h-[40vh] flex flex-col items-center justify-center px-12 py-24 text-center border border-red-500/20 bg-red-950/10">
+          <div className="min-h-[40vh] flex flex-col items-center justify-center px-8 py-16 text-center border border-red-500/20 bg-red-950/10 mx-8">
             <p className="text-red-500 text-sm font-medium tracking-wide">DB 연결 실패</p>
-            <p className="mt-3 text-xs text-white/60 font-mono max-w-md break-all">{error}</p>
-            <p className="mt-4 text-[10px] text-white/40 uppercase tracking-widest">Supabase URL · ANON KEY · RLS 정책 확인</p>
+            <p className="mt-3 text-[9pt] text-white/60 font-mono max-w-md break-all">{error}</p>
           </div>
         )}
 
-        {/* 제품 목록 */}
-        {!loading && !error && newArrivals.length > 0 && (
+        {/* 제품 목록 (우영미 스타일: 작은 박스, 4열 그리드) */}
+        {!loading && !error && newArrivalsByTab.length > 0 && (
           <>
-            {/* 화살표 컨트롤러 (심플 화살표 유지) */}
-            <button onClick={() => scroll(newRef, 'left')} className="absolute left-6 top-[55%] z-20 opacity-0 group-hover/new:opacity-100 transition-all text-white/50 hover:text-white"><svg className="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="0.5" d="M15 19l-7-7 7-7" /></svg></button>
-            <button onClick={() => scroll(newRef, 'right')} className="absolute right-6 top-[55%] z-20 opacity-0 group-hover/new:opacity-100 transition-all text-white/50 hover:text-white"><svg className="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="0.5" d="M9 5l7 7-7 7" /></svg></button>
+            <button onClick={() => scroll(newRef, 'left')} className="absolute left-4 top-[55%] z-20 opacity-0 group-hover/new:opacity-100 transition-all text-white/50 hover:text-white"><svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="0.5" d="M15 19l-7-7 7-7" /></svg></button>
+            <button onClick={() => scroll(newRef, 'right')} className="absolute right-4 top-[55%] z-20 opacity-0 group-hover/new:opacity-100 transition-all text-white/50 hover:text-white"><svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="0.5" d="M9 5l7 7-7 7" /></svg></button>
 
-            <div ref={newRef} className="flex overflow-x-auto gap-12 px-12 scrollbar-hide snap-x no-scrollbar" style={{ scrollbarWidth: 'none' }}>
-          {newArrivals.map((product) => (
-            <div key={product.id} className="min-w-[85%] md:min-w-[calc(33.333%-32px)] snap-start group relative flex flex-col">
-              <Link to={`/product/${product.id}`}>
-                {/* Shop 페이지와 동일한 이미지 & 버튼 레이아웃 */}
-                <div className="aspect-[3/4] overflow-hidden bg-zinc-900 relative border border-white/5">
-                  <img src={product.image} className="w-full h-full object-cover opacity-90 group-hover:scale-105 transition-all duration-700" alt={product.name} />
-                  
-                  {/* Shop 페이지 디자인: 하단에서 올라오는 흰색 버튼 바 */}
-                  <div 
-                    onClick={(e) => handleAddToCart(product, e)}
-                    className="absolute bottom-0 left-0 right-0 bg-white text-black py-4 text-center text-[11px] font-black tracking-widest translate-y-full group-hover:translate-y-0 transition-transform duration-500 z-30 cursor-pointer"
-                  >
-                    ADD TO CART +
-                  </div>
+            <div ref={newRef} className="flex overflow-x-auto gap-6 md:gap-8 px-8 md:px-12 scrollbar-hide snap-x no-scrollbar" style={{ scrollbarWidth: 'none' }}>
+              {newArrivalsByTab.map((product) => (
+                <div key={product.id} className="min-w-[42%] sm:min-w-[30%] md:min-w-[calc(25%-18px)] snap-start group relative flex flex-col flex-shrink-0">
+                  <Link to={`/product/${product.id}`}>
+                    <div className="aspect-[3/4] overflow-hidden bg-zinc-900 relative border border-white/5">
+                      <img src={product.image} className="w-full h-full object-cover opacity-90 group-hover:scale-105 transition-all duration-500" alt={product.name} />
+                      <div
+                        onClick={(e) => handleAddToCart(product, e)}
+                        className="absolute bottom-0 left-0 right-0 bg-white text-black py-2.5 text-center text-[9pt] font-black tracking-widest translate-y-full group-hover:translate-y-0 transition-transform duration-400 z-30 cursor-pointer"
+                      >
+                        ADD TO CART +
+                      </div>
+                    </div>
+                    <div className="mt-4 space-y-1 text-left">
+                      <h3 className="text-[9pt] font-bold tracking-widest uppercase text-white/70 group-hover:text-white transition-colors leading-tight line-clamp-2">
+                        {product.name}
+                      </h3>
+                      <p className="text-[11px] font-semibold text-purple-500">
+                        {product.price}
+                      </p>
+                    </div>
+                  </Link>
                 </div>
-
-                {/* 정보 영역: 텍스트 위계 동일하게 조정 */}
-                <div className="mt-8 space-y-2 text-left">
-                  <h3 className="text-[12px] font-bold tracking-widest uppercase text-white/70 group-hover:text-white transition-colors leading-tight">
-                    {product.name}
-                  </h3>
-                  <p className="text-[14px] font-semibold text-purple-500">
-                    {product.price}
-                  </p>
-                </div>
-              </Link>
-            </div>
-          ))}
+              ))}
             </div>
           </>
         )}
 
-        {/* Supabase 데이터 없음 (테이블 비어 있음) */}
-        {!loading && !error && newArrivals.length === 0 && (
-          <div className="px-12 py-20 text-center min-h-[30vh] flex items-center justify-center">
-            <p className="text-white/40 text-sm tracking-extra-wide uppercase">No Products (Supabase products 테이블에 데이터 없음)</p>
+        {!loading && !error && newArrivalsByTab.length === 0 && (
+          <div className="px-8 py-16 text-center min-h-[20vh] flex items-center justify-center">
+            <p className="text-white/40 text-[9pt] tracking-widest uppercase">
+              {newArrivalTab === 'men' ? '남성' : '여성'} 신상품이 없습니다.
+            </p>
           </div>
         )}
       </section>
 
-      {/* 3. BEST SELLERS (Shop 페이지 디자인 이식) */}
-      <section className="py-40 bg-[#080808] border-y border-white/5 relative group/best">
-        <div className="px-12 mb-16"><h2 className="text-3xl font-black italic uppercase tracking-tighter">Most Loved Archive</h2></div>
+      {/* 3. BEST SELLERS (우영미 스타일: 작은 박스) */}
+      <section className="py-20 md:py-28 bg-[#080808] border-y border-white/5 relative group/best">
+        <div className="px-8 md:px-12 mb-8">
+          <h2 className="text-2xl md:text-3xl font-black italic uppercase tracking-tighter">Most Loved Archive</h2>
+        </div>
 
-        {/* Best Sellers 로딩 스켈레톤 */}
         {loading && (
           <div className="relative">
             <ProductCarouselSkeleton count={6} variant="small" />
@@ -153,35 +185,33 @@ const LandingPage = () => {
 
         {!loading && !error && bestSellers.length > 0 && (
           <>
-            <button onClick={() => scroll(bestRef, 'left')} className="absolute left-6 top-[50%] z-20 opacity-0 group-hover/best:opacity-100 transition-all text-white/30 hover:text-white"><svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="0.5" d="M15 19l-7-7 7-7" /></svg></button>
-            <button onClick={() => scroll(bestRef, 'right')} className="absolute right-6 top-[50%] z-20 opacity-0 group-hover/best:opacity-100 transition-all text-white/30 hover:text-white"><svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="0.5" d="M9 5l7 7-7 7" /></svg></button>
+            <button onClick={() => scroll(bestRef, 'left')} className="absolute left-4 top-[50%] z-20 opacity-0 group-hover/best:opacity-100 transition-all text-white/30 hover:text-white"><svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="0.5" d="M15 19l-7-7 7-7" /></svg></button>
+            <button onClick={() => scroll(bestRef, 'right')} className="absolute right-4 top-[50%] z-20 opacity-0 group-hover/best:opacity-100 transition-all text-white/30 hover:text-white"><svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="0.5" d="M9 5l7 7-7 7" /></svg></button>
 
-            <div ref={bestRef} className="flex overflow-x-auto gap-6 px-12 scrollbar-hide no-scrollbar" style={{ scrollbarWidth: 'none' }}>
-          {bestSellers.map((product) => (
-            <div key={product.id} className="min-w-[46%] md:min-w-[calc(16.666%-20px)] group relative flex flex-col">
-              <Link to={`/product/${product.id}`}>
-                <div className="aspect-[3/4] overflow-hidden bg-zinc-900 mb-6 relative border border-white/5">
-                  <img src={product.image} className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500" alt={product.name} />
-                  
-                  {/* Shop 페이지 동일 레이아웃 */}
-                  <div 
-                    onClick={(e) => handleAddToCart(product, e)}
-                    className="absolute bottom-0 left-0 right-0 bg-white text-black py-4 text-center text-[10px] font-black tracking-widest translate-y-full group-hover:translate-y-0 transition-transform duration-500 z-30 cursor-pointer"
-                  >
-                    ADD TO CART +
-                  </div>
+            <div ref={bestRef} className="flex overflow-x-auto gap-4 md:gap-6 px-8 md:px-12 scrollbar-hide no-scrollbar" style={{ scrollbarWidth: 'none' }}>
+              {bestSellers.map((product) => (
+                <div key={product.id} className="min-w-[38%] sm:min-w-[28%] md:min-w-[calc(20%-16px)] group relative flex flex-col flex-shrink-0">
+                  <Link to={`/product/${product.id}`}>
+                    <div className="aspect-[3/4] overflow-hidden bg-zinc-900 mb-4 relative border border-white/5">
+                      <img src={product.image} className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500" alt={product.name} />
+                      <div
+                        onClick={(e) => handleAddToCart(product, e)}
+                        className="absolute bottom-0 left-0 right-0 bg-white text-black py-2 text-center text-[9pt] font-black tracking-widest translate-y-full group-hover:translate-y-0 transition-transform duration-400 z-30 cursor-pointer"
+                      >
+                        ADD TO CART +
+                      </div>
+                    </div>
+                    <div className="space-y-0.5 text-left px-0.5">
+                      <h3 className="text-[9pt] font-bold tracking-widest uppercase text-white/50 group-hover:text-white transition-colors truncate">
+                        {product.name}
+                      </h3>
+                      <p className="text-[11px] font-semibold text-purple-500/80">
+                        {product.price}
+                      </p>
+                    </div>
+                  </Link>
                 </div>
-                <div className="space-y-1 text-left px-1">
-                  <h3 className="text-[10px] font-bold tracking-widest uppercase text-white/50 group-hover:text-white transition-colors truncate">
-                    {product.name}
-                  </h3>
-                  <p className="text-[13px] font-semibold text-purple-500/80">
-                    {product.price}
-                  </p>
-                </div>
-              </Link>
-            </div>
-          ))}
+              ))}
             </div>
           </>
         )}
