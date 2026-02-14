@@ -1,7 +1,23 @@
-import React from 'react';
-import { useDaumPostcodePopup } from 'react-daum-postcode';
+import React, { useCallback } from 'react';
 
-const SCRIPT_URL = '//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js';
+const SCRIPT_URL = 'https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js';
+
+/**
+ * Daum 스크립트 로드 후 실행
+ */
+const loadDaumScript = () => {
+  return new Promise((resolve) => {
+    if (window.daum?.Postcode) {
+      resolve();
+      return;
+    }
+    const script = document.createElement('script');
+    script.src = SCRIPT_URL;
+    script.async = true;
+    script.onload = resolve;
+    document.head.appendChild(script);
+  });
+};
 
 /**
  * Daum 우편번호 검색 결과를 전체 주소 문자열로 변환
@@ -52,16 +68,21 @@ const AddressInput = ({
   className = '',
   inputClassName = '',
 }) => {
-  const open = useDaumPostcodePopup(SCRIPT_URL);
+  const handleComplete = useCallback(
+    (data) => {
+      const fullAddress = formatAddress(data);
+      onAddressChange(fullAddress);
+    },
+    [onAddressChange]
+  );
 
-  const handleComplete = (data) => {
-    const fullAddress = formatAddress(data);
-    onAddressChange(fullAddress);
-  };
-
-  const handleClick = () => {
-    open({ onComplete: handleComplete });
-  };
+  const handleClick = useCallback(async () => {
+    await loadDaumScript();
+    if (!window.daum?.Postcode) return;
+    new window.daum.Postcode({
+      oncomplete: handleComplete,
+    }).open();
+  }, [handleComplete]);
 
   return (
     <div className={`space-y-2 ${className}`}>
