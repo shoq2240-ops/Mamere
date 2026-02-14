@@ -1,76 +1,114 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
+import { ANTWERP_COLLECTION } from '../data/productData'; 
 
 const LandingPage = () => {
-  // 실제 이미지 링크가 준비되면 url 부분을 교체하세요.
-  const products = [
-    { id: 1, name: "DN RECONSTRUCTION HOODIE", price: "128,000", img: "https://via.placeholder.com/600x800/111111/555555" },
-    { id: 2, name: "ARCHIVE LOGO TEE", price: "52,000", img: "https://via.placeholder.com/600x800/111111/555555" },
-    { id: 3, name: "NEGATIVE LAYERED KNIT", price: "94,000", img: "https://via.placeholder.com/600x800/111111/555555" },
-    { id: 4, name: "DOUBLE CARGO PANTS", price: "145,000", img: "https://via.placeholder.com/600x800/111111/555555" },
-    { id: 5, name: "DISTRESSED CAP", price: "42,000", img: "https://via.placeholder.com/600x800/111111/555555" },
-    { id: 6, name: "VOID OVERSIZED SHIRT", price: "112,000", img: "https://via.placeholder.com/600x800/111111/555555" },
-  ];
+  const newArrivals = ANTWERP_COLLECTION.slice(0, 6); 
+  const bestSellers = ANTWERP_COLLECTION.slice(0, 12); 
+
+  const newRef = useRef(null);
+  const bestRef = useRef(null);
+
+  const scroll = (ref, direction) => {
+    const { current } = ref;
+    const scrollAmount = window.innerWidth * 0.5;
+    if (direction === 'left') {
+      current.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
+    } else {
+      current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+    }
+  };
 
   return (
-    <div className="bg-black text-white min-h-screen pt-32 pb-20 px-8">
-      {/* 1. 메인 비주얼 (Mardi 스타일의 큰 배너) */}
-      <section className="mb-24">
-        <div className="relative aspect-[16/7] w-full overflow-hidden bg-neutral-900 border border-white/5">
-          <div className="absolute inset-0 flex flex-col items-center justify-center z-10">
-            <motion.h2 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="text-[12vw] font-black italic uppercase tracking-tighter leading-none mix-blend-difference"
-            >
-              Collection <span className="text-purple-500">01</span>
-            </motion.h2>
-          </div>
-          {/* 배경 이미지: 실제 룩북 영상이나 고화질 사진을 넣으세요 */}
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/60" />
-        </div>
+    <div className="bg-black text-white font-['Noto_Sans_KR'] antialiased overflow-x-hidden">
+      
+      {/* 1. HERO SECTION */}
+      <section className="h-[90vh] flex flex-col items-center justify-center relative border-b border-white/5">
+        <motion.h1 
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-[12vw] font-black italic tracking-tighter leading-none text-center"
+        >
+          DOUBLE <span className="font-light text-white/10 uppercase font-['Noto_Sans_KR']">Negative</span>
+        </motion.h1>
       </section>
 
-      {/* 2. 상품 그리드 (Mardi 스타일의 다단 배치) */}
-      <section>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-16">
-          {products.map((product) => (
-            <motion.div 
-              key={product.id}
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              viewport={{ once: true }}
-              className="group cursor-pointer"
-            >
-              {/* 상품 이미지 */}
-              <div className="relative aspect-[3/4] bg-neutral-900 overflow-hidden border border-white/5">
-                <img 
-                  src={product.img} 
-                  alt={product.name}
-                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                />
-                {/* 퀵 찜하기 버튼 (오른쪽 상단) */}
-                <button className="absolute top-4 right-4 p-2 bg-black/50 backdrop-blur-md opacity-0 group-hover:opacity-100 transition-opacity">
-                  <span className="text-[10px]">SAVE</span>
-                </button>
-              </div>
+      {/* 2. NEW ARRIVALS (큰 3구 박스) */}
+      <section className="py-40 relative group/new">
+        <div className="px-12 mb-16">
+          <p className="text-purple-500 text-[12px] font-black tracking-[0.5em] uppercase italic mb-4">SEASONAL FOCUS</p>
+          <h2 className="text-5xl md:text-7xl font-black italic uppercase tracking-tighter leading-none">New Arrivals</h2>
+        </div>
 
-              {/* 상품 정보 */}
-              <div className="mt-6 flex justify-between items-start">
-                <div className="space-y-1">
-                  <h3 className="text-[11px] font-bold uppercase tracking-widest leading-tight">
+        {/* 화살표 컨트롤러 */}
+        <button onClick={() => scroll(newRef, 'left')} className="absolute left-6 top-[55%] z-20 opacity-0 group-hover/new:opacity-100 transition-all duration-500 hover:scale-125 text-white/50 hover:text-white">
+          <svg className="w-12 h-12 md:w-20 md:h-20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="0.5" d="M15 19l-7-7 7-7" /></svg>
+        </button>
+        <button onClick={() => scroll(newRef, 'right')} className="absolute right-6 top-[55%] z-20 opacity-0 group-hover/new:opacity-100 transition-all duration-500 hover:scale-125 text-white/50 hover:text-white">
+          <svg className="w-12 h-12 md:w-20 md:h-20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="0.5" d="M9 5l7 7-7 7" /></svg>
+        </button>
+
+        <div ref={newRef} className="flex overflow-x-auto gap-12 px-12 scrollbar-hide snap-x no-scrollbar" style={{ scrollbarWidth: 'none' }}>
+          {newArrivals.map((product) => (
+            <div key={product.id} className="min-w-[85%] md:min-w-[calc(33.333%-32px)] snap-start group">
+              <Link to={`/product/${product.id}`}>
+                <div className="aspect-[3/4] overflow-hidden bg-zinc-900 border border-white/5 shadow-2xl">
+                  <img src={product.image} className="w-full h-full object-cover opacity-90 group-hover:scale-105 group-hover:opacity-100 transition-all duration-[1.2s] ease-out" alt={product.name} />
+                </div>
+                {/* 정보 가시성 강화 */}
+                <div className="mt-8 space-y-3">
+                  <h3 className="text-[14px] font-black tracking-widest uppercase text-white leading-tight">
                     {product.name}
                   </h3>
-                  <p className="text-[10px] text-purple-500 font-mono italic">
-                    KRW {product.price}
+                  <p className="text-[16px] font-medium text-purple-500 tracking-wider">
+                    {product.price}
                   </p>
                 </div>
-                <span className="text-[9px] text-neutral-600 font-mono">NEW</span>
-              </div>
-            </motion.div>
+              </Link>
+            </div>
           ))}
         </div>
       </section>
+
+      {/* 3. BEST SELLERS (6구 박스) */}
+      <section className="py-40 bg-[#080808] border-y border-white/5 relative group/best text-left">
+        <div className="px-12 mb-16">
+          <h2 className="text-3xl font-black italic uppercase tracking-tighter">Most Loved Archive</h2>
+        </div>
+
+        <button onClick={() => scroll(bestRef, 'left')} className="absolute left-6 top-[50%] z-20 opacity-0 group-hover/best:opacity-100 transition-all duration-500 hover:scale-125 text-white/30 hover:text-white">
+          <svg className="w-10 h-10 md:w-14 md:h-14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="0.5" d="M15 19l-7-7 7-7" /></svg>
+        </button>
+        <button onClick={() => scroll(bestRef, 'right')} className="absolute right-6 top-[50%] z-20 opacity-0 group-hover/best:opacity-100 transition-all duration-500 hover:scale-125 text-white/30 hover:text-white">
+          <svg className="w-10 h-10 md:w-14 md:h-14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="0.5" d="M9 5l7 7-7 7" /></svg>
+        </button>
+
+        <div ref={bestRef} className="flex overflow-x-auto gap-6 px-12 scrollbar-hide no-scrollbar" style={{ scrollbarWidth: 'none' }}>
+          {bestSellers.map((product) => (
+            <div key={product.id} className="min-w-[46%] md:min-w-[calc(16.666%-20px)] flex flex-col group">
+              <Link to={`/product/${product.id}`}>
+                <div className="aspect-[3/4] overflow-hidden bg-zinc-900 mb-6 border border-white/5">
+                  <img src={product.image} className="w-full h-full object-cover grayscale group-hover:grayscale-0 group-hover:scale-105 transition-all duration-[1s]" alt={product.name} />
+                </div>
+                {/* 인기 상품 가시성 강화 */}
+                <div className="space-y-1 px-1">
+                  <h3 className="text-[11px] font-bold tracking-widest uppercase text-white/50 group-hover:text-white transition-colors truncate">
+                    {product.name}
+                  </h3>
+                  <p className="text-[13px] font-semibold text-purple-500/80">
+                    {product.price}
+                  </p>
+                </div>
+              </Link>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <footer className="py-32 text-center opacity-20">
+        <p className="text-[10px] font-light tracking-[1em] uppercase italic">Double Negative Archive 2026</p>
+      </footer>
     </div>
   );
 };
