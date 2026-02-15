@@ -1,6 +1,22 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
-// 1. 컨텍스트 생성
+// 보안: 장바구니 상품 필드 화이트리스트 (prototype pollution 방지)
+const sanitizeProduct = (product) => {
+  if (!product || typeof product !== 'object' || product.id == null) return null;
+  return {
+    id: product.id,
+    name: typeof product.name === 'string' ? product.name.slice(0, 200) : String(product.name ?? '').slice(0, 200),
+    price: product.price,
+    image: typeof product.image === 'string' ? product.image.slice(0, 2048) : null,
+    gender: typeof product.gender === 'string' ? product.gender.slice(0, 20) : null,
+    category: typeof product.category === 'string' ? product.category.slice(0, 50) : null,
+    selectedSize: typeof product.selectedSize === 'string' ? product.selectedSize.slice(0, 20) : null,
+  };
+};
+
+const MAX_QUANTITY = 99;
+const MAX_CART_ITEMS = 50;
+
 const CartContext = createContext(null);
 
 export const CartProvider = ({ children }) => {
@@ -9,25 +25,44 @@ export const CartProvider = ({ children }) => {
       const savedCart = localStorage.getItem('dn_cart');
       if (!savedCart) return [];
       const parsed = JSON.parse(savedCart);
-      return Array.isArray(parsed) ? parsed : [];
+      if (!Array.isArray(parsed)) return [];
+      // 복원 시 각 항목 검증 (손상된 데이터 방지)
+      return parsed
+        .map((item) => {
+          const safe = sanitizeProduct(item);
+          if (!safe || typeof item?.quantity !== 'number' || item.quantity < 1) return null;
+          return { ...safe, quantity: Math.min(Math.max(1, Math.floor(item.quantity)), MAX_QUANTITY) };
+        })
+        .filter(Boolean)
+        .slice(0, MAX_CART_ITEMS);
     } catch {
       return [];
     }
   });
 
   useEffect(() => {
-    localStorage.setItem('dn_cart', JSON.stringify(cart));
+    try {
+      localStorage.setItem('dn_cart', JSON.stringify(cart));
+    } catch {
+      // quota exceeded 등 localStorage 오류 시 무시 (앱 동작에는 영향 없음)
+    }
   }, [cart]);
 
   const addToCart = (product) => {
+    const safe = sanitizeProduct(product);
+    if (!safe) return;
+
     setCart((prevCart) => {
-      const isExist = prevCart.find((item) => item.id === product.id);
+      if (prevCart.length >= MAX_CART_ITEMS && !prevCart.find((i) => i.id === safe.id)) return prevCart;
+      const isExist = prevCart.find((item) => item.id === safe.id);
       if (isExist) {
         return prevCart.map((item) =>
-          item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item
+          item.id === safe.id
+            ? { ...item, quantity: Math.min(item.quantity + 1, MAX_QUANTITY) }
+            : item
         );
       }
-      return [...prevCart, { ...product, quantity: 1 }];
+      return [...prevCart, { ...safe, quantity: 1 }];
     });
   };
 
@@ -38,8 +73,8 @@ export const CartProvider = ({ children }) => {
   const updateQuantity = (productId, amount) => {
     setCart((prevCart) =>
       prevCart.map((item) =>
-        item.id === productId 
-          ? { ...item, quantity: Math.max(1, item.quantity + amount) } 
+        item.id === productId
+          ? { ...item, quantity: Math.max(1, Math.min(MAX_QUANTITY, item.quantity + amount)) }
           : item
       )
     );

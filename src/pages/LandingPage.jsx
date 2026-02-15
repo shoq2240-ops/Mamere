@@ -13,8 +13,8 @@ const LandingPage = () => {
   const [newArrivalTab, setNewArrivalTab] = useState('men'); // 'men' | 'women'
 
   const { products, loading, error } = useProducts();
-  const menProducts = products.filter((p) => (p.category || '').toLowerCase() === 'men');
-  const womenProducts = products.filter((p) => (p.category || '').toLowerCase() === 'women');
+  const menProducts = products.filter((p) => (p.gender || '').toLowerCase() === 'men');
+  const womenProducts = products.filter((p) => (p.gender || '').toLowerCase() === 'women');
   const newArrivalsByTab = newArrivalTab === 'men' ? menProducts.slice(0, 12) : womenProducts.slice(0, 12);
   const bestSellers = products.slice(0, 12); 
 
@@ -60,31 +60,41 @@ const LandingPage = () => {
         )}
       </AnimatePresence>
 
-      {/* 1. HERO SECTION */}
-      <section className="h-[90vh] flex flex-col items-center justify-center relative border-b border-white/5">
-        <motion.h1 
-          initial={{ opacity: 0, y: 30 }}
+      {/* 1. HERO SECTION - 우영미 스타일 카드 배너 (가로 +6cm, 세로 +3cm) */}
+      <section className="min-h-[90vh] flex flex-col items-center justify-center relative border-b border-white/5 py-16 px-6">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-[12vw] font-black italic tracking-tighter leading-none text-center"
+          transition={{ duration: 0.6, ease: 'easeOut' }}
+          className="w-full max-w-[calc(42rem+11cm)] mx-auto border border-[#eeeeee]/30 bg-transparent"
         >
-          DOUBLE <span className="font-light text-white/10 uppercase">Negative</span>
-        </motion.h1>
+          <div className="hero-banner-inner py-[calc(3.5rem+3cm)] px-10 md:py-[calc(4rem+3cm)] md:px-14 flex flex-col items-center justify-center text-center">
+            {/* [매뉴얼] 로고 대신 이미지를 넣으려면 아래 블록 전체를 <img src="..." alt="..." className="w-full h-auto object-cover" /> 등으로 교체 */}
+            <div className="hero-banner-content">
+              <h1 className="text-[8.4vw] md:text-[6.5vw] font-bold italic tracking-tight leading-none uppercase whitespace-nowrap">
+                DOUBLE <span className="font-light text-white/90">Negative</span>
+              </h1>
+              <p className="mt-6 text-[10px] font-light tracking-[0.2em] uppercase text-white/40">
+                어둠 속에서 정의되는 새로운 미학
+              </p>
+            </div>
+            {/* [매뉴얼] 배너 하단에 이미지 추가 시: <div className="mt-8 w-full"><img src="..." className="w-full h-auto" alt="" /></div> */}
+          </div>
+        </motion.div>
       </section>
 
       {/* 2. NEW ARRIVALS (우영미 스타일: 작은 박스, 남/여 탭, 더 많은 상품보기) */}
       <section className="py-24 md:py-32 relative group/new">
-        <div className="px-8 md:px-12 mb-8 flex flex-col md:flex-row md:items-end md:justify-between gap-4">
-          <div>
-            <p className="text-purple-500 text-[9pt] font-black tracking-widest uppercase italic mb-2">Seasonal Focus</p>
-            <h2 className="text-xl md:text-2xl font-light uppercase tracking-tight leading-none">신상품</h2>
-          </div>
-          {/* 남성/여성 탭 + 더 많은 상품보기 (선택된 성별만 노출) */}
-          <div className="flex items-center gap-6">
+        <div className="px-8 md:px-12 mb-8">
+          <p className="text-purple-500 text-[9pt] font-black tracking-widest uppercase italic mb-2">Seasonal Focus</p>
+          <h2 className="text-xl md:text-2xl font-light uppercase tracking-tight leading-none">신상품</h2>
+          {/* 남성/여성 탭 + 더 많은 상품보기 (신상품 밑, 1단계 작은 크기) */}
+          <div className="flex items-center gap-6 mt-4">
             <div className="flex border-b border-white/20">
               <button
                 type="button"
                 onClick={() => setNewArrivalTab('men')}
-                className={`px-4 py-2 text-[9pt] font-medium tracking-widest uppercase transition-colors ${
+                className={`px-3 py-1.5 text-[8pt] font-medium tracking-widest uppercase transition-colors ${
                   newArrivalTab === 'men' ? 'text-white border-b-2 border-white -mb-[2px]' : 'text-white/50 hover:text-white/80'
                 }`}
               >
@@ -93,7 +103,7 @@ const LandingPage = () => {
               <button
                 type="button"
                 onClick={() => setNewArrivalTab('women')}
-                className={`px-4 py-2 text-[9pt] font-medium tracking-widest uppercase transition-colors ${
+                className={`px-3 py-1.5 text-[8pt] font-medium tracking-widest uppercase transition-colors ${
                   newArrivalTab === 'women' ? 'text-white border-b-2 border-white -mb-[2px]' : 'text-white/50 hover:text-white/80'
                 }`}
               >
@@ -101,12 +111,12 @@ const LandingPage = () => {
               </button>
             </div>
             {newArrivalTab === 'men' ? (
-              <Link to="/shop/men" className="text-[9pt] font-medium tracking-widest uppercase text-white/70 hover:text-white border-b border-white/30 hover:border-white/60 transition-colors whitespace-nowrap">
-                남성 더 많은 상품 보기
+              <Link to="/shop/men" className="text-[8pt] font-medium tracking-widest uppercase text-white/70 hover:text-white border-b border-white/30 hover:border-white/60 transition-colors whitespace-nowrap">
+                더 많은 상품 보기
               </Link>
             ) : (
-              <Link to="/shop/women" className="text-[9pt] font-medium tracking-widest uppercase text-white/70 hover:text-white border-b border-white/30 hover:border-white/60 transition-colors whitespace-nowrap">
-                여성 더 많은 상품 보기
+              <Link to="/shop/women" className="text-[8pt] font-medium tracking-widest uppercase text-white/70 hover:text-white border-b border-white/30 hover:border-white/60 transition-colors whitespace-nowrap">
+                더 많은 상품 보기
               </Link>
             )}
           </div>

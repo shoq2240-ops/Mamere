@@ -28,7 +28,7 @@ export const useProducts = () => {
       setProducts(formattedProducts);
       setError(null);
     } catch (err) {
-      console.error('제품 데이터 로딩 에러:', err);
+      if (import.meta.env.DEV) console.error('제품 데이터 로딩 에러:', err);
       setError(err.message);
     } finally {
       setLoading(false);
@@ -65,12 +65,17 @@ export const useProducts = () => {
   return { products, loading, error, refetch: fetchProducts };
 };
 
-// 카테고리별 제품 필터링 훅
+// 성별/카테고리별 제품 필터링 훅
+// category가 men/women이면 gender 기준 필터, 그 외는 category(상품 종류) 기준 필터
 export const useProductsByCategory = (category) => {
   const { products, loading, error, refetch } = useProducts();
   
   const filteredProducts = category 
-    ? products.filter(p => p.category === category)
+    ? products.filter(p => {
+        const c = (category || '').toLowerCase();
+        if (c === 'men' || c === 'women') return (p.gender || '').toLowerCase() === c;
+        return (p.category || '').toLowerCase() === c;
+      })
     : products;
 
   return { products: filteredProducts, loading, error, refetch };

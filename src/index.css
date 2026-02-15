@@ -86,6 +86,11 @@
       font-size: 15px;
     }
   }
+
+  /* 상단 로고 네온 호버 (은은한 효과) */
+  .logo-neon-subtle:hover {
+    text-shadow: 0 0 6px rgba(255, 255, 255, 0.4), 0 0 12px rgba(168, 85, 247, 0.25);
+  }
 }
 
 @layer components {
@@ -124,8 +129,8 @@
   100% { transform: translate(5%, 0); }
 }
 
-/* 마키: 오른쪽 끝에서 시작하여 좌측 무한 스크롤 */
+/* 마키: 왼쪽에서 시작해 오른쪽 끝까지 무한 반복 */
 @keyframes marquee-scroll {
-  from { transform: translateX(calc(100vw - 100%)); }
-  to { transform: translateX(calc(100vw - 150%)); }
+  from { transform: translateX(-50%); }
+  to { transform: translateX(0); }
 }

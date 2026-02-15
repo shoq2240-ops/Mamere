@@ -90,7 +90,7 @@ const AddressInput = ({
         <input
           type="text"
           value={addressValue}
-          onChange={(e) => onAddressChange(e.target.value)}
+          onChange={(e) => onAddressChange(e.target.value.slice(0, 400))}
           placeholder={addressPlaceholder}
           className={`flex-1 bg-neutral-900/50 border border-white/5 px-4 py-3 text-[11px] text-white outline-none focus:border-purple-500/50 placeholder:text-neutral-600 ${inputClassName}`}
         />
@@ -105,7 +105,7 @@ const AddressInput = ({
       <input
         type="text"
         value={detailValue}
-        onChange={(e) => onDetailChange(e.target.value)}
+        onChange={(e) => onDetailChange(e.target.value.slice(0, 100))}
         placeholder={detailPlaceholder}
         className={`w-full bg-neutral-900/50 border border-white/5 px-4 py-3 text-[11px] text-white outline-none focus:border-purple-500/50 placeholder:text-neutral-600 ${inputClassName}`}
       />

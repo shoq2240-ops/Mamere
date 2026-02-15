@@ -12,6 +12,7 @@ const ShopPage = ({ category }) => {
   
   const [searchParams, setSearchParams] = useSearchParams();
   const query = searchParams.get('search') || "";
+  const sub = searchParams.get('sub') || '';
 
   const [showToast, setShowToast] = useState(false);
   const [searchTerm, setSearchTerm] = useState(query);
@@ -22,10 +23,12 @@ const ShopPage = ({ category }) => {
     setSearchTerm(query);
   }, [query]);
 
-  // 1) 카테고리 필터: category가 있으면 Supabase products.category와 일치하는 것만
-  // 2) 검색어 필터: product.name에 searchTerm 포함
+  // 1) 성별 필터: category prop이 있으면 products.gender와 일치하는 것만 (men/women)
+  // 2) 상품 종류 필터: sub 쿼리가 있으면 products.category와 일치 (outerwear/top/bottom)
+  // 3) 검색어 필터: product.name에 searchTerm 포함
   const filteredProducts = products
-    .filter(product => !category || (product.category && product.category.toLowerCase() === category.toLowerCase()))
+    .filter(product => !category || (product.gender && product.gender.toLowerCase() === category.toLowerCase()))
+    .filter(product => !sub || (product.category || '').toLowerCase() === sub.toLowerCase())
     .filter(product => product.name.toLowerCase().includes(searchTerm.toLowerCase()));
 
   // 팝업을 띄우는 핵심 함수
@@ -46,8 +49,9 @@ const ShopPage = ({ category }) => {
           placeholder="SEARCH YOUR ARCHIVE..."
           value={searchTerm}
           onChange={(e) => {
-            setSearchTerm(e.target.value);
-            setSearchParams({ search: e.target.value });
+            const val = e.target.value.slice(0, 100);
+            setSearchTerm(val);
+            setSearchParams(val ? { search: val } : {});
           }}
           className="w-full bg-transparent border-b border-white/10 py-4 text-[12px] font-light tracking-extra-wide uppercase outline-none focus:border-purple-500 transition-colors placeholder:text-white/5 text-white"
         />
@@ -57,8 +61,8 @@ const ShopPage = ({ category }) => {
       <div className="px-8 mb-16 flex justify-between items-end">
         <div>
           <h1 className="text-[10px] tracking-mega-wide uppercase text-purple-500 font-bold mb-3 italic">Selection</h1>
-          <h2 className="text-4xl md:text-6xl font-black italic tracking-tighter uppercase text-white leading-none">
-            Shop <span className="font-light text-white/40">/ 모두 보기</span>
+          <h2 className="text-xl md:text-2xl font-light uppercase tracking-tight leading-none text-white">
+            {category === 'men' ? '남성' : category === 'women' ? '여성' : '남성 · 여성'}
           </h2>
         </div>
         <span className="text-[10px] font-light text-white/30 tracking-extra-wide uppercase mb-2">

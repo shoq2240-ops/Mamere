@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { CartProvider, useCart } from "./store/CartContext";
+import { WishlistProvider } from "./store/WishlistContext";
 import { AuthProvider } from "./store/AuthContext";
 import ScrollToTop from "./components/ScrollToTop";
 
@@ -12,7 +13,8 @@ import LandingPage from "./pages/LandingPage";
 import PhilosophyPage from './pages/PhilosophyPage';
 import ShopPage from "./pages/ShopPage";
 import LookbookPage from "./pages/LookbookPage";
-import ProductDetail from "./pages/ProductDetail";
+import ProductDetailPage from "./pages/ProductDetailPage";
+import WishlistPage from "./pages/WishlistPage";
 import CollectionPage from './pages/CollectionPage';
 import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
@@ -20,6 +22,7 @@ import ProfilePage from './pages/ProfilePage';
 import CartPage from './pages/CartPage';
 import CheckoutPage from './pages/CheckoutPage';
 import OrdersPage from './pages/OrdersPage';
+import AdminUploadPage from './pages/AdminUploadPage';
 
 const AnimatedRoutes = () => {
   const location = useLocation();
@@ -34,7 +37,8 @@ const AnimatedRoutes = () => {
         <Route path="/philosophy" element={<PageWrapper><PhilosophyPage /></PageWrapper>} />
         <Route path="/shop" element={<PageWrapper><ShopPage /></PageWrapper>} />
         <Route path="/lookbook" element={<PageWrapper><LookbookPage /></PageWrapper>} />
-        <Route path="/product/:id" element={<PageWrapper><ProductDetail /></PageWrapper>} />
+        <Route path="/product/:id" element={<PageWrapper><ProductDetailPage /></PageWrapper>} />
+        <Route path="/wishlist" element={<PageWrapper><WishlistPage /></PageWrapper>} />
         <Route path="/collection" element={<PageWrapper><CollectionPage /></PageWrapper>} />
         <Route path="/login" element={<PageWrapper><LoginPage /></PageWrapper>} />
         <Route path="/signup" element={<PageWrapper><SignupPage /></PageWrapper>} />
@@ -42,6 +46,7 @@ const AnimatedRoutes = () => {
         <Route path="/cart" element={<PageWrapper><CartPage /></PageWrapper>} />
         <Route path="/checkout" element={<PageWrapper><CheckoutPage /></PageWrapper>} />
         <Route path="/orders" element={<PageWrapper><OrdersPage /></PageWrapper>} />
+        <Route path="/admin/upload" element={<PageWrapper><AdminUploadPage /></PageWrapper>} />
         
         {/* 카테고리별 쇼핑 페이지 */}
         <Route path="/shop/men" element={<PageWrapper><ShopPage category="men" /></PageWrapper>} />
@@ -75,6 +80,7 @@ function App() {
   return (
     <AuthProvider>
       <CartProvider>
+        <WishlistProvider>
         <Router>
           <ScrollToTop />
           <div className="flex flex-col h-screen max-h-[100dvh] bg-black text-white antialiased overflow-hidden flex">
@@ -82,12 +88,13 @@ function App() {
               <Marquee />
               <Navbar />
             </header>
-            <main className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden">
+            <main id="main-scroll" className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden">
               <AnimatedRoutes />
               <Footer />
             </main>
           </div>
         </Router>
+        </WishlistProvider>
       </CartProvider>
     </AuthProvider>
   );

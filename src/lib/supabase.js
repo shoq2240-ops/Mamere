@@ -5,7 +5,7 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
 
 // 연결 설정 검증
 const isConfigured = !!(supabaseUrl && supabaseAnonKey && supabaseUrl.startsWith('http'));
-if (!isConfigured) {
+if (!isConfigured && import.meta.env.DEV) {
   console.warn(
     '[Supabase] VITE_SUPABASE_URL 또는 VITE_SUPABASE_ANON_KEY가 설정되지 않았습니다. .env 파일을 확인하세요.'
   );

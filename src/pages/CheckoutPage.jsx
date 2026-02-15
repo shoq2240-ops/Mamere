@@ -98,9 +98,9 @@ const CheckoutPage = () => {
     e.preventDefault();
     if (!user?.id || cart.length === 0) return;
 
-    const name = shippingName.trim();
-    const addressFull = combineAddress(shippingAddress, shippingAddressDetail);
-    const phone = shippingPhone.trim();
+    const name = shippingName.trim().slice(0, 100);
+    const addressFull = combineAddress(shippingAddress, shippingAddressDetail).slice(0, 500);
+    const phone = shippingPhone.trim().replace(/\D/g, '').slice(0, 15);
     if (!name || !shippingAddress.trim() || !phone) {
       setError('이름, 기본 주소, 전화번호를 모두 입력해주세요.');
       return;
@@ -126,7 +126,18 @@ const CheckoutPage = () => {
       return;
     }
 
-    const priceMap = Object.fromEntries((serverProducts ?? []).map((p) => [p.id, p.price]));
+    const parseServerPrice = (v) => {
+      if (typeof v === 'number' && !Number.isNaN(v)) return Math.max(0, Math.floor(v));
+      if (typeof v === 'string') {
+        const n = parseInt(v.replace(/[^\d]/g, ''), 10);
+        return Number.isNaN(n) ? 0 : Math.max(0, n);
+      }
+      return 0;
+    };
+
+    const priceMap = Object.fromEntries(
+      (serverProducts ?? []).map((p) => [p.id, parseServerPrice(p.price)])
+    );
     const missingIds = cartIds.filter((id) => priceMap[id] == null);
     if (missingIds.length > 0) {
       setSubmitting(false);
@@ -134,9 +145,10 @@ const CheckoutPage = () => {
       return;
     }
 
-    // 서버 가격 기준으로 총액 계산
+    // 서버 가격 기준으로 총액 계산 (수량 상한 99 적용)
+    const MAX_QUANTITY = 99;
     const totalAmount = cart.reduce(
-      (sum, item) => sum + (priceMap[item.id] ?? 0) * Math.max(1, item.quantity),
+      (sum, item) => sum + (priceMap[item.id] ?? 0) * Math.max(1, Math.min(MAX_QUANTITY, Math.floor(item.quantity || 1))),
       0
     );
 
@@ -163,13 +175,13 @@ const CheckoutPage = () => {
       }
     }
 
-    // 주문 저장 시 서버 가격 사용 (클라이언트 조작 방지)
+    // 주문 저장 시 서버 가격 사용 (클라이언트 조작 방지, 필드 길이 제한)
     const items = cart.map((item) => ({
       id: item.id,
-      name: item.name,
+      name: String(item.name ?? '').slice(0, 200),
       price: priceMap[item.id] ?? parsePrice(item.price),
-      quantity: Math.max(1, item.quantity),
-      image: item.image,
+      quantity: Math.max(1, Math.min(MAX_QUANTITY, Math.floor(item.quantity || 1))),
+      image: typeof item.image === 'string' ? item.image.slice(0, 2048) : null,
     }));
 
     // 포트원 결제창 호출
@@ -278,7 +290,7 @@ const CheckoutPage = () => {
                   <input
                     type="text"
                     value={shippingName}
-                    onChange={(e) => setShippingName(e.target.value)}
+                    onChange={(e) => setShippingName(e.target.value.slice(0, 100))}
                     placeholder="수령인 이름"
                     className="w-full bg-neutral-900/50 border border-white/5 px-4 py-3 text-[11px] text-white outline-none focus:border-purple-500/50 placeholder:text-neutral-600"
                   />
@@ -299,7 +311,7 @@ const CheckoutPage = () => {
                   <input
                     type="tel"
                     value={shippingPhone}
-                    onChange={(e) => setShippingPhone(e.target.value)}
+                    onChange={(e) => setShippingPhone(e.target.value.replace(/\D/g, '').slice(0, 15))}
                     placeholder="연락처"
                     className="w-full bg-neutral-900/50 border border-white/5 px-4 py-3 text-[11px] text-white outline-none focus:border-purple-500/50 placeholder:text-neutral-600"
                   />
