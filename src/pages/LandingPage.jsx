@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useCart } from '../store/CartContext';
@@ -15,8 +15,6 @@ const LandingPage = () => {
   const { addToCart } = useCart();
   const { isLoggedIn } = useAuth();
   const [showLoginModal, setShowLoginModal] = useState(false);
-  const [showPopup, setShowPopup] = useState(false);
-  const [popupItem, setPopupItem] = useState("");
   const [newArrivalTab, setNewArrivalTab] = useState('men'); // 'men' | 'women'
 
   const { products, loading, error } = useProducts();
@@ -36,10 +34,7 @@ const LandingPage = () => {
       return;
     }
     addToCart(product);
-    toast.success('장바구니에 추가되었습니다');
-    setPopupItem(product.name);
-    setShowPopup(true);
-    setTimeout(() => setShowPopup(false), 2000);
+    toast.success('ARCHIVE에 추가되었습니다');
   };
 
   const scroll = (ref, direction) => {
@@ -55,22 +50,6 @@ const LandingPage = () => {
   return (
     <div className="bg-black text-white antialiased overflow-x-hidden relative">
       <LoginRequiredModal show={showLoginModal} onClose={() => setShowLoginModal(false)} />
-      {/* 장바구니 알림 팝업 (Shop 페이지 디자인 동일) */}
-      <AnimatePresence>
-        {showPopup && (
-          <motion.div 
-            initial={{ y: -100, opacity: 0 }}
-            animate={{ y: 20, opacity: 1 }}
-            exit={{ y: -100, opacity: 0 }}
-            className="fixed top-20 left-0 right-0 z-[150] flex justify-center pointer-events-none"
-          >
-            <div className="bg-white text-black px-8 py-4 shadow-2xl flex items-center gap-4 border border-zinc-200">
-              <span className="text-[12px] font-black uppercase tracking-widest border-r border-zinc-200 pr-4">Added</span>
-              <span className="text-[12px] font-medium tracking-tighter">{popupItem} 장바구니에 담겼습니다.</span>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       {/* 1. HERO SECTION - 우영미 스타일 카드 배너 (가로 +6cm, 세로 +3cm) */}
       <section className="min-h-[90vh] flex flex-col items-center justify-center relative border-b border-white/5 py-16 px-6">
