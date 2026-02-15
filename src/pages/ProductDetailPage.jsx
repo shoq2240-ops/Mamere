@@ -107,21 +107,8 @@ const ProductDetailPage = () => {
     // BUY는 장바구니 담기 후 결제 페이지로 이동할 수 있음 (선택)
   };
 
-  const images = product ? getImageList(product) : [];
-  const descSections = product ? parseDescription(product.description) : { freeShipping: '', details: '', sizeFit: '' };
-  const soldOut = product ? isSoldOut(product) : false;
-  const accordionItems = [
-    { key: 'shipping', title: '무료 배송 & 반품', content: descSections.freeShipping },
-    { key: 'details', title: '세부 정보', content: descSections.details },
-    { key: 'size', title: '사이즈 및 핏', content: descSections.sizeFit },
-  ].filter((item) => item.content);
-  const sizes = Array.isArray(product?.sizes) && product.sizes.length > 0
-    ? product.sizes
-    : DEFAULT_SIZES;
-
-  const recentlyViewed = recentlyViewedRaw.filter((p) => p.id !== product.id).slice(0, 5);
-
-  if (loading) {
+  // 로딩 중이거나 product가 없으면 렌더링 전에 early return (데이터 로드 전 예외 처리)
+  if (loading || !product) {
     return (
       <div className="min-h-[70vh] flex items-center justify-center bg-black px-12 py-24">
         <p className="text-[10px] tracking-[0.2em] uppercase text-white/40">Loading...</p>
@@ -129,7 +116,7 @@ const ProductDetailPage = () => {
     );
   }
 
-  if (error || !product) {
+  if (error) {
     return (
       <div className="min-h-[70vh] flex flex-col items-center justify-center bg-black px-12 py-24">
         <p className="text-[10px] tracking-[0.2em] uppercase text-white/40 text-center">
@@ -144,6 +131,20 @@ const ProductDetailPage = () => {
       </div>
     );
   }
+
+  // 이 시점에서 product가 존재함이 보장됨 (옵셔널 체이닝으로 이중 안전)
+  const images = getImageList(product);
+  const descSections = parseDescription(product?.description);
+  const soldOut = isSoldOut(product);
+  const accordionItems = [
+    { key: 'shipping', title: '무료 배송 & 반품', content: descSections.freeShipping },
+    { key: 'details', title: '세부 정보', content: descSections.details },
+    { key: 'size', title: '사이즈 및 핏', content: descSections.sizeFit },
+  ].filter((item) => item.content);
+  const sizes = Array.isArray(product?.sizes) && product.sizes.length > 0
+    ? product.sizes
+    : DEFAULT_SIZES;
+  const recentlyViewed = recentlyViewedRaw.filter((p) => p?.id !== product?.id).slice(0, 5);
 
   return (
     <div className="bg-black min-h-screen text-white antialiased">
@@ -171,17 +172,17 @@ const ProductDetailPage = () => {
               {/* 상품명 + 위시리스트 (하트: 상품명 옆 가시성 있게) */}
               <div className="flex items-start gap-2">
                 <h1 className="text-[11px] font-normal tracking-widest uppercase text-white/90 leading-relaxed flex-1 min-w-0">
-                  {product.name}
+                  {product?.name}
                 </h1>
                 <button
                   type="button"
-                  onClick={() => toggleWishlist(product.id)}
+                  onClick={() => toggleWishlist(product?.id)}
                   className="flex-shrink-0 p-2 -m-2 text-white hover:text-purple-400 transition-colors"
-                  aria-label={isInWishlist(product.id) ? '위시리스트에서 제거' : '위시리스트에 추가'}
+                  aria-label={isInWishlist(product?.id) ? '위시리스트에서 제거' : '위시리스트에 추가'}
                 >
                   <svg
                     className="w-6 h-6"
-                    fill={isInWishlist(product.id) ? 'currentColor' : 'none'}
+                    fill={isInWishlist(product?.id) ? 'currentColor' : 'none'}
                     stroke="currentColor"
                     strokeWidth="2"
                     viewBox="0 0 24 24"
@@ -193,7 +194,7 @@ const ProductDetailPage = () => {
 
               {/* 가격 */}
               <p className="text-[11px] font-light tracking-widest text-white/70">
-                {formatPrice(product.price)}
+                {formatPrice(product?.price)}
               </p>
 
               {/* 아코디언: 무료 배송/반품, 세부 정보, 사이즈 및 핏 */}
@@ -286,7 +287,7 @@ const ProductDetailPage = () => {
                 >
                   <img
                     src={src}
-                    alt={`${product.name} ${idx + 1}`}
+                    alt={`${product?.name ?? ''} ${idx + 1}`}
                     className="w-full h-full object-cover object-top"
                   />
                 </motion.div>
