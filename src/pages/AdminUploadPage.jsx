@@ -7,6 +7,9 @@ import { parseDescription, serializeDescription } from '../lib/descriptionSectio
 import { isSoldOut } from '../lib/productStock';
 
 const STORAGE_BUCKET = 'product-images';
+const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'];
+const MAX_IMAGE_SIZE_MB = 5;
+const MAX_IMAGE_BYTES = MAX_IMAGE_SIZE_MB * 1024 * 1024;
 
 const GENDERS = [
   { value: 'men', label: '남성' },
@@ -75,8 +78,18 @@ const AdminUploadPage = () => {
   }, [isLoggedIn]);
 
   const uploadImage = async (file) => {
-    const ext = file.name.split('.').pop();
-    const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+    if (!file || !(file instanceof File)) {
+      throw new Error('유효한 파일을 선택해주세요.');
+    }
+    if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+      throw new Error(`허용된 이미지 형식만 업로드 가능합니다. (JPEG, PNG, WebP, GIF)`);
+    }
+    if (file.size > MAX_IMAGE_BYTES) {
+      throw new Error(`이미지 크기는 ${MAX_IMAGE_SIZE_MB}MB 이하여야 합니다.`);
+    }
+    const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg';
+    const safeExt = ['jpeg', 'jpg', 'png', 'webp', 'gif'].includes(ext) ? ext : 'jpg';
+    const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${safeExt}`;
     const { data, error } = await supabase.storage
       .from(STORAGE_BUCKET)
       .upload(fileName, file, { upsert: false });
@@ -193,6 +206,17 @@ const AdminUploadPage = () => {
   const onFileChange = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+      setError('허용된 이미지 형식만 업로드 가능합니다. (JPEG, PNG, WebP, GIF)');
+      e.target.value = '';
+      return;
+    }
+    if (file.size > MAX_IMAGE_BYTES) {
+      setError(`이미지 크기는 ${MAX_IMAGE_SIZE_MB}MB 이하여야 합니다.`);
+      e.target.value = '';
+      return;
+    }
+    setError('');
     setForm((prev) => ({
       ...prev,
       imageFile: file,
@@ -369,7 +393,7 @@ const AdminUploadPage = () => {
               <div className="flex flex-col sm:flex-row gap-4 items-start">
                 <label className="flex-shrink-0 px-6 py-3 border border-white/20 text-[11px] font-medium tracking-widest uppercase cursor-pointer hover:bg-white/5 transition-colors">
                   파일 선택
-                  <input type="file" accept="image/*" onChange={onFileChange} className="hidden" />
+                  <input type="file" accept=".jpg,.jpeg,.png,.webp,.gif,image/jpeg,image/png,image/webp,image/gif" onChange={onFileChange} className="hidden" />
                 </label>
                 {form.imagePreview && (
                   <div className="w-24 h-32 bg-white/5 overflow-hidden border border-white/10">
@@ -377,7 +401,7 @@ const AdminUploadPage = () => {
                   </div>
                 )}
               </div>
-              <p className="text-[10px] text-white/40 mt-2">이미지는 Supabase Storage에 자동 업로드됩니다</p>
+              <p className="text-[10px] text-white/40 mt-2">JPEG, PNG, WebP, GIF 최대 {MAX_IMAGE_SIZE_MB}MB · Supabase Storage에 업로드</p>
             </div>
           </div>
 

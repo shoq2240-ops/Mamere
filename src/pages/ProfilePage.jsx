@@ -155,8 +155,8 @@ const ProfilePage = () => {
               <input
                 type="tel"
                 value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                placeholder="전화번호"
+                onChange={(e) => setPhone(e.target.value.replace(/[^\d\-]/g, '').slice(0, 13))}
+                placeholder="010-0000-0000"
                 className="w-full bg-neutral-900/30 border border-white/5 px-6 py-4 text-[11px] text-white outline-none focus:border-purple-500/50 transition-all placeholder:text-neutral-600"
               />
             </div>

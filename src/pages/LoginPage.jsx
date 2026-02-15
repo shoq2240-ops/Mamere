@@ -63,8 +63,11 @@ const LoginPage = () => {
       redirectTo: `${window.location.origin}/login?reset=success`,
     });
     setLoading(false);
-    if (error) setError(error.message);
-    else setResetSent(true);
+    if (error) {
+      setError('요청 처리에 실패했습니다. 이메일을 확인 후 다시 시도해주세요.');
+      return;
+    }
+    setResetSent(true);
   };
 
   return (

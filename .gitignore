@@ -23,8 +23,10 @@ dist-ssr
 *.sln
 *.sw?
 
-# Environment variables
+# Environment variables (민감정보)
 .env
 .env.local
 .env.production
 .env.development
+.env.*.local
+src/.env

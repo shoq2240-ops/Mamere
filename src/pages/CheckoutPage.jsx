@@ -102,8 +102,9 @@ const CheckoutPage = () => {
 
     const name = shippingName.trim().slice(0, 100);
     const addressFull = combineAddress(shippingAddress, shippingAddressDetail).slice(0, 500);
-    const phone = shippingPhone.trim().replace(/\D/g, '').slice(0, 15);
-    if (!name || !shippingAddress.trim() || !phone) {
+    const phoneDigits = shippingPhone.trim().replace(/\D/g, '');
+    const phone = phoneDigits.slice(0, 11);
+    if (!name || !shippingAddress.trim() || !phone || phone.length < 9) {
       setError('이름, 기본 주소, 전화번호를 모두 입력해주세요.');
       return;
     }
@@ -178,7 +179,7 @@ const CheckoutPage = () => {
           id: user.id,
           full_name: name || null,
           address: addressFull || null,
-          phone: phone || null,
+          phone: shippingPhone.trim() || null,
         },
         { onConflict: 'id' }
       );
@@ -240,7 +241,7 @@ const CheckoutPage = () => {
 
       const shippingNameFromProfile = profile.full_name ?? name;
       const shippingAddressFromProfile = profile.address ?? addressFull;
-      const shippingPhoneFromProfile = profile.phone ?? phone;
+      const shippingPhoneFromProfile = profile.phone ?? shippingPhone.trim();
 
       if (!shippingNameFromProfile || !shippingAddressFromProfile || !shippingPhoneFromProfile) {
         setSubmitting(false);
@@ -346,8 +347,8 @@ const CheckoutPage = () => {
                   <input
                     type="tel"
                     value={shippingPhone}
-                    onChange={(e) => setShippingPhone(e.target.value.replace(/\D/g, '').slice(0, 15))}
-                    placeholder="연락처"
+                    onChange={(e) => setShippingPhone(e.target.value.replace(/[^\d\-]/g, '').slice(0, 13))}
+                    placeholder="010-0000-0000"
                     className="w-full bg-neutral-900/50 border border-white/5 px-4 py-3 text-[11px] text-white outline-none focus:border-purple-500/50 placeholder:text-neutral-600"
                   />
                 </div>

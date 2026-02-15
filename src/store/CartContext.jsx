@@ -1,8 +1,18 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
 // 보안: 장바구니 상품 필드 화이트리스트 (prototype pollution 방지)
+const isValidProductId = (id) => {
+  if (id == null) return false;
+  if (typeof id === 'number') return Number.isInteger(id) && id > 0;
+  if (typeof id === 'string') {
+    if (['__proto__', 'constructor', 'prototype'].includes(id)) return false;
+    return /^\d+$/.test(id) || /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+  }
+  return false;
+};
+
 const sanitizeProduct = (product) => {
-  if (!product || typeof product !== 'object' || product.id == null) return null;
+  if (!product || typeof product !== 'object' || !isValidProductId(product.id)) return null;
   return {
     id: product.id,
     name: typeof product.name === 'string' ? product.name.slice(0, 200) : String(product.name ?? '').slice(0, 200),
