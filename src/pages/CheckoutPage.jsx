@@ -118,7 +118,7 @@ const CheckoutPage = () => {
     // [보안] products 테이블에서 실제 가격·재고 조회 후 총액·품절 검증 (클라이언트 조작 방지)
     const cartIds = [...new Set(cart.map((i) => i.id))];
     const { data: serverProducts, error: productsError } = await publicTable('products')
-      .select('id, price, name, stock_quantity, stock, is_manual_soldout')
+      .select('id, price, name, stock_quantity, is_manual_soldout')
       .in('id', cartIds);
 
     if (productsError) {
@@ -268,10 +268,10 @@ const CheckoutPage = () => {
       for (const item of items) {
         const qty = Math.max(1, Math.min(MAX_QUANTITY, Math.floor(item.quantity || 1)));
         const { data: prod } = await publicTable('products')
-          .select('stock_quantity, stock')
+          .select('stock_quantity')
           .eq('id', item.id)
           .single();
-        const current = prod?.stock_quantity ?? prod?.stock ?? 0;
+        const current = prod?.stock_quantity ?? 0;
         const newStock = Math.max(0, current - qty);
         await publicTable('products').update({ stock_quantity: newStock }).eq('id', item.id);
       }

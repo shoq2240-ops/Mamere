@@ -153,7 +153,7 @@ const AdminUploadPage = () => {
       category: p.category || 'outerwear',
       imageFile: null,
       imagePreview: p.image,
-      stockQuantity: p.stock_quantity ?? p.stock ?? 0,
+      stockQuantity: p.stock_quantity ?? 0,
       isManualSoldout: p.is_manual_soldout === true,
     });
     setSuccess('');
