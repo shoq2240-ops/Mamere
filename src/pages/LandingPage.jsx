@@ -1,9 +1,10 @@
 import React, { useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { useCart } from '../store/CartContext'; 
+import { useCart } from '../store/CartContext';
 import { useProducts } from '../hooks/useProducts';
-import { ProductCarouselSkeleton, LoadingMessage } from '../components/ProductSkeleton'; 
+import { ProductCarouselSkeleton, LoadingMessage } from '../components/ProductSkeleton';
+import ProductCard from '../components/ProductCard'; 
 
 // 데이터 소스: Supabase products 테이블만 사용. 더미/로컬 데이터 없음.
 const LandingPage = () => {
@@ -84,12 +85,12 @@ const LandingPage = () => {
       </section>
 
       {/* 2. NEW ARRIVALS (우영미 스타일: 작은 박스, 남/여 탭, 더 많은 상품보기) */}
-      <section className="py-24 md:py-32 relative group/new">
-        <div className="px-8 md:px-12 mb-8">
-          <p className="text-purple-500 text-[9pt] font-black tracking-widest uppercase italic mb-2">Seasonal Focus</p>
-          <h2 className="text-xl md:text-2xl font-light uppercase tracking-tight leading-none">신상품</h2>
+      <section className="py-16 md:py-32 relative group/new">
+        <div className="px-6 md:px-12 mb-6 md:mb-8">
+          <p className="text-purple-500 text-[8pt] md:text-[9pt] font-black tracking-widest uppercase italic mb-1.5 md:mb-2">Seasonal Focus</p>
+          <h2 className="text-lg md:text-2xl font-light uppercase tracking-tight leading-none">신상품</h2>
           {/* 남성/여성 탭 + 더 많은 상품보기 (신상품 밑, 1단계 작은 크기) */}
-          <div className="flex items-center gap-6 mt-4">
+          <div className="flex items-center gap-4 md:gap-6 mt-3 md:mt-4">
             <div className="flex border-b border-white/20">
               <button
                 type="button"
@@ -144,28 +145,10 @@ const LandingPage = () => {
             <button onClick={() => scroll(newRef, 'left')} className="absolute left-4 top-[55%] z-20 opacity-0 group-hover/new:opacity-100 transition-all text-white/50 hover:text-white"><svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="0.5" d="M15 19l-7-7 7-7" /></svg></button>
             <button onClick={() => scroll(newRef, 'right')} className="absolute right-4 top-[55%] z-20 opacity-0 group-hover/new:opacity-100 transition-all text-white/50 hover:text-white"><svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="0.5" d="M9 5l7 7-7 7" /></svg></button>
 
-            <div ref={newRef} className="flex overflow-x-auto gap-6 md:gap-8 px-8 md:px-12 scrollbar-hide snap-x no-scrollbar" style={{ scrollbarWidth: 'none' }}>
+            <div ref={newRef} className="flex overflow-x-auto gap-6 md:gap-8 px-6 md:px-12 scrollbar-hide snap-x no-scrollbar" style={{ scrollbarWidth: 'none' }}>
               {newArrivalsByTab.map((product) => (
-                <div key={product.id} className="min-w-[42%] sm:min-w-[30%] md:min-w-[calc(25%-18px)] snap-start group relative flex flex-col flex-shrink-0">
-                  <Link to={`/product/${product.id}`}>
-                    <div className="aspect-[3/4] overflow-hidden bg-zinc-900 relative border border-white/5">
-                      <img src={product.image} className="w-full h-full object-cover opacity-90 group-hover:scale-105 transition-all duration-500" alt={product.name} />
-                      <div
-                        onClick={(e) => handleAddToCart(product, e)}
-                        className="absolute bottom-0 left-0 right-0 bg-white text-black py-2.5 text-center text-[9pt] font-black tracking-widest translate-y-full group-hover:translate-y-0 transition-transform duration-400 z-30 cursor-pointer"
-                      >
-                        ADD TO CART +
-                      </div>
-                    </div>
-                    <div className="mt-4 space-y-1 text-left">
-                      <h3 className="text-[9pt] font-bold tracking-widest uppercase text-white/70 group-hover:text-white transition-colors leading-tight line-clamp-2">
-                        {product.name}
-                      </h3>
-                      <p className="text-[11px] font-semibold text-purple-500">
-                        {product.price}
-                      </p>
-                    </div>
-                  </Link>
+                <div key={product.id} className="min-w-[42%] sm:min-w-[30%] md:min-w-[calc(25%-18px)] snap-start">
+                  <ProductCard product={product} onAddToCart={handleAddToCart} variant="carousel" />
                 </div>
               ))}
             </div>
@@ -182,11 +165,11 @@ const LandingPage = () => {
       </section>
 
       {/* 3. 가장 주목 받는 상품 (우영미 스타일) */}
-      <section className="py-20 md:py-28 bg-[#080808] border-y border-white/5 relative group/best">
-        <div className="px-8 md:px-12 mb-8">
-          <h2 className="text-xl md:text-2xl font-light uppercase tracking-tight">가장 주목 받는 상품</h2>
+      <section className="py-16 md:py-28 bg-[#080808] border-y border-white/5 relative group/best">
+        <div className="px-6 md:px-12 mb-6 md:mb-8">
+          <h2 className="text-lg md:text-2xl font-light uppercase tracking-tight">가장 주목 받는 상품</h2>
           {/* [매뉴얼] 아래 DESCRIPTION 수정: 작은 연한 회색 설명 문구. 브랜드 스토리/컬렉션 소개를 자유롭게 작성하세요. */}
-          <p className="mt-3 text-[11px] font-light text-white/50 tracking-[0.05em] leading-relaxed max-w-2xl">
+          <p className="mt-2 md:mt-3 text-[11px] font-light text-white/50 tracking-[0.05em] leading-relaxed max-w-2xl">
             두 번의 삭제를 통해 거부하며, 그 과정에서 본연의 형체를 드러냅니다. Double Negative는 일상 속에서 빛나는 감각적인 실루엣을 제안합니다.
           </p>
         </div>
@@ -202,28 +185,10 @@ const LandingPage = () => {
             <button onClick={() => scroll(bestRef, 'left')} className="absolute left-4 top-[50%] z-20 opacity-0 group-hover/best:opacity-100 transition-all text-white/30 hover:text-white"><svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="0.5" d="M15 19l-7-7 7-7" /></svg></button>
             <button onClick={() => scroll(bestRef, 'right')} className="absolute right-4 top-[50%] z-20 opacity-0 group-hover/best:opacity-100 transition-all text-white/30 hover:text-white"><svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="0.5" d="M9 5l7 7-7 7" /></svg></button>
 
-            <div ref={bestRef} className="flex overflow-x-auto gap-4 md:gap-6 px-8 md:px-12 scrollbar-hide no-scrollbar" style={{ scrollbarWidth: 'none' }}>
+            <div ref={bestRef} className="flex overflow-x-auto gap-4 md:gap-6 px-6 md:px-12 scrollbar-hide no-scrollbar" style={{ scrollbarWidth: 'none' }}>
               {bestSellers.map((product) => (
-                <div key={product.id} className="min-w-[38%] sm:min-w-[28%] md:min-w-[calc(20%-16px)] group relative flex flex-col flex-shrink-0">
-                  <Link to={`/product/${product.id}`}>
-                    <div className="aspect-[3/4] overflow-hidden bg-zinc-900 mb-4 relative border border-white/5">
-                      <img src={product.image} className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500" alt={product.name} />
-                      <div
-                        onClick={(e) => handleAddToCart(product, e)}
-                        className="absolute bottom-0 left-0 right-0 bg-white text-black py-2 text-center text-[9pt] font-black tracking-widest translate-y-full group-hover:translate-y-0 transition-transform duration-400 z-30 cursor-pointer"
-                      >
-                        ADD TO CART +
-                      </div>
-                    </div>
-                    <div className="space-y-0.5 text-left px-0.5">
-                      <h3 className="text-[9pt] font-bold tracking-widest uppercase text-white/50 group-hover:text-white transition-colors truncate">
-                        {product.name}
-                      </h3>
-                      <p className="text-[11px] font-semibold text-purple-500/80">
-                        {product.price}
-                      </p>
-                    </div>
-                  </Link>
+                <div key={product.id} className="min-w-[38%] sm:min-w-[28%] md:min-w-[calc(20%-16px)]">
+                  <ProductCard product={product} onAddToCart={handleAddToCart} variant="carousel" grayscale />
                 </div>
               ))}
             </div>

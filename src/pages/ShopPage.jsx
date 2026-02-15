@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { useCart } from '../store/CartContext'; 
+import { useCart } from '../store/CartContext';
 import { useProducts } from '../hooks/useProducts';
-import { ProductGridSkeleton, LoadingMessage } from '../components/ProductSkeleton'; 
+import { ProductGridSkeleton, LoadingMessage } from '../components/ProductSkeleton';
+import ProductCard from '../components/ProductCard'; 
 
 // 데이터 소스: Supabase products 테이블만 사용. category = 'men' | 'women' 시 해당 카테고리만 필터.
 const ShopPage = ({ category }) => {
@@ -40,10 +41,10 @@ const ShopPage = ({ category }) => {
   };
 
   return (
-    <div className="bg-black min-h-screen pt-24 pb-20 antialiased relative">
+    <div className="bg-black min-h-screen pt-20 md:pt-24 pb-16 md:pb-20 antialiased relative">
       
       {/* 검색 바 섹션 */}
-      <div className="px-8 mb-12">
+      <div className="px-6 md:px-8 mb-8 md:mb-12">
         <input 
           type="text"
           placeholder="SEARCH YOUR ARCHIVE..."
@@ -53,19 +54,19 @@ const ShopPage = ({ category }) => {
             setSearchTerm(val);
             setSearchParams(val ? { search: val } : {});
           }}
-          className="w-full bg-transparent border-b border-white/10 py-4 text-[12px] font-light tracking-extra-wide uppercase outline-none focus:border-purple-500 transition-colors placeholder:text-white/5 text-white"
+          className="w-full bg-transparent border-b border-white/10 py-3 md:py-4 text-[11px] md:text-[12px] font-light tracking-extra-wide uppercase outline-none focus:border-purple-500 transition-colors placeholder:text-white/5 text-white"
         />
       </div>
       
       {/* 헤더 섹션 */}
-      <div className="px-8 mb-16 flex justify-between items-end">
+      <div className="px-6 md:px-8 mb-12 md:mb-16 flex justify-between items-end">
         <div>
-          <h1 className="text-[10px] tracking-mega-wide uppercase text-purple-500 font-bold mb-3 italic">Selection</h1>
-          <h2 className="text-xl md:text-2xl font-light uppercase tracking-tight leading-none text-white">
+          <h1 className="text-[9px] md:text-[10px] tracking-mega-wide uppercase text-purple-500 font-bold mb-2 md:mb-3 italic">Selection</h1>
+          <h2 className="text-lg md:text-2xl font-light uppercase tracking-tight leading-none text-white">
             {category === 'men' ? '남성' : category === 'women' ? '여성' : '남성 · 여성'}
           </h2>
         </div>
-        <span className="text-[10px] font-light text-white/30 tracking-extra-wide uppercase mb-2">
+        <span className="text-[9px] md:text-[10px] font-light text-white/30 tracking-extra-wide uppercase mb-2">
           {loading ? '...' : `${filteredProducts.length} 개 상품`}
         </span>
       </div>
@@ -89,29 +90,11 @@ const ShopPage = ({ category }) => {
 
       {/* 상품 그리드: Supabase 데이터만 표시 */}
       {!loading && !error && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-[1px] gap-y-20 border-t border-white/10">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-[1px] gap-y-12 md:gap-y-20 border-t border-white/10">
         {filteredProducts.length > 0 ? (
           filteredProducts.map((product) => (
-            <div key={product.id} className="group relative flex flex-col border-r border-b border-white/10 transition-colors duration-700 hover:bg-zinc-900/40">
-              <Link to={`/product/${product.id}`} className="relative aspect-[3/4] overflow-hidden bg-zinc-900">
-                <img src={product.image} alt={product.name} className="w-full h-full object-cover opacity-80 transition-all duration-1000 group-hover:scale-[1.03] group-hover:opacity-100" />
-                <div className="absolute inset-0 bg-white/[0.02] opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
-              </Link>
-
-              <div className="p-8 space-y-4">
-                <div className="space-y-1">
-                  <h3 className="text-[11px] font-bold tracking-widest uppercase text-white/70 group-hover:text-white transition-colors leading-tight">{product.name}</h3>
-                  <p className="text-[13px] font-light tracking-widest text-purple-500/80">{product.price}</p>
-                </div>
-                <div className="pt-4 opacity-0 group-hover:opacity-100 transition-all duration-500 transform translate-y-2 group-hover:translate-y-0">
-                  <button 
-                    onClick={() => handleAddToCart(product)} // 👈 함수 연결
-                    className="w-full border border-white/10 py-4 text-[9px] font-bold tracking-ultra-wide uppercase text-white/50 hover:bg-white hover:text-black hover:border-white transition-all duration-300"
-                  >
-                    Add to Archive
-                  </button>
-                </div>
-              </div>
+            <div key={product.id} className="border-r border-b border-white/10">
+              <ProductCard product={product} onAddToCart={handleAddToCart} variant="grid" />
             </div>
           ))
         ) : (

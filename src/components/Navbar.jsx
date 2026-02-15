@@ -130,7 +130,7 @@ const Navbar = () => {
             Double <span className="text-purple-500">Negative</span>
           </Link>
 
-          <div className="ml-auto flex items-center gap-4 md:gap-2 z-[210]">
+          <div className="ml-auto flex items-center gap-2 md:gap-2 z-[210] pr-1 md:pr-0">
             {/* 계정 영역: 로그인 시 MY PAGE, 비로그인 시 사람 아이콘 */}
             <div className="hidden md:block relative">
               {isLoggedIn ? (
@@ -168,10 +168,10 @@ const Navbar = () => {
                 </Link>
               )}
             </div>
-            <button onClick={() => { setIsSearchOpen(true); setIsMobileMenuOpen(false); }} className="w-10 h-10 ml-2 flex items-center justify-center hover:text-purple-500 transition-colors">
+            <button onClick={() => { setIsSearchOpen(true); setIsMobileMenuOpen(false); }} className="w-9 h-9 md:w-10 md:h-10 flex items-center justify-center hover:text-purple-500 transition-colors">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" /></svg>
             </button>
-            <Link to="/cart" className="w-10 h-10 flex items-center justify-center relative hover:text-purple-500 transition-colors">
+            <Link to="/cart" className="w-9 h-9 md:w-10 md:h-10 flex items-center justify-center relative hover:text-purple-500 transition-colors">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" /><path d="M3 6h18" /><path d="M16 10a4 4 0 0 1-8 0" /></svg>
               <AnimatePresence mode="popLayout">
                 {cartCount > 0 && (
@@ -191,14 +191,14 @@ const Navbar = () => {
       {/* 모바일 메뉴 (기존 백 기능 완벽 유지) */}
       <AnimatePresence>
         {isMobileMenuOpen && (
-          <motion.div initial={{ x: "-100%" }} animate={{ x: 0 }} exit={{ x: "-100%" }} transition={{ type: "spring", damping: 25, stiffness: 200 }} className="fixed inset-0 bg-black z-[200] flex flex-col pt-24 pb-12 px-10 text-white md:hidden">
-            <div className="mb-10 text-left">
+          <motion.div initial={{ x: "-100%" }} animate={{ x: 0 }} exit={{ x: "-100%" }} transition={{ type: "spring", damping: 25, stiffness: 200 }} className="fixed inset-0 bg-black z-[200] flex flex-col pt-20 pb-12 px-8 text-white md:hidden">
+            <div className="mb-8 text-left">
               <button onClick={() => (isWomenOpen || isMenOpen) ? (setIsWomenOpen(false), setIsMenOpen(false)) : setIsMobileMenuOpen(false)} className="flex items-center gap-2 text-[12px] font-light tracking-ultra-wide uppercase text-white/40">
                 <span className="text-xl">←</span> {(isWomenOpen || isMenOpen) ? 'Back to Menu' : 'Back'}
               </button>
             </div>
-            <div className="flex-1 flex flex-col justify-between">
-              <div className="flex flex-col space-y-2">
+            <div className="flex-1 flex flex-col justify-between min-h-0">
+              <div className="flex flex-col space-y-2 overflow-y-auto">
                 {navLinks.map((item) => (
                   <div key={item.name}>
                     {item.sub ? (
@@ -222,18 +222,18 @@ const Navbar = () => {
                   </div>
                 ))}
               </div>
-              <div className="mt-auto pt-12 border-t border-white/10 flex flex-col space-y-6 text-[14px]">
-                <button onClick={() => handleMenuClick('/cart')} className="font-bold tracking-extra-wide uppercase text-purple-500 flex justify-between">Shopping Bag <span>[{cartCount}]</span></button>
+              <div className="flex-shrink-0 pt-8 mt-6 border-t border-white/10 flex flex-col space-y-4 text-[12px]">
+                <button onClick={() => handleMenuClick('/cart')} className="font-bold tracking-[0.12em] uppercase text-purple-500 flex justify-between py-1">Shopping Bag <span>[{cartCount}]</span></button>
                 {isLoggedIn ? (
                   <>
-                    <button onClick={() => handleMenuClick('/orders')} className="font-light tracking-[0.15em] uppercase text-white/60 text-left" style={{ fontWeight: 300 }}>ORDERS</button>
-                    <button onClick={() => handleMenuClick('/profile')} className="font-light tracking-[0.15em] uppercase text-white/60 text-left" style={{ fontWeight: 300 }}>PROFILE</button>
-                    <button onClick={handleLogout} className="font-light tracking-[0.15em] uppercase text-white/40 text-left" style={{ fontWeight: 300 }}>LOGOUT</button>
+                    <button onClick={() => handleMenuClick('/orders')} className="font-light tracking-[0.12em] uppercase text-white/60 text-left py-1">ORDERS</button>
+                    <button onClick={() => handleMenuClick('/profile')} className="font-light tracking-[0.12em] uppercase text-white/60 text-left py-1">PROFILE</button>
+                    <button onClick={handleLogout} className="font-light tracking-[0.12em] uppercase text-white/40 text-left py-1">LOGOUT</button>
                   </>
                 ) : (
                   <>
-                    <button onClick={() => handleMenuClick('/login')} className="font-light tracking-extra-wide uppercase text-white/40 text-left">Login</button>
-                    <button onClick={() => handleMenuClick('/signup')} className="font-light tracking-extra-wide uppercase text-white/40 text-left">Join Now</button>
+                    <button onClick={() => handleMenuClick('/login')} className="font-light tracking-[0.12em] uppercase text-white/40 text-left py-1">Login</button>
+                    <button onClick={() => handleMenuClick('/signup')} className="font-light tracking-[0.12em] uppercase text-white/40 text-left py-1">Join Now</button>
                   </>
                 )}
               </div>
