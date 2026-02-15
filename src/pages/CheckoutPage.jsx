@@ -6,6 +6,7 @@ import { useAuth } from '../store/AuthContext';
 import { useCart } from '../store/CartContext';
 import { supabase, publicTable } from '../lib/supabase';
 import AddressInput, { combineAddress, splitAddress } from '../components/AddressInput';
+import { isSoldOut } from '../lib/productStock';
 
 // 포트원 결제 설정 (.env의 VITE_PORTONE_* 사용)
 const PORTONE_STORE_ID = import.meta.env.VITE_PORTONE_STORE_ID;
@@ -114,10 +115,10 @@ const CheckoutPage = () => {
     setSubmitting(true);
     setError('');
 
-    // [보안] products 테이블에서 실제 가격 조회 후 총액 검증 (클라이언트 조작 방지)
+    // [보안] products 테이블에서 실제 가격·재고 조회 후 총액·품절 검증 (클라이언트 조작 방지)
     const cartIds = [...new Set(cart.map((i) => i.id))];
     const { data: serverProducts, error: productsError } = await publicTable('products')
-      .select('id, price, name')
+      .select('id, price, name, stock_quantity, stock, is_manual_soldout')
       .in('id', cartIds);
 
     if (productsError) {
@@ -138,10 +139,22 @@ const CheckoutPage = () => {
     const priceMap = Object.fromEntries(
       (serverProducts ?? []).map((p) => [p.id, parseServerPrice(p.price)])
     );
+    const productMap = Object.fromEntries((serverProducts ?? []).map((p) => [p.id, p]));
     const missingIds = cartIds.filter((id) => priceMap[id] == null);
     if (missingIds.length > 0) {
       setSubmitting(false);
       setError('장바구니에 유효하지 않은 상품이 포함되어 있습니다. 장바구니를 비우고 다시 시도해주세요.');
+      return;
+    }
+
+    // 품절 상품 검사: 결제 전 재고/수동 품절 상태 확인
+    const soldOutProduct = cart.find((item) => {
+      const p = productMap[item.id];
+      return p && isSoldOut(p);
+    });
+    if (soldOutProduct) {
+      setSubmitting(false);
+      setError(`'${soldOutProduct.name}' 상품이 품절되었습니다. 장바구니에서 제거 후 다시 결제해주세요.`);
       return;
     }
 
@@ -248,6 +261,19 @@ const CheckoutPage = () => {
       if (orderError) {
         setError(orderError.message);
         return;
+      }
+
+      // [자동화] 결제 완료 후 재고 차감
+      // stock_quantity에서 구매 수량을 빼고, 0이 되면 상품 상세 페이지에서 자동으로 SOLD OUT 표시됨
+      for (const item of items) {
+        const qty = Math.max(1, Math.min(MAX_QUANTITY, Math.floor(item.quantity || 1)));
+        const { data: prod } = await publicTable('products')
+          .select('stock_quantity, stock')
+          .eq('id', item.id)
+          .single();
+        const current = prod?.stock_quantity ?? prod?.stock ?? 0;
+        const newStock = Math.max(0, current - qty);
+        await publicTable('products').update({ stock_quantity: newStock }).eq('id', item.id);
       }
 
       clearCart();

@@ -1,6 +1,8 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useWishlist } from '../store/WishlistContext';
+import { formatPrice } from '../lib/formatPrice';
+import { isSoldOut } from '../lib/productStock';
 
 /**
  * @param {Object} product - { id, name, price, image }
@@ -10,6 +12,7 @@ import { useWishlist } from '../store/WishlistContext';
  */
 const ProductCard = ({ product, onAddToCart, variant = 'grid', grayscale = false }) => {
   const { toggleWishlist, isInWishlist } = useWishlist();
+  const soldOut = isSoldOut(product);
 
   const handleWishlistClick = (e) => {
     e.preventDefault();
@@ -28,21 +31,28 @@ const ProductCard = ({ product, onAddToCart, variant = 'grid', grayscale = false
           } ${grayscale ? 'grayscale group-hover:grayscale-0' : ''}`}
         />
         <div className="absolute inset-0 bg-white/[0.02] opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
-        {/* Add to Cart: 데스크톱에서만 표시 */}
-        {onAddToCart && (
+        {/* Add to Cart / SOLD OUT: 데스크톱에서만 표시, 품절 시 회색 비활성 스타일 */}
+        {(onAddToCart || soldOut) && (
           <div
             onClick={(e) => {
+              if (soldOut) {
+                e.preventDefault();
+                e.stopPropagation();
+                return;
+              }
               e.preventDefault();
               e.stopPropagation();
-              onAddToCart(product, e);
+              onAddToCart?.(product, e);
             }}
-            className={`absolute bottom-0 left-0 right-0 bg-white text-black text-center font-black tracking-widest transition-transform duration-400 z-30 cursor-pointer hidden md:block ${
-              variant === 'carousel'
-                ? 'py-2.5 text-[9pt] translate-y-full group-hover:translate-y-0'
-                : 'py-4 text-[9px] opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0'
+            className={`absolute bottom-0 left-0 right-0 text-center font-black tracking-widest transition-all duration-400 z-30 hidden md:block ${
+              soldOut
+                ? 'bg-white/10 text-white/50 cursor-not-allowed py-2.5 text-[9pt] opacity-80'
+                : variant === 'carousel'
+                  ? 'bg-white text-black py-2.5 text-[9pt] translate-y-full group-hover:translate-y-0 cursor-pointer'
+                  : 'bg-white text-black py-4 text-[9px] opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 cursor-pointer'
             }`}
           >
-            ADD TO CART +
+            {soldOut ? 'SOLD OUT' : 'ADD TO CART +'}
           </div>
         )}
       </div>
@@ -73,20 +83,27 @@ const ProductCard = ({ product, onAddToCart, variant = 'grid', grayscale = false
           </button>
         </div>
         <p className={`font-light tracking-widest text-purple-500 ${variant === 'carousel' ? 'text-[11px] font-semibold' : 'text-[12px] md:text-[13px]'}`}>
-          {product.price}
+          {formatPrice(product.price)}
         </p>
-        {/* Add to Archive (grid 전용): 데스크톱에서만, 모바일은 제거 */}
-        {variant === 'grid' && onAddToCart && (
-          <div className="pt-4 opacity-0 group-hover:opacity-100 transition-all duration-500 transform translate-y-2 group-hover:translate-y-0 hidden md:block">
+        {/* Add to Archive (grid 전용): 품절 시 SOLD OUT 비활성화 */}
+        {variant === 'grid' && (onAddToCart || soldOut) && (
+          <div className={`pt-4 hidden md:block ${soldOut ? '' : 'opacity-0 group-hover:opacity-100 transition-all duration-500 transform translate-y-2 group-hover:translate-y-0'}`}>
             <button
+              type="button"
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                onAddToCart(product);
+                if (soldOut) return;
+                onAddToCart?.(product);
               }}
-              className="w-full border border-white/10 py-4 text-[9px] font-bold tracking-ultra-wide uppercase text-white/50 hover:bg-white hover:text-black hover:border-white transition-all duration-300"
+              disabled={soldOut}
+              className={`w-full border py-4 text-[9px] font-bold tracking-ultra-wide uppercase transition-all duration-300 ${
+                soldOut
+                  ? 'border-white/10 text-white/40 bg-white/5 cursor-not-allowed'
+                  : 'border-white/10 text-white/50 hover:bg-white hover:text-black hover:border-white'
+              }`}
             >
-              Add to Archive
+              {soldOut ? 'SOLD OUT' : 'Add to Archive'}
             </button>
           </div>
         )}

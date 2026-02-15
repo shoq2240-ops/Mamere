@@ -3,16 +3,11 @@ import { useParams, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCart } from '../store/CartContext';
 import { useWishlist } from '../store/WishlistContext';
+import { useRecentlyViewed } from '../hooks/useRecentlyViewed';
 import { publicTable } from '../lib/supabase';
 import { parseDescription } from '../lib/descriptionSections';
-
-const formatPrice = (price) => {
-  if (typeof price === 'number') return `₩${price.toLocaleString()}`;
-  if (typeof price === 'string' && price.replace(/\D/g, '').length > 0) {
-    return `₩${parseInt(price.replace(/\D/g, ''), 10).toLocaleString()}`;
-  }
-  return price;
-};
+import { formatPrice } from '../lib/formatPrice';
+import { isSoldOut } from '../lib/productStock';
 
 // image / image_url / images 지원: 배열이면 모두, 단일이면 1장
 const getImageList = (product) => {
@@ -63,6 +58,7 @@ const ProductDetailPage = () => {
   const { id } = useParams();
   const { addToCart } = useCart();
   const { toggleWishlist, isInWishlist } = useWishlist();
+  const { items: recentlyViewedRaw, addRecentlyViewed } = useRecentlyViewed();
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -82,6 +78,7 @@ const ProductDetailPage = () => {
           .single();
         if (err) throw err;
         setProduct(data);
+        addRecentlyViewed(data);
         const sizes = data?.sizes;
         setSelectedSize(Array.isArray(sizes) && sizes.length > 0 ? sizes[0] : DEFAULT_SIZES[0]);
       } catch (err) {
@@ -112,6 +109,7 @@ const ProductDetailPage = () => {
 
   const images = product ? getImageList(product) : [];
   const descSections = product ? parseDescription(product.description) : { freeShipping: '', details: '', sizeFit: '' };
+  const soldOut = product ? isSoldOut(product) : false;
   const accordionItems = [
     { key: 'shipping', title: '무료 배송 & 반품', content: descSections.freeShipping },
     { key: 'details', title: '세부 정보', content: descSections.details },
@@ -120,6 +118,8 @@ const ProductDetailPage = () => {
   const sizes = Array.isArray(product?.sizes) && product.sizes.length > 0
     ? product.sizes
     : DEFAULT_SIZES;
+
+  const recentlyViewed = recentlyViewedRaw.filter((p) => p.id !== product.id).slice(0, 5);
 
   if (loading) {
     return (
@@ -168,30 +168,28 @@ const ProductDetailPage = () => {
               transition={{ duration: 0.5, delay: 0.1 }}
               className="space-y-8"
             >
-              {/* 북마크(위시리스트) */}
-              <div className="flex justify-end -mt-2">
+              {/* 상품명 + 위시리스트 (하트: 상품명 옆 가시성 있게) */}
+              <div className="flex items-start gap-2">
+                <h1 className="text-[11px] font-normal tracking-widest uppercase text-white/90 leading-relaxed flex-1 min-w-0">
+                  {product.name}
+                </h1>
                 <button
                   type="button"
                   onClick={() => toggleWishlist(product.id)}
-                  className="p-2 text-white/50 hover:text-white transition-colors"
+                  className="flex-shrink-0 p-2 -m-2 text-white hover:text-purple-400 transition-colors"
                   aria-label={isInWishlist(product.id) ? '위시리스트에서 제거' : '위시리스트에 추가'}
                 >
                   <svg
-                    className="w-5 h-5"
+                    className="w-6 h-6"
                     fill={isInWishlist(product.id) ? 'currentColor' : 'none'}
                     stroke="currentColor"
-                    strokeWidth="1.5"
+                    strokeWidth="2"
                     viewBox="0 0 24 24"
                   >
                     <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
                   </svg>
                 </button>
               </div>
-
-              {/* 상품명 (미니멀, font-bold 없음) */}
-              <h1 className="text-[11px] font-normal tracking-widest uppercase text-white/90 leading-relaxed pr-8">
-                {product.name}
-              </h1>
 
               {/* 가격 */}
               <p className="text-[11px] font-light tracking-widest text-white/70">
@@ -237,19 +235,31 @@ const ProductDetailPage = () => {
                 </ul>
               </div>
 
-              {/* 버튼: ADD TO ARCHIVE, BUY (검정 배경, 회색 테두리/폰트) */}
+              {/* 버튼: ADD TO ARCHIVE, BUY (품절 시 SOLD OUT, 비활성화) */}
               <div className="flex flex-col sm:flex-row gap-4 pt-8">
                 <button
-                  onClick={handleAddToCart}
-                  className="flex-1 py-4 px-8 bg-black border border-white/30 text-white/70 text-[10px] font-light tracking-[0.2em] uppercase hover:bg-white/5 hover:border-white/50 hover:text-white/90 transition-all duration-300"
+                  type="button"
+                  onClick={soldOut ? undefined : handleAddToCart}
+                  disabled={soldOut}
+                  className={`flex-1 py-4 px-8 text-[10px] font-light tracking-[0.2em] uppercase transition-all duration-300 ${
+                    soldOut
+                      ? 'bg-white/5 border border-white/10 text-white/40 cursor-not-allowed opacity-60'
+                      : 'bg-black border border-white/30 text-white/70 hover:bg-white/5 hover:border-white/50 hover:text-white/90'
+                  }`}
                 >
-                  {added ? 'ADDED' : 'ADD TO ARCHIVE'}
+                  {soldOut ? 'SOLD OUT' : added ? 'ADDED' : 'ADD TO ARCHIVE'}
                 </button>
                 <button
-                  onClick={handleBuy}
-                  className="flex-1 py-4 px-8 bg-black border border-white/30 text-white/70 text-[10px] font-light tracking-[0.2em] uppercase hover:bg-white/5 hover:border-white/50 hover:text-white/90 transition-all duration-300"
+                  type="button"
+                  onClick={soldOut ? undefined : handleBuy}
+                  disabled={soldOut}
+                  className={`flex-1 py-4 px-8 text-[10px] font-light tracking-[0.2em] uppercase transition-all duration-300 ${
+                    soldOut
+                      ? 'bg-white/5 border border-white/10 text-white/40 cursor-not-allowed opacity-60'
+                      : 'bg-black border border-white/30 text-white/70 hover:bg-white/5 hover:border-white/50 hover:text-white/90'
+                  }`}
                 >
-                  BUY
+                  {soldOut ? 'SOLD OUT' : 'BUY'}
                 </button>
               </div>
 
@@ -285,6 +295,40 @@ const ProductDetailPage = () => {
           </div>
         </div>
       </div>
+
+      {/* 최근 본 상품 (은은하게) */}
+      {recentlyViewed.length > 0 && (
+        <div className="border-t border-white/5 mt-16 md:mt-24 pt-12 md:pt-16 px-10 md:px-16 lg:px-24 pb-24">
+          <p className="text-[9px] font-light tracking-[0.2em] uppercase text-white/30 mb-6">
+            Recently Viewed
+          </p>
+          <div className="flex gap-4 md:gap-6 overflow-x-auto scrollbar-hide pb-2">
+            {recentlyViewed.map((p) => (
+              <Link
+                key={p.id}
+                to={`/product/${p.id}`}
+                className="flex-shrink-0 w-24 md:w-28 group"
+              >
+                <div className="aspect-[3/4] overflow-hidden bg-zinc-900/50 mb-2">
+                  {p.image && (
+                    <img
+                      src={p.image}
+                      alt={p.name}
+                      className="w-full h-full object-cover opacity-60 group-hover:opacity-90 transition-opacity duration-500"
+                    />
+                  )}
+                </div>
+                <p className="text-[9px] font-light tracking-widest text-white/40 group-hover:text-white/60 truncate transition-colors">
+                  {p.name}
+                </p>
+                <p className="text-[8px] font-light tracking-widest text-white/25 mt-0.5">
+                  {formatPrice(p.price)}
+                </p>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

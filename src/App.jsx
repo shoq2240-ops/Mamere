@@ -23,6 +23,7 @@ import CartPage from './pages/CartPage';
 import CheckoutPage from './pages/CheckoutPage';
 import OrdersPage from './pages/OrdersPage';
 import AdminUploadPage from './pages/AdminUploadPage';
+import AdminOrdersPage from './pages/AdminOrdersPage';
 
 const AnimatedRoutes = () => {
   const location = useLocation();
@@ -47,6 +48,7 @@ const AnimatedRoutes = () => {
         <Route path="/checkout" element={<PageWrapper><CheckoutPage /></PageWrapper>} />
         <Route path="/orders" element={<PageWrapper><OrdersPage /></PageWrapper>} />
         <Route path="/admin/upload" element={<PageWrapper><AdminUploadPage /></PageWrapper>} />
+        <Route path="/admin/orders" element={<PageWrapper><AdminOrdersPage /></PageWrapper>} />
         
         {/* 카테고리별 쇼핑 페이지 */}
         <Route path="/shop/men" element={<PageWrapper><ShopPage category="men" /></PageWrapper>} />

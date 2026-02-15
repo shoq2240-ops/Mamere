@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { supabase, publicTable } from '../lib/supabase';
 import { useAuth } from '../store/AuthContext';
 import { parseDescription, serializeDescription } from '../lib/descriptionSections';
+import { isSoldOut } from '../lib/productStock';
 
 const STORAGE_BUCKET = 'product-images';
 
@@ -44,6 +45,8 @@ const AdminUploadPage = () => {
     category: 'outerwear',
     imageFile: null,
     imagePreview: null,
+    stockQuantity: 0,
+    isManualSoldout: false,
   });
 
   useEffect(() => {
@@ -105,6 +108,9 @@ const AdminUploadPage = () => {
         return;
       }
 
+      // 재고 수량 파싱 (숫자만 허용, 음수 방지)
+      const stockQty = Math.max(0, parseInt(String(form.stockQuantity || 0).replace(/\D/g, ''), 10) || 0);
+
       const row = {
         name,
         price,
@@ -112,6 +118,8 @@ const AdminUploadPage = () => {
         gender: form.gender,
         category: form.category,
         image: imageUrl,
+        stock_quantity: stockQty,
+        is_manual_soldout: form.isManualSoldout,
       };
 
       if (editingId) {
@@ -145,6 +153,8 @@ const AdminUploadPage = () => {
       category: p.category || 'outerwear',
       imageFile: null,
       imagePreview: p.image,
+      stockQuantity: p.stock_quantity ?? p.stock ?? 0,
+      isManualSoldout: p.is_manual_soldout === true,
     });
     setSuccess('');
     setError('');
@@ -175,6 +185,8 @@ const AdminUploadPage = () => {
       category: 'outerwear',
       imageFile: null,
       imagePreview: null,
+      stockQuantity: 0,
+      isManualSoldout: false,
     });
   };
 
@@ -193,9 +205,17 @@ const AdminUploadPage = () => {
   return (
     <div className="min-h-screen bg-black text-white pt-28 pb-24 px-6">
       <div className="max-w-4xl mx-auto">
-        <div className="border-b border-white/10 pb-6 mb-10">
-          <h1 className="text-2xl md:text-3xl font-light uppercase tracking-tight">관리자 · 상품 등록</h1>
-          <p className="text-[11px] text-white/50 tracking-[0.1em] uppercase mt-2">상품을 등록·수정·삭제합니다</p>
+        <div className="border-b border-white/10 pb-6 mb-10 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+          <div>
+            <h1 className="text-2xl md:text-3xl font-light uppercase tracking-tight">관리자 · 상품 등록</h1>
+            <p className="text-[11px] text-white/50 tracking-[0.1em] uppercase mt-2">상품을 등록·수정·삭제합니다</p>
+          </div>
+          <Link
+            to="/admin/orders"
+            className="text-[10px] font-medium tracking-widest uppercase text-white/60 hover:text-white border-b border-white/20 pb-1 w-fit"
+          >
+            주문 관리 →
+          </Link>
         </div>
 
         {/* 등록 폼 */}
@@ -267,6 +287,54 @@ const AdminUploadPage = () => {
                 />
               </div>
               <p className="text-[9px] text-white/30">비워두면 상세 페이지에서 해당 메뉴가 표시되지 않습니다</p>
+            </div>
+
+            {/* [재고 및 품절] 재고 개수 입력 + 수동 품절 토글 스위치 */}
+            <div className="space-y-4 pt-2 border-t border-white/5 mt-6 pt-6">
+              <p className="text-[10px] font-medium tracking-widest uppercase text-white/50">재고 및 품절</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-[10px] font-medium tracking-widest uppercase text-white/40 mb-2">재고 개수</label>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    value={form.stockQuantity}
+                    onChange={(e) => setForm((f) => ({ ...f, stockQuantity: e.target.value }))}
+                    placeholder="0"
+                    className="w-full bg-white/5 border border-white/10 px-4 py-3 text-sm text-white placeholder-white/30 outline-none focus:border-white/30"
+                  />
+                  <p className="text-[9px] text-white/30 mt-1">0이면 자동 품절로 표시됩니다</p>
+                </div>
+                <div>
+                  {/* 관리자용: 재고와 무관하게 상품을 내리고 싶을 때 사용하는 스위치 */}
+                  <label className="block text-[10px] font-medium tracking-widest uppercase text-white/40 mb-2">판매 중단 (수동 품절)</label>
+                  <label className="flex items-center gap-3 cursor-pointer">
+                    <div
+                      role="switch"
+                      aria-checked={form.isManualSoldout}
+                      className={`relative w-12 h-6 rounded-full transition-colors ${
+                        form.isManualSoldout ? 'bg-white/90' : 'bg-white/10'
+                      }`}
+                    >
+                      <div
+                        className={`absolute top-1 w-4 h-4 rounded-full bg-black transition-transform ${
+                          form.isManualSoldout ? 'left-7' : 'left-1'
+                        }`}
+                      />
+                    </div>
+                    <input
+                      type="checkbox"
+                      checked={form.isManualSoldout}
+                      onChange={(e) => setForm((f) => ({ ...f, isManualSoldout: e.target.checked }))}
+                      className="sr-only"
+                    />
+                    <span className="text-[11px] text-white/70">
+                      {form.isManualSoldout ? '품절 (판매 중단)' : '판매 중'}
+                    </span>
+                  </label>
+                  <p className="text-[9px] text-white/30 mt-1">켜면 재고와 무관하게 품절로 표시됩니다</p>
+                </div>
+              </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -356,9 +424,17 @@ const AdminUploadPage = () => {
                     {p.image && <img src={p.image} alt="" className="w-full h-full object-cover" />}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{p.name}</p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm font-medium truncate">{p.name}</p>
+                      {isSoldOut(p) && (
+                        <span className="flex-shrink-0 px-2 py-0.5 text-[9px] font-medium tracking-widest uppercase bg-white/10 text-white/70 border border-white/20">
+                          품절
+                        </span>
+                      )}
+                    </div>
                     <p className="text-[11px] text-white/50">
                       ₩{Number(p.price).toLocaleString()} · {p.gender === 'men' ? '남성' : p.gender === 'women' ? '여성' : '—'} · {getCategoryLabel(p.category)}
+                      {p.stock_quantity != null && ` · 재고 ${p.stock_quantity}개`}
                     </p>
                   </div>
                   <div className="flex gap-2 flex-shrink-0">

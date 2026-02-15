@@ -4,7 +4,8 @@ import { Link } from 'react-router-dom';
 import { useCart } from '../store/CartContext';
 import { useProducts } from '../hooks/useProducts';
 import { ProductCarouselSkeleton, LoadingMessage } from '../components/ProductSkeleton';
-import ProductCard from '../components/ProductCard'; 
+import ProductCard from '../components/ProductCard';
+import LookbookSection from '../components/LookbookSection';
 
 // 데이터 소스: Supabase products 테이블만 사용. 더미/로컬 데이터 없음.
 const LandingPage = () => {
@@ -145,9 +146,9 @@ const LandingPage = () => {
             <button onClick={() => scroll(newRef, 'left')} className="absolute left-4 top-[55%] z-20 opacity-0 group-hover/new:opacity-100 transition-all text-white/50 hover:text-white"><svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="0.5" d="M15 19l-7-7 7-7" /></svg></button>
             <button onClick={() => scroll(newRef, 'right')} className="absolute right-4 top-[55%] z-20 opacity-0 group-hover/new:opacity-100 transition-all text-white/50 hover:text-white"><svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="0.5" d="M9 5l7 7-7 7" /></svg></button>
 
-            <div ref={newRef} className="flex overflow-x-auto gap-6 md:gap-8 px-6 md:px-12 scrollbar-hide snap-x no-scrollbar" style={{ scrollbarWidth: 'none' }}>
+            <div ref={newRef} className="flex overflow-x-auto gap-4 md:gap-8 px-6 md:px-12 scrollbar-hide snap-x no-scrollbar" style={{ scrollbarWidth: 'none' }}>
               {newArrivalsByTab.map((product) => (
-                <div key={product.id} className="min-w-[42%] sm:min-w-[30%] md:min-w-[calc(25%-18px)] snap-start">
+                <div key={product.id} className="w-[calc(50%-8px)] min-w-[calc(50%-8px)] sm:w-[calc(33.333%-12px)] sm:min-w-[calc(33.333%-12px)] md:min-w-[calc(25%-18px)] md:w-auto snap-start flex-shrink-0">
                   <ProductCard product={product} onAddToCart={handleAddToCart} variant="carousel" />
                 </div>
               ))}
@@ -185,9 +186,9 @@ const LandingPage = () => {
             <button onClick={() => scroll(bestRef, 'left')} className="absolute left-4 top-[50%] z-20 opacity-0 group-hover/best:opacity-100 transition-all text-white/30 hover:text-white"><svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="0.5" d="M15 19l-7-7 7-7" /></svg></button>
             <button onClick={() => scroll(bestRef, 'right')} className="absolute right-4 top-[50%] z-20 opacity-0 group-hover/best:opacity-100 transition-all text-white/30 hover:text-white"><svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="0.5" d="M9 5l7 7-7 7" /></svg></button>
 
-            <div ref={bestRef} className="flex overflow-x-auto gap-4 md:gap-6 px-6 md:px-12 scrollbar-hide no-scrollbar" style={{ scrollbarWidth: 'none' }}>
+            <div ref={bestRef} className="flex overflow-x-auto gap-4 md:gap-6 px-6 md:px-12 scrollbar-hide snap-x no-scrollbar" style={{ scrollbarWidth: 'none' }}>
               {bestSellers.map((product) => (
-                <div key={product.id} className="min-w-[38%] sm:min-w-[28%] md:min-w-[calc(20%-16px)]">
+                <div key={product.id} className="w-[calc(50%-8px)] min-w-[calc(50%-8px)] sm:w-[calc(33.333%-12px)] sm:min-w-[calc(33.333%-12px)] md:min-w-[calc(20%-16px)] md:w-auto snap-start flex-shrink-0">
                   <ProductCard product={product} onAddToCart={handleAddToCart} variant="carousel" grayscale />
                 </div>
               ))}
@@ -202,6 +203,9 @@ const LandingPage = () => {
           </div>
         )}
       </section>
+
+      {/* 4. LOOKBOOK SECTION - 브랜드 감성 갤러리 */}
+      <LookbookSection />
 
       <footer className="py-32 text-center opacity-20"><p className="text-[10px] font-light tracking-mega-wide uppercase italic">Double Negative Archive 2026</p></footer>
     </div>
