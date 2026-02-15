@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCart } from '../store/CartContext';
-import { useWishlist } from '../store/WishlistContext';
 import { useAuth } from '../store/AuthContext';
 import { supabase } from '../lib/supabase';
 
@@ -15,7 +14,6 @@ const Navbar = () => {
   const [accountOpen, setAccountOpen] = useState(false);
   const [searchInput, setSearchInput] = useState("");
   const { cartCount } = useCart();
-  const { wishlist } = useWishlist();
   const { isLoggedIn } = useAuth();
   const navigate = useNavigate();
 
@@ -62,8 +60,8 @@ const Navbar = () => {
         { name: '하의', path: '/shop/men?sub=bottom' },
       ]
     },
-    { name: '컬렉션', path: '/collection' },
-    { name: '스토리', path: '/philosophy' },
+    { name: '컬렉션', path: '/collection', mobileLabel: 'Collection' },
+    { name: '스토리', path: '/philosophy', mobileLabel: 'Story' },
   ];
 
   return (
@@ -121,11 +119,11 @@ const Navbar = () => {
             Double <span className="text-purple-500">Negative</span>
           </Link>
 
-          {/* 모바일 버튼/로고/유틸리티 (기존 로직 완벽 유지) */}
-          <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="md:hidden w-10 h-10 -ml-2 flex flex-col justify-center items-center gap-[6px] z-[210]">
-            <motion.span animate={isMobileMenuOpen ? { rotate: 45, y: 7, backgroundColor: "#A855F7" } : { rotate: 0, y: 0, backgroundColor: "#FFFFFF" }} className="w-6 h-[1px] block" />
-            <motion.span animate={isMobileMenuOpen ? { opacity: 0 } : { opacity: 1 }} className="w-6 h-[1px] bg-white block" />
-            <motion.span animate={isMobileMenuOpen ? { rotate: -45, y: -7, backgroundColor: "#A855F7" } : { rotate: 0, y: 0, backgroundColor: "#FFFFFF" }} className="w-6 h-[1px] block" />
+          {/* 모바일: 햄버거 메뉴 (작은 크기) */}
+          <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="md:hidden w-8 h-8 -ml-1 flex flex-col justify-center items-center gap-[4px] z-[210]">
+            <motion.span animate={isMobileMenuOpen ? { rotate: 45, y: 5, backgroundColor: "#A855F7" } : { rotate: 0, y: 0, backgroundColor: "#FFFFFF" }} className="w-4 h-[1px] block" />
+            <motion.span animate={isMobileMenuOpen ? { opacity: 0 } : { opacity: 1 }} className="w-4 h-[1px] bg-white block" />
+            <motion.span animate={isMobileMenuOpen ? { rotate: -45, y: -5, backgroundColor: "#A855F7" } : { rotate: 0, y: 0, backgroundColor: "#FFFFFF" }} className="w-4 h-[1px] block" />
           </button>
 
           <Link to="/" className="md:hidden absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-[12px] font-black italic tracking-[0.4em] uppercase z-[210] transition-shadow duration-300 logo-neon-subtle">
@@ -173,16 +171,6 @@ const Navbar = () => {
             <button onClick={() => { setIsSearchOpen(true); setIsMobileMenuOpen(false); }} className="w-10 h-10 ml-2 flex items-center justify-center hover:text-purple-500 transition-colors">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" /></svg>
             </button>
-            <Link to="/wishlist" className="w-10 h-10 flex items-center justify-center relative hover:text-purple-500 transition-colors" aria-label="위시리스트">
-              <svg className="w-5 h-5" fill={wishlist.length > 0 ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
-              </svg>
-              {wishlist.length > 0 && (
-                <span className="absolute top-2 right-1.5 bg-purple-600 text-white text-[8px] w-4 h-4 rounded-full flex items-center justify-center font-bold">
-                  {wishlist.length}
-                </span>
-              )}
-            </Link>
             <Link to="/cart" className="w-10 h-10 flex items-center justify-center relative hover:text-purple-500 transition-colors">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" /><path d="M3 6h18" /><path d="M16 10a4 4 0 0 1-8 0" /></svg>
               <AnimatePresence mode="popLayout">
@@ -210,17 +198,17 @@ const Navbar = () => {
               </button>
             </div>
             <div className="flex-1 flex flex-col justify-between">
-              <div className="flex flex-col space-y-8">
+              <div className="flex flex-col space-y-2">
                 {navLinks.map((item) => (
                   <div key={item.name}>
                     {item.sub ? (
                       <>
-                        <button onClick={() => { setIsWomenOpen(item.name === '여성' ? !isWomenOpen : false); setIsMenOpen(item.name === '남성' ? !isMenOpen : false); }} className="text-5xl font-bold tracking-tighter uppercase text-left flex items-center justify-between w-full hover:text-purple-500">
-                          {item.name} <span className="text-2xl font-light opacity-20">{(item.name === '여성' ? isWomenOpen : isMenOpen) ? '−' : '+'}</span>
+                        <button onClick={() => { setIsWomenOpen(item.name === '여성' ? !isWomenOpen : false); setIsMenOpen(item.name === '남성' ? !isMenOpen : false); }} className="text-xl font-bold tracking-tighter uppercase text-left flex items-center justify-between w-full hover:text-purple-500 py-2">
+                          {item.name} <span className="text-lg font-light opacity-20">{(item.name === '여성' ? isWomenOpen : isMenOpen) ? '−' : '+'}</span>
                         </button>
                         <AnimatePresence>
                           {(item.name === '여성' ? isWomenOpen : isMenOpen) && (
-                            <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="flex flex-col space-y-6 mt-8 ml-4 border-l border-purple-500/20 pl-6 text-left text-3xl font-light uppercase text-white/80">
+                            <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="flex flex-col space-y-4 mt-4 ml-4 border-l border-purple-500/20 pl-5 text-left text-sm font-light uppercase text-white/80">
                               {item.sub.map((sub) => (
                                 <button key={sub.name} onClick={() => handleMenuClick(sub.path)}>{sub.name}</button>
                               ))}
@@ -229,15 +217,12 @@ const Navbar = () => {
                         </AnimatePresence>
                       </>
                     ) : (
-                      <button onClick={() => handleMenuClick(item.path)} className="text-5xl font-bold tracking-tighter uppercase text-left hover:text-purple-500">{item.name}</button>
+                      <button onClick={() => handleMenuClick(item.path)} className="text-xl font-bold tracking-tighter uppercase text-left hover:text-purple-500 py-2">{item.mobileLabel || item.name}</button>
                     )}
                   </div>
                 ))}
               </div>
               <div className="mt-auto pt-12 border-t border-white/10 flex flex-col space-y-6 text-[14px]">
-                <button onClick={() => handleMenuClick('/wishlist')} className="font-light tracking-[0.15em] uppercase text-white/60 text-left flex justify-between">
-                  Wishlist <span>[{wishlist.length}]</span>
-                </button>
                 <button onClick={() => handleMenuClick('/cart')} className="font-bold tracking-extra-wide uppercase text-purple-500 flex justify-between">Shopping Bag <span>[{cartCount}]</span></button>
                 {isLoggedIn ? (
                   <>
