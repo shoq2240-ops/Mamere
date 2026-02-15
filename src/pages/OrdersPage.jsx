@@ -137,13 +137,13 @@ const OrdersPage = () => {
                   <div className="flex justify-between items-center border-t border-white/5 pt-4">
                     <span className="text-[10px] text-white/50">배송지</span>
                     <span className="text-[11px] text-white/70 text-right max-w-[60%]">
-                      {order.shipping_name} / {order.shipping_address}
+                      {order.shipping_name || order.customer_name} / {order.shipping_address || order.address}
                     </span>
                   </div>
 
                   <div className="flex justify-end pt-2">
                     <span className="text-lg font-black italic text-purple-500">
-                      ₩{(order.total_amount || 0).toLocaleString()}
+                      ₩{(order.total_amount ?? order.total_price ?? 0).toLocaleString()}
                     </span>
                   </div>
                 </motion.div>

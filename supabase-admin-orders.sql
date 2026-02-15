@@ -15,16 +15,23 @@
 ALTER TABLE orders 
 ADD COLUMN IF NOT EXISTS tracking_number TEXT;
 
--- 2. 관리자용 RLS 정책: 로그인 사용자가 모든 주문 조회 가능
+-- 2. 컬럼명 호환: customer_name, phone, total_price, address 추가 (기존 shipping_* 와 중복 저장)
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS customer_name TEXT;
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS phone TEXT;
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS total_price INTEGER;
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS address TEXT;
+
+-- 3. 관리자용 RLS 정책: 로그인 사용자가 모든 주문 조회 가능
 --    (실제 운영 시 profiles.is_admin 등으로 제한 권장)
 CREATE POLICY "Authenticated can read all orders"
   ON orders FOR SELECT
   TO authenticated
   USING (true);
 
--- 3. 관리자용 RLS 정책: 로그인 사용자가 주문 상태/송장 수정 가능
+-- 4. 관리자용 RLS 정책: 로그인 사용자가 주문 상태/송장 수정 가능
 CREATE POLICY "Authenticated can update orders"
   ON orders FOR UPDATE
   TO authenticated
   USING (true)
-  WITH CHECK (true);
+  WITH CHECK (true);  
+

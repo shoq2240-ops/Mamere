@@ -111,7 +111,7 @@ const AdminOrdersPage = () => {
     if (q) {
       list = list.filter(
         (o) =>
-          (o.shipping_name || '').toLowerCase().includes(q) ||
+          ((o.shipping_name || o.customer_name || '').toLowerCase().includes(q)) ||
           (o.id || '').toLowerCase().includes(q)
       );
     }
@@ -175,13 +175,13 @@ const AdminOrdersPage = () => {
       return [
         o.id || '',
         formatDate(o.created_at),
-        o.shipping_name || '',
+        o.shipping_name || o.customer_name || '',
         itemNames,
-        o.total_amount ?? '',
+        o.total_amount ?? o.total_price ?? '',
         o.status || '',
         o.tracking_number || '',
-        o.shipping_address || '',
-        o.shipping_phone || '',
+        o.shipping_address || o.address || '',
+        o.shipping_phone || o.phone || '',
       ];
     });
     const csv = [headers.join(','), ...rows.map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(','))].join('\n');
@@ -328,12 +328,12 @@ const AdminOrdersPage = () => {
                           {order.id?.slice(0, 8)}...
                         </td>
                         <td className="px-4 py-3 text-[11px] text-white/70">{formatDate(order.created_at)}</td>
-                        <td className="px-4 py-3 text-[11px] text-white/80">{order.shipping_name || '-'}</td>
+                        <td className="px-4 py-3 text-[11px] text-white/80">{order.shipping_name || order.customer_name || '-'}</td>
                         <td className="px-4 py-3 text-[11px] text-white/70 max-w-[200px] truncate" title={itemNames}>
                           {itemNames}
                         </td>
                         <td className="px-4 py-3 text-[11px] text-white/80">
-                          ₩{(order.total_amount || 0).toLocaleString()}
+                          ₩{(order.total_amount ?? order.total_price ?? 0).toLocaleString()}
                         </td>
                         <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
                           <select
@@ -418,7 +418,7 @@ const AdminOrdersPage = () => {
                 송장 번호 입력 (선택)
               </h3>
               <p className="text-[10px] text-white/50 mb-3">
-                주문번호 {trackingModalOrder.id?.slice(0, 8)}... · {trackingModalOrder.shipping_name}
+                주문번호 {trackingModalOrder.id?.slice(0, 8)}... · {trackingModalOrder.shipping_name || trackingModalOrder.customer_name}
               </p>
               <input
                 type="text"
@@ -496,15 +496,15 @@ const AdminOrdersPage = () => {
                 </div>
                 <div>
                   <p className="text-[10px] text-white/40 tracking-widest uppercase mb-1">고객명</p>
-                  <p className="text-white/80">{selectedOrder.shipping_name || '-'}</p>
+                  <p className="text-white/80">{selectedOrder.shipping_name || selectedOrder.customer_name || '-'}</p>
                 </div>
                 <div>
                   <p className="text-[10px] text-white/40 tracking-widest uppercase mb-1">배송지 주소</p>
-                  <p className="text-white/80 whitespace-pre-line">{selectedOrder.shipping_address || '-'}</p>
+                  <p className="text-white/80 whitespace-pre-line">{selectedOrder.shipping_address || selectedOrder.address || '-'}</p>
                 </div>
                 <div>
                   <p className="text-[10px] text-white/40 tracking-widest uppercase mb-1">연락처</p>
-                  <p className="text-white/80">{selectedOrder.shipping_phone || '-'}</p>
+                  <p className="text-white/80">{selectedOrder.shipping_phone || selectedOrder.phone || '-'}</p>
                 </div>
                 {selectedOrder.tracking_number && (
                   <div>
@@ -540,7 +540,7 @@ const AdminOrdersPage = () => {
 
                 <div className="pt-4 border-t border-white/10 flex justify-between items-center">
                   <span className="text-[10px] text-white/50 uppercase tracking-widest">총 결제금액</span>
-                  <span className="text-lg font-light text-white">₩{(selectedOrder.total_amount || 0).toLocaleString()}</span>
+                  <span className="text-lg font-light text-white">₩{(selectedOrder.total_amount ?? selectedOrder.total_price ?? 0).toLocaleString()}</span>
                 </div>
 
                 {/* 모달 내 상태 변경 (배송중일 때 송장 입력) */}

@@ -247,15 +247,21 @@ const CheckoutPage = () => {
         return;
       }
 
-      const { error: orderError } = await publicTable('orders').insert({
+      // 컬럼명 이중 매핑: 기존/신규 스키마 모두 호환 (불일치 에러 방지)
+      const orderPayload = {
         user_id: user.id,
-        shipping_name: shippingNameFromProfile,
-        shipping_address: shippingAddressFromProfile,
-        shipping_phone: shippingPhoneFromProfile,
-        total_amount: totalAmount,
         items,
         status: '결제완료',
-      });
+        customer_name: shippingNameFromProfile,
+        shipping_name: shippingNameFromProfile,
+        phone: shippingPhoneFromProfile,
+        shipping_phone: shippingPhoneFromProfile,
+        total_price: totalAmount,
+        total_amount: totalAmount,
+        address: shippingAddressFromProfile,
+        shipping_address: shippingAddressFromProfile,
+      };
+      const { error: orderError } = await publicTable('orders').insert(orderPayload);
 
       setSubmitting(false);
       if (orderError) {
