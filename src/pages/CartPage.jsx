@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useCart } from '../store/CartContext';
-import { Link, useSearchParams } from 'react-router-dom';
+import { useAuth } from '../store/AuthContext';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import LoginRequiredModal from '../components/LoginRequiredModal';
 
 const parsePrice = (price) => {
   if (typeof price === 'number') return price;
@@ -12,9 +14,12 @@ const parsePrice = (price) => {
 };
 
 const CartPage = () => {
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [showOrderSuccess, setShowOrderSuccess] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
   const { cart, removeFromCart, updateQuantity, cartCount } = useCart();
+  const { isLoggedIn } = useAuth();
   const totalPrice = cart.reduce((sum, item) => sum + parsePrice(item.price) * item.quantity, 0);
 
   useEffect(() => {
@@ -75,16 +80,24 @@ const CartPage = () => {
                 <span className="text-xs uppercase tracking-widest text-white/40">Total Amount</span>
                 <span className="text-2xl font-black italic text-purple-500">₩{totalPrice.toLocaleString()}</span>
               </div>
-              <Link
-                to="/checkout"
+              <button
+                type="button"
+                onClick={() => {
+                  if (!isLoggedIn) {
+                    setShowLoginModal(true);
+                    return;
+                  }
+                  navigate('/checkout');
+                }}
                 className="block w-full bg-purple-600 py-4 font-black italic uppercase tracking-widest hover:bg-purple-500 transition-colors text-center"
               >
                 Proceed to Checkout
-              </Link>
+              </button>
             </div>
           </div>
         )}
       </div>
+      <LoginRequiredModal show={showLoginModal} onClose={() => setShowLoginModal(false)} />
     </div>
   );
 };

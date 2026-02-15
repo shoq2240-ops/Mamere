@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import { useCart } from '../store/CartContext';
+import { useAuth } from '../store/AuthContext';
+import LoginRequiredModal from '../components/LoginRequiredModal';
 import { useProducts } from '../hooks/useProducts';
 import { ProductGridSkeleton, LoadingMessage } from '../components/ProductSkeleton';
 import ProductCard from '../components/ProductCard'; 
@@ -9,13 +12,14 @@ import ProductCard from '../components/ProductCard';
 // 데이터 소스: Supabase products 테이블만 사용. category = 'men' | 'women' 시 해당 카테고리만 필터.
 const ShopPage = ({ category }) => {
   const { addToCart } = useCart();
+  const { isLoggedIn } = useAuth();
   const navigate = useNavigate();
+  const [showLoginModal, setShowLoginModal] = useState(false);
   
   const [searchParams, setSearchParams] = useSearchParams();
   const query = searchParams.get('search') || "";
   const sub = searchParams.get('sub') || '';
 
-  const [showToast, setShowToast] = useState(false);
   const [searchTerm, setSearchTerm] = useState(query);
 
   const { products, loading, error } = useProducts();
@@ -32,12 +36,13 @@ const ShopPage = ({ category }) => {
     .filter(product => !sub || (product.category || '').toLowerCase() === sub.toLowerCase())
     .filter(product => product.name.toLowerCase().includes(searchTerm.toLowerCase()));
 
-  // 팝업을 띄우는 핵심 함수
   const handleAddToCart = (product) => {
+    if (!isLoggedIn) {
+      setShowLoginModal(true);
+      return;
+    }
     addToCart(product);
-    setShowToast(true); // 👈 팝업 켜기
-    // 3초 후 자동으로 팝업 닫기
-    setTimeout(() => setShowToast(false), 3000);
+    toast.success('장바구니에 추가되었습니다');
   };
 
   return (
@@ -123,50 +128,7 @@ const ShopPage = ({ category }) => {
         </div>
       )}
 
-      {/* 팝업 메시지 (복구된 부분) */}
-      <AnimatePresence>
-        {showToast && (
-          <>
-            {/* 뒷배경 암전 효과 */}
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setShowToast(false)}
-              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[290]"
-            />
-
-            {/* 정중앙 알림 박스 */}
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.95, x: "-50%", y: "-45%" }}
-              animate={{ opacity: 1, scale: 1, x: "-50%", y: "-50%" }}
-              exit={{ opacity: 0, scale: 0.95, x: "-50%", y: "-48%" }}
-              className="fixed top-1/2 left-1/2 z-[300] w-[85%] max-w-[360px] bg-[#0a0a0a] border border-white/10 p-10 shadow-[0_0_50px_rgba(0,0,0,0.5)]"
-            >
-              <div className="text-center space-y-10">
-                <p className="text-[10px] font-bold tracking-mega-wide uppercase text-purple-500">
-                  Item added to archive
-                </p>
-                
-                <div className="flex flex-col gap-3">
-                  <button 
-                    onClick={() => navigate('/cart')}
-                    className="w-full bg-white text-black py-4 text-[10px] font-black tracking-ultra-wide uppercase hover:bg-purple-600 hover:text-white transition-all duration-500"
-                  >
-                    View Archive
-                  </button>
-                  <button 
-                    onClick={() => setShowToast(false)}
-                    className="w-full py-2 text-[9px] font-light tracking-extra-wide uppercase text-white/30 hover:text-white transition-colors"
-                  >
-                    Continue Shopping
-                  </button>
-                </div>
-              </div>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
+      <LoginRequiredModal show={showLoginModal} onClose={() => setShowLoginModal(false)} />
     </div>
   );
 };

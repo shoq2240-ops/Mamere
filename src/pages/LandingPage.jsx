@@ -1,7 +1,10 @@
 import React, { useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import { useCart } from '../store/CartContext';
+import { useAuth } from '../store/AuthContext';
+import LoginRequiredModal from '../components/LoginRequiredModal';
 import { useProducts } from '../hooks/useProducts';
 import { ProductCarouselSkeleton, LoadingMessage } from '../components/ProductSkeleton';
 import ProductCard from '../components/ProductCard';
@@ -10,6 +13,8 @@ import LookbookSection from '../components/LookbookSection';
 // 데이터 소스: Supabase products 테이블만 사용. 더미/로컬 데이터 없음.
 const LandingPage = () => {
   const { addToCart } = useCart();
+  const { isLoggedIn } = useAuth();
+  const [showLoginModal, setShowLoginModal] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
   const [popupItem, setPopupItem] = useState("");
   const [newArrivalTab, setNewArrivalTab] = useState('men'); // 'men' | 'women'
@@ -24,9 +29,14 @@ const LandingPage = () => {
   const bestRef = useRef(null);
 
   const handleAddToCart = (product, e) => {
-    e.preventDefault();
-    e.stopPropagation();
+    e?.preventDefault?.();
+    e?.stopPropagation?.();
+    if (!isLoggedIn) {
+      setShowLoginModal(true);
+      return;
+    }
     addToCart(product);
+    toast.success('장바구니에 추가되었습니다');
     setPopupItem(product.name);
     setShowPopup(true);
     setTimeout(() => setShowPopup(false), 2000);
@@ -44,7 +54,7 @@ const LandingPage = () => {
 
   return (
     <div className="bg-black text-white antialiased overflow-x-hidden relative">
-      
+      <LoginRequiredModal show={showLoginModal} onClose={() => setShowLoginModal(false)} />
       {/* 장바구니 알림 팝업 (Shop 페이지 디자인 동일) */}
       <AnimatePresence>
         {showPopup && (

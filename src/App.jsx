@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { Toaster } from "react-hot-toast";
 import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { CartProvider, useCart } from "./store/CartContext";
@@ -86,6 +87,19 @@ function App() {
         <Router>
           <ScrollToTop />
           <div className="flex flex-col h-screen max-h-[100dvh] bg-black text-white antialiased overflow-hidden flex">
+            <Toaster
+              position="top-center"
+              toastOptions={{
+                duration: 2500,
+                style: {
+                  background: '#171717',
+                  color: '#fff',
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  borderRadius: 0,
+                },
+                success: { iconTheme: { primary: '#a855f7' } },
+              }}
+            />
             <header className="sticky top-0 z-[100] flex flex-col flex-none shrink-0">
               <Marquee />
               <Navbar />

@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import toast from 'react-hot-toast';
 import { useCart } from '../store/CartContext';
+import { useAuth } from '../store/AuthContext';
+import LoginRequiredModal from '../components/LoginRequiredModal';
 import { useWishlist } from '../store/WishlistContext';
 import { useRecentlyViewed } from '../hooks/useRecentlyViewed';
 import { publicTable } from '../lib/supabase';
@@ -57,6 +60,8 @@ const AccordionItem = ({ title, content, isOpen, onToggle }) => (
 const ProductDetailPage = () => {
   const { id } = useParams();
   const { addToCart } = useCart();
+  const { isLoggedIn } = useAuth();
+  const [showLoginModal, setShowLoginModal] = useState(false);
   const { toggleWishlist, isInWishlist } = useWishlist();
   const { items: recentlyViewedRaw, addRecentlyViewed } = useRecentlyViewed();
   const [product, setProduct] = useState(null);
@@ -92,12 +97,17 @@ const ProductDetailPage = () => {
 
   const handleAddToCart = () => {
     if (!product) return;
+    if (!isLoggedIn) {
+      setShowLoginModal(true);
+      return;
+    }
     addToCart({
       ...product,
       image: product.image || images[0],
       price: formatPrice(product.price),
       selectedSize: selectedSize,
     });
+    toast.success('장바구니에 추가되었습니다');
     setAdded(true);
     setTimeout(() => setAdded(false), 2000);
   };
@@ -148,6 +158,7 @@ const ProductDetailPage = () => {
 
   return (
     <div className="bg-black min-h-screen text-white antialiased">
+      <LoginRequiredModal show={showLoginModal} onClose={() => setShowLoginModal(false)} />
       {/* 뒤로가기 */}
       <div className="px-10 md:px-16 lg:px-24 pt-10 md:pt-14 pb-8">
         <Link

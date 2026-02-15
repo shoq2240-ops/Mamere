@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import * as PortOne from '@portone/browser-sdk/v2';
 import { useAuth } from '../store/AuthContext';
 import { useCart } from '../store/CartContext';
@@ -282,7 +283,9 @@ const CheckoutPage = () => {
         await publicTable('products').update({ stock_quantity: newStock }).eq('id', item.id);
       }
 
+      setSubmitting(false);
       clearCart();
+      toast.success('주문이 완료되었습니다');
       navigate('/cart?order=success', { replace: true });
     } catch (err) {
       setSubmitting(false);
@@ -398,7 +401,7 @@ const CheckoutPage = () => {
             <button
               type="submit"
               disabled={submitting || profileLoading}
-              className="flex-1 bg-white text-black py-4 text-[11px] font-black tracking-widest uppercase hover:bg-purple-600 hover:text-white transition-colors disabled:opacity-50"
+              className="flex-1 bg-white text-black py-4 text-[11px] font-black tracking-widest uppercase hover:bg-purple-600 hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {submitting ? '처리 중...' : '결제하기'}
             </button>

@@ -41,7 +41,7 @@ const LoginPage = () => {
 
     setLoading(false);
     if (error) {
-      setError(error.message);
+      setError('회원 정보가 없습니다');
       return;
     }
     try {

@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import { useWishlist } from '../store/WishlistContext';
 import { useCart } from '../store/CartContext';
+import { useAuth } from '../store/AuthContext';
+import LoginRequiredModal from '../components/LoginRequiredModal';
 import { publicTable } from '../lib/supabase';
 
 const formatPrice = (price) => {
@@ -15,6 +18,8 @@ const formatPrice = (price) => {
 const WishlistPage = () => {
   const { wishlist, toggleWishlist } = useWishlist();
   const { addToCart } = useCart();
+  const { isLoggedIn } = useAuth();
+  const [showLoginModal, setShowLoginModal] = useState(false);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -43,6 +48,7 @@ const WishlistPage = () => {
 
   return (
     <div className="bg-black min-h-screen text-white antialiased pt-24 pb-32 px-8 md:px-12">
+      <LoginRequiredModal show={showLoginModal} onClose={() => setShowLoginModal(false)} />
       <div className="max-w-6xl mx-auto">
         <h1 className="text-[10px] tracking-[0.2em] uppercase text-purple-500 font-medium mb-2">Wishlist</h1>
         <h2 className="text-2xl md:text-3xl font-light uppercase tracking-tight mb-12">
@@ -94,7 +100,14 @@ const WishlistPage = () => {
                     {formatPrice(product.price)}
                   </p>
                   <button
-                    onClick={() => addToCart({ ...product, price: formatPrice(product.price) })}
+                    onClick={() => {
+                      if (!isLoggedIn) {
+                        setShowLoginModal(true);
+                        return;
+                      }
+                      addToCart({ ...product, price: formatPrice(product.price) });
+                      toast.success('장바구니에 추가되었습니다');
+                    }}
                     className="mt-3 w-full py-3 border border-white/20 text-[10px] font-light tracking-[0.2em] uppercase text-white/70 hover:bg-white/5 hover:border-white/40 transition-all"
                   >
                     ADD TO ARCHIVE
