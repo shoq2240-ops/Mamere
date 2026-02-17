@@ -20,16 +20,16 @@ const LookbookSection = ({ items = LOOKBOOK_ITEMS }) => {
   }, []);
 
   return (
-    <section className="lookbook-section relative border-t border-white/5 overflow-hidden">
+    <section className="lookbook-section relative border-t border-[#F0F0F0] overflow-hidden bg-[#FFFFFF]">
       <div className="px-6 md:px-12 pt-12 md:pt-16 pb-4">
-        <p className="text-purple-500 text-[8pt] md:text-[9pt] font-black tracking-widest uppercase italic">Lookbook</p>
+        <p className="text-[#666666] text-[8pt] md:text-[9pt] font-bold tracking-[0.2em] uppercase">Lookbook</p>
       </div>
       <div
         ref={scrollRef}
         className="flex overflow-x-auto overflow-y-hidden snap-x snap-mandatory scroll-smooth lookbook-scroll pb-8 md:pb-12 pl-[50vw] pr-[50vw] md:pl-[45vw] md:pr-[45vw]"
         style={{
           scrollbarWidth: 'thin',
-          scrollbarColor: 'rgba(255,255,255,0.2) transparent',
+          scrollbarColor: 'rgba(0,0,0,0.15) transparent',
           height: 'min(85vh, 850px)',
           WebkitOverflowScrolling: 'touch',
         }}
@@ -47,7 +47,7 @@ const LookbookSection = ({ items = LOOKBOOK_ITEMS }) => {
           background: transparent;
         }
         .lookbook-scroll::-webkit-scrollbar-thumb {
-          background: rgba(255,255,255,0.15);
+          background: rgba(0,0,0,0.15);
           border-radius: 2px;
         }
       `}</style>
@@ -69,7 +69,7 @@ const LookbookSlide = ({ item, index }) => {
       style={{ scrollSnapAlign: 'center' }}
     >
       <div
-        className="relative overflow-hidden bg-zinc-900 flex items-center justify-center"
+        className="relative overflow-hidden bg-[#F5F5F5] flex items-center justify-center"
         style={{
           width: 'min(85vw, 900px)',
           height: 'min(80vh, 700px)',
@@ -81,8 +81,8 @@ const LookbookSlide = ({ item, index }) => {
           className="w-full h-full object-cover object-center"
           loading="lazy"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none" />
-        <p className="absolute bottom-6 left-6 md:bottom-8 md:left-8 text-[9px] md:text-[10px] font-light tracking-[0.25em] uppercase text-white/50">
+        <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent pointer-events-none" />
+        <p className="absolute bottom-6 left-6 md:bottom-8 md:left-8 text-[9px] md:text-[10px] font-light tracking-[0.25em] uppercase text-[#666666]">
           {item.caption}
         </p>
       </div>

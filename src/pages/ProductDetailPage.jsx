@@ -22,19 +22,19 @@ const getImageList = (product) => {
 const DEFAULT_SIZES = ['46', '48', '50', '52'];
 
 const AccordionItem = ({ title, content, isOpen, onToggle }) => (
-  <div className="border-b border-white/10">
+  <div className="border-b border-[#F0F0F0]">
     <button
       type="button"
       onClick={onToggle}
       className="w-full flex items-center justify-between py-4 text-left group"
     >
-      <span className="text-[10px] font-light tracking-widest uppercase text-white/70 group-hover:text-white/90 transition-colors">
+      <span className="text-[10px] font-light tracking-widest uppercase text-[#333333] group-hover:text-[#000000] transition-colors">
         {title}
       </span>
       <motion.span
         animate={{ rotate: isOpen ? 45 : 0 }}
         transition={{ duration: 0.25, ease: 'easeInOut' }}
-        className="text-white/50 text-xl font-light w-6 h-6 flex items-center justify-center"
+        className="text-[#999999] text-xl font-light w-6 h-6 flex items-center justify-center"
       >
         +
       </motion.span>
@@ -48,7 +48,7 @@ const AccordionItem = ({ title, content, isOpen, onToggle }) => (
           transition={{ duration: 0.3, ease: 'easeInOut' }}
           className="overflow-hidden"
         >
-          <p className="text-[11px] font-light tracking-widest text-white/50 leading-relaxed pb-4 whitespace-pre-line">
+          <p className="text-[11px] font-light tracking-widest text-[#666666] leading-relaxed pb-4 whitespace-pre-line">
             {content}
           </p>
         </motion.div>
@@ -120,21 +120,21 @@ const ProductDetailPage = () => {
   // 로딩 중이거나 product가 없으면 렌더링 전에 early return (데이터 로드 전 예외 처리)
   if (loading || !product) {
     return (
-      <div className="min-h-[70vh] flex items-center justify-center bg-black px-12 py-24">
-        <p className="text-[10px] tracking-[0.2em] uppercase text-white/40">Loading...</p>
+      <div className="min-h-[70vh] flex items-center justify-center bg-[#FFFFFF] px-12 py-24">
+        <p className="text-[10px] tracking-[0.2em] uppercase text-[#999999]">Loading...</p>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-[70vh] flex flex-col items-center justify-center bg-black px-12 py-24">
-        <p className="text-[10px] tracking-[0.2em] uppercase text-white/40 text-center">
+      <div className="min-h-[70vh] flex flex-col items-center justify-center bg-[#FFFFFF] px-12 py-24">
+        <p className="text-[10px] tracking-[0.2em] uppercase text-[#999999] text-center">
           {error || '상품을 찾을 수 없습니다.'}
         </p>
         <Link
           to="/"
-          className="mt-10 text-[10px] tracking-[0.15em] uppercase text-white/60 hover:text-white border-b border-white/20 pb-1 transition-colors"
+          className="mt-10 text-[10px] tracking-[0.15em] uppercase text-[#666666] hover:text-[#000000] border-b border-[#E5E5E5] pb-1 transition-colors"
         >
           메인으로 돌아가기
         </Link>
@@ -157,15 +157,15 @@ const ProductDetailPage = () => {
   const recentlyViewed = recentlyViewedRaw.filter((p) => p?.id !== product?.id).slice(0, 5);
 
   return (
-    <div className="bg-black min-h-screen text-white antialiased">
+    <div className="bg-[#FFFFFF] min-h-screen text-[#000000] antialiased">
       <LoginRequiredModal show={showLoginModal} onClose={() => setShowLoginModal(false)} />
       {/* 뒤로가기 */}
       <div className="px-10 md:px-16 lg:px-24 pt-10 md:pt-14 pb-8">
         <Link
           to="/"
-          className="inline-flex items-center gap-2 text-[10px] font-light tracking-[0.2em] uppercase text-white/50 hover:text-white transition-colors"
+          className="inline-flex items-center gap-2 text-[10px] font-light tracking-[0.2em] uppercase text-[#666666] hover:text-[#000000] transition-colors"
         >
-          <span>←</span> Double Negative
+          <span>←</span> jvng.
         </Link>
       </div>
 
@@ -182,13 +182,13 @@ const ProductDetailPage = () => {
             >
               {/* 상품명 + 위시리스트 (하트: 상품명 옆 가시성 있게) */}
               <div className="flex items-start gap-2">
-                <h1 className="text-[11px] font-normal tracking-widest uppercase text-white/90 leading-relaxed flex-1 min-w-0">
+                <h1 className="text-[11px] font-normal tracking-widest uppercase text-[#000000] leading-relaxed flex-1 min-w-0">
                   {product?.name}
                 </h1>
                 <button
                   type="button"
                   onClick={() => toggleWishlist(product?.id)}
-                  className="flex-shrink-0 p-2 -m-2 text-white hover:text-purple-400 transition-colors"
+                  className="flex-shrink-0 p-2 -m-2 text-[#000000] hover:opacity-70 transition-colors"
                   aria-label={isInWishlist(product?.id) ? '위시리스트에서 제거' : '위시리스트에 추가'}
                 >
                   <svg
@@ -225,7 +225,7 @@ const ProductDetailPage = () => {
 
               {/* 사이즈 선택 (리스트 형) */}
               <div className="space-y-4 pt-4">
-                <p className="text-[10px] font-light tracking-widest uppercase text-white/40">
+                <p className="text-[10px] font-light tracking-widest uppercase text-[#999999]">
                   Size
                 </p>
                 <ul className="flex flex-wrap gap-3">
@@ -236,8 +236,8 @@ const ProductDetailPage = () => {
                         onClick={() => setSelectedSize(size)}
                         className={`w-12 h-12 flex items-center justify-center text-[11px] font-light tracking-widest uppercase transition-all border ${
                           selectedSize === size
-                            ? 'border-white/60 text-white bg-white/5'
-                            : 'border-white/20 text-white/60 hover:border-white/40 hover:text-white/80'
+                            ? 'border-[#000000] text-[#000000] bg-[#F5F5F5]'
+                            : 'border-[#E5E5E5] text-[#666666] hover:border-[#000000] hover:text-[#000000]'
                         }`}
                       >
                         {size}
@@ -255,8 +255,8 @@ const ProductDetailPage = () => {
                   disabled={soldOut}
                   className={`flex-1 py-4 px-8 text-[10px] font-light tracking-[0.2em] uppercase transition-all duration-300 ${
                     soldOut
-                      ? 'bg-white/5 border border-white/10 text-white/40 cursor-not-allowed opacity-60'
-                      : 'bg-black border border-white/30 text-white/70 hover:bg-white/5 hover:border-white/50 hover:text-white/90'
+                      ? 'bg-white/5 border border-white/10 text-[#999999] cursor-not-allowed opacity-60'
+                      : 'bg-black border border-white/30 text-white/70 hover:bg-white/5 hover:border-white/50 hover:text-[#000000]'
                   }`}
                 >
                   {soldOut ? 'SOLD OUT' : added ? 'ADDED' : 'ADD TO ARCHIVE'}
@@ -267,8 +267,8 @@ const ProductDetailPage = () => {
                   disabled={soldOut}
                   className={`flex-1 py-4 px-8 text-[10px] font-light tracking-[0.2em] uppercase transition-all duration-300 ${
                     soldOut
-                      ? 'bg-white/5 border border-white/10 text-white/40 cursor-not-allowed opacity-60'
-                      : 'bg-black border border-white/30 text-white/70 hover:bg-white/5 hover:border-white/50 hover:text-white/90'
+                      ? 'bg-white/5 border border-white/10 text-[#999999] cursor-not-allowed opacity-60'
+                      : 'bg-black border border-white/30 text-white/70 hover:bg-white/5 hover:border-white/50 hover:text-[#000000]'
                   }`}
                 >
                   {soldOut ? 'SOLD OUT' : 'BUY'}
@@ -276,7 +276,7 @@ const ProductDetailPage = () => {
               </div>
 
               {added && (
-                <p className="text-[9px] tracking-[0.15em] uppercase text-white/40">
+                <p className="text-[9px] tracking-[0.15em] uppercase text-[#999999]">
                   장바구니에 추가되었습니다.
                 </p>
               )}
@@ -294,7 +294,7 @@ const ProductDetailPage = () => {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ duration: 0.5, delay: idx * 0.1 }}
-                  className="w-full aspect-[3/4] lg:aspect-[4/5] bg-zinc-900/80 mb-0"
+                  className="w-full aspect-[3/4] lg:aspect-[4/5] bg-[#F5F5F5] mb-0"
                 >
                   <img
                     src={src}
@@ -310,8 +310,8 @@ const ProductDetailPage = () => {
 
       {/* 최근 본 상품 (은은하게) */}
       {recentlyViewed.length > 0 && (
-        <div className="border-t border-white/5 mt-16 md:mt-24 pt-12 md:pt-16 px-10 md:px-16 lg:px-24 pb-24">
-          <p className="text-[9px] font-light tracking-[0.2em] uppercase text-white/30 mb-6">
+        <div className="border-t border-[#F0F0F0] mt-16 md:mt-24 pt-12 md:pt-16 px-10 md:px-16 lg:px-24 pb-24">
+          <p className="text-[9px] font-light tracking-[0.2em] uppercase text-[#999999] mb-6">
             Recently Viewed
           </p>
           <div className="flex gap-4 md:gap-6 overflow-x-auto scrollbar-hide pb-2">
@@ -321,7 +321,7 @@ const ProductDetailPage = () => {
                 to={`/product/${p.id}`}
                 className="flex-shrink-0 w-24 md:w-28 group"
               >
-                <div className="aspect-[3/4] overflow-hidden bg-zinc-900/50 mb-2">
+                <div className="aspect-[3/4] overflow-hidden bg-[#F5F5F5] mb-2">
                   {p.image && (
                     <img
                       src={p.image}
@@ -330,10 +330,10 @@ const ProductDetailPage = () => {
                     />
                   )}
                 </div>
-                <p className="text-[9px] font-light tracking-widest text-white/40 group-hover:text-white/60 truncate transition-colors">
+                <p className="text-[9px] font-light tracking-widest text-[#999999] group-hover:text-[#000000] truncate transition-colors">
                   {p.name}
                 </p>
-                <p className="text-[8px] font-light tracking-widest text-white/25 mt-0.5">
+                <p className="text-[8px] font-light tracking-widest text-[#CCCCCC] mt-0.5">
                   {formatPrice(p.price)}
                 </p>
               </Link>

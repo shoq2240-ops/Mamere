@@ -90,7 +90,7 @@ const ProfilePage = () => {
   if (authLoading || !isLoggedIn) return null;
 
   return (
-    <div className="min-h-screen bg-black flex items-center justify-center px-8 pt-24 pb-20 antialiased">
+    <div className="min-h-screen bg-[#FFFFFF] flex items-center justify-center px-8 pt-24 pb-20 antialiased">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -98,7 +98,7 @@ const ProfilePage = () => {
         className="w-full max-w-md"
       >
         <div className="text-center space-y-2 mb-10">
-          <h1 className="text-4xl font-black italic uppercase tracking-tighter text-white">
+          <h1 className="text-4xl font-black italic uppercase tracking-tighter text-[#000000]">
             Profile
           </h1>
           <p className="text-[10px] text-neutral-500 tracking-mega-wide uppercase font-mono">
@@ -108,8 +108,8 @@ const ProfilePage = () => {
 
         {loading ? (
           <div className="py-12 text-center">
-            <div className="inline-block w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full animate-spin" />
-            <p className="mt-4 text-[10px] text-white/40 tracking-widest uppercase">Loading...</p>
+            <div className="inline-block w-8 h-8 border-2 border-[#CCCCCC] border-t-transparent rounded-full animate-spin" />
+            <p className="mt-4 text-[10px] text-[#000000]/40 tracking-widest uppercase">Loading...</p>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-5">
@@ -117,11 +117,11 @@ const ProfilePage = () => {
               <p className="text-red-500 text-[11px] text-center">{error}</p>
             )}
             {message && (
-              <p className="text-purple-400 text-[11px] text-center">{message}</p>
+              <p className="text-neutral-300 text-[11px] text-center">{message}</p>
             )}
 
             <div>
-              <label className="block text-[10px] font-bold tracking-widest uppercase text-white/50 mb-2">
+              <label className="block text-[10px] font-bold tracking-widest uppercase text-[#000000]/50 mb-2">
                 이름
               </label>
               <input
@@ -129,12 +129,12 @@ const ProfilePage = () => {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="이름"
-                className="w-full bg-neutral-900/30 border border-white/5 px-6 py-4 text-[11px] text-white outline-none focus:border-purple-500/50 transition-all placeholder:text-neutral-600"
+                className="w-full bg-[#F9F9F9] px-6 py-4 text-[11px] text-[#000000] outline-none focus:bg-[#F5F5F5] transition-all placeholder:text-[#999999]"
               />
             </div>
 
             <div>
-              <label className="block text-[10px] font-bold tracking-widest uppercase text-white/50 mb-2">
+              <label className="block text-[10px] font-bold tracking-widest uppercase text-[#000000]/50 mb-2">
                 주소
               </label>
               <AddressInput
@@ -144,12 +144,12 @@ const ProfilePage = () => {
                 onDetailChange={setAddressDetail}
                 addressPlaceholder="기본 주소 (주소 찾기)"
                 detailPlaceholder="상세 주소 (동, 호수 등)"
-                inputClassName="bg-neutral-900/30 px-6 py-4"
+                inputClassName="bg-[#F9F9F9] px-6 py-4"
               />
             </div>
 
             <div>
-              <label className="block text-[10px] font-bold tracking-widest uppercase text-white/50 mb-2">
+              <label className="block text-[10px] font-bold tracking-widest uppercase text-[#000000]/50 mb-2">
                 전화번호
               </label>
               <input
@@ -157,14 +157,14 @@ const ProfilePage = () => {
                 value={phone}
                 onChange={(e) => setPhone(e.target.value.replace(/[^\d\-]/g, '').slice(0, 13))}
                 placeholder="010-0000-0000"
-                className="w-full bg-neutral-900/30 border border-white/5 px-6 py-4 text-[11px] text-white outline-none focus:border-purple-500/50 transition-all placeholder:text-neutral-600"
+                className="w-full bg-[#F9F9F9] px-6 py-4 text-[11px] text-[#000000] outline-none focus:bg-[#F5F5F5] transition-all placeholder:text-[#999999]"
               />
             </div>
 
             <button
               type="submit"
               disabled={saving}
-              className="w-full bg-white text-black py-5 text-[11px] font-black uppercase tracking-extra-wide hover:bg-purple-600 hover:text-white transition-all duration-500 disabled:opacity-50"
+              className="w-full bg-[#000000] text-[#FFFFFF] py-5 text-[11px] font-black uppercase tracking-extra-wide hover:bg-neutral-100 transition-all duration-500 disabled:opacity-50"
             >
               {saving ? '저장 중...' : '저장'}
             </button>
@@ -174,13 +174,13 @@ const ProfilePage = () => {
         <div className="mt-8 flex justify-center gap-6">
           <Link
             to="/orders"
-            className="text-[10px] font-bold tracking-widest uppercase text-purple-500 hover:text-purple-400 transition-colors"
+            className="text-[10px] font-bold tracking-widest uppercase text-[#000000]/90 hover:text-[#000000] transition-colors"
           >
             주문 내역
           </Link>
           <Link
             to="/"
-            className="text-[10px] font-light tracking-widest uppercase text-white/40 hover:text-purple-500 transition-colors"
+            className="text-[10px] font-light tracking-widest uppercase text-[#000000]/40 hover:text-[#000000] transition-colors"
           >
             ← 홈으로
           </Link>

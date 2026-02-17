@@ -297,12 +297,12 @@ const CheckoutPage = () => {
   if (authLoading || !isLoggedIn || cart.length === 0) return null;
 
   return (
-    <div className="pt-32 pb-20 px-6 min-h-screen bg-black text-white antialiased">
+    <div className="pt-32 pb-20 px-6 min-h-screen bg-[#FFFFFF] text-[#000000] antialiased">
       <div className="max-w-2xl mx-auto">
         <h1 className="text-4xl font-black italic tracking-tighter uppercase mb-2">
           Checkout
         </h1>
-        <p className="text-[10px] text-white/40 tracking-widest uppercase mb-10">
+        <p className="text-[10px] text-[#999999] tracking-widest uppercase mb-10">
           배송지 정보를 확인하고 결제를 완료하세요
         </p>
 
@@ -313,26 +313,26 @@ const CheckoutPage = () => {
           className="space-y-8"
         >
           {/* 배송지 정보 */}
-          <section className="border border-white/10 p-6 space-y-4">
-            <h2 className="text-[11px] font-bold tracking-widest uppercase text-purple-500 mb-4">
+          <section className="border border-[#F0F0F0] p-6 space-y-4">
+            <h2 className="text-[11px] font-bold tracking-widest uppercase text-[#000000] mb-4">
               배송지 정보
             </h2>
             {profileLoading ? (
-              <div className="py-4 text-white/40 text-[11px]">불러오는 중...</div>
+              <div className="py-4 text-[#999999] text-[11px]">불러오는 중...</div>
             ) : (
               <>
                 <div>
-                  <label className="block text-[10px] font-bold tracking-widest uppercase text-white/50 mb-2">이름</label>
+                  <label className="block text-[10px] font-bold tracking-widest uppercase text-[#666666] mb-2">이름</label>
                   <input
                     type="text"
                     value={shippingName}
                     onChange={(e) => setShippingName(e.target.value.slice(0, 100))}
                     placeholder="수령인 이름"
-                    className="w-full bg-neutral-900/50 border border-white/5 px-4 py-3 text-[11px] text-white outline-none focus:border-purple-500/50 placeholder:text-neutral-600"
+                    className="w-full bg-[#F9F9F9] px-4 py-3 text-[11px] text-[#000000] outline-none focus:bg-[#F5F5F5] placeholder:text-[#999999]"
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-bold tracking-widest uppercase text-white/50 mb-2">주소</label>
+                  <label className="block text-[10px] font-bold tracking-widest uppercase text-[#666666] mb-2">주소</label>
                   <AddressInput
                     addressValue={shippingAddress}
                     onAddressChange={setShippingAddress}
@@ -343,13 +343,13 @@ const CheckoutPage = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-bold tracking-widest uppercase text-white/50 mb-2">전화번호</label>
+                  <label className="block text-[10px] font-bold tracking-widest uppercase text-[#666666] mb-2">전화번호</label>
                   <input
                     type="tel"
                     value={shippingPhone}
                     onChange={(e) => setShippingPhone(e.target.value.replace(/[^\d\-]/g, '').slice(0, 13))}
                     placeholder="010-0000-0000"
-                    className="w-full bg-neutral-900/50 border border-white/5 px-4 py-3 text-[11px] text-white outline-none focus:border-purple-500/50 placeholder:text-neutral-600"
+                    className="w-full bg-[#F9F9F9] px-4 py-3 text-[11px] text-[#000000] outline-none focus:bg-[#F5F5F5] placeholder:text-[#999999]"
                   />
                 </div>
                 {showSaveAsDefaultCheckbox && (
@@ -358,9 +358,9 @@ const CheckoutPage = () => {
                       type="checkbox"
                       checked={saveAsDefault}
                       onChange={(e) => setSaveAsDefault(e.target.checked)}
-                      className="w-4 h-4 rounded border-white/20 bg-neutral-900 text-purple-500 focus:ring-purple-500 focus:ring-offset-0"
+                      className="w-4 h-4 rounded border-[#CCCCCC] bg-white text-[#000000] focus:ring-[#000000] focus:ring-offset-0"
                     />
-                    <span className="text-[11px] text-white/70 group-hover:text-white/90 transition-colors">
+                    <span className="text-[11px] text-[#666666] group-hover:text-[#000000] transition-colors">
                       이 주소를 기본 배송지로 저장하시겠습니까?
                     </span>
                   </label>
@@ -370,21 +370,21 @@ const CheckoutPage = () => {
           </section>
 
           {/* 주문 요약 */}
-          <section className="border border-white/10 p-6">
-            <h2 className="text-[11px] font-bold tracking-widest uppercase text-purple-500 mb-4">
+          <section className="border border-[#F0F0F0] p-6">
+            <h2 className="text-[11px] font-bold tracking-widest uppercase text-[#000000] mb-4">
               주문 요약
             </h2>
             <ul className="space-y-3 mb-6">
               {cart.map((item) => (
                 <li key={item.id} className="flex justify-between text-[11px]">
-                  <span className="text-white/80 truncate max-w-[60%]">{item.name} × {item.quantity}</span>
-                  <span className="text-purple-500">₩{(parsePrice(item.price) * item.quantity).toLocaleString()}</span>
+                  <span className="text-[#333333] truncate max-w-[60%]">{item.name} × {item.quantity}</span>
+                  <span className="text-[#000000]">₩{(parsePrice(item.price) * item.quantity).toLocaleString()}</span>
                 </li>
               ))}
             </ul>
-            <div className="flex justify-between items-center border-t border-white/10 pt-4">
-              <span className="text-[11px] font-bold tracking-widest uppercase text-white/70">총 결제 금액</span>
-              <span className="text-xl font-black italic text-purple-500">₩{displayTotal.toLocaleString()}</span>
+            <div className="flex justify-between items-center border-t border-[#F0F0F0] pt-4">
+              <span className="text-[11px] font-bold tracking-widest uppercase text-[#666666]">총 결제 금액</span>
+              <span className="text-xl font-black italic text-[#000000]">₩{displayTotal.toLocaleString()}</span>
             </div>
           </section>
 
@@ -395,14 +395,14 @@ const CheckoutPage = () => {
           <div className="flex gap-4">
             <Link
               to="/cart"
-              className="flex-1 border border-white/20 py-4 text-center text-[11px] font-bold tracking-widest uppercase text-white/70 hover:bg-white/5 transition-colors"
+              className="flex-1 border border-white/20 py-4 text-center text-[11px] font-bold tracking-widest uppercase text-[#666666] hover:bg-[#F9F9F9] transition-colors"
             >
               장바구니로
             </Link>
             <button
               type="submit"
               disabled={submitting || profileLoading}
-              className="flex-1 bg-white text-black py-4 text-[11px] font-black tracking-widest uppercase hover:bg-purple-600 hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 bg-[#000000] text-[#FFFFFF] py-4 text-[11px] font-black tracking-widest uppercase hover:opacity-90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {submitting ? '처리 중...' : '결제하기'}
             </button>

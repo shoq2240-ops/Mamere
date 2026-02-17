@@ -27,7 +27,7 @@ const lookbookItems = [
 
 const LookbookPage = () => {
   return (
-    <div className="bg-black text-white pt-32 pb-40 overflow-hidden antialiased">
+    <div className="bg-[#FFFFFF] text-[#000000] pt-32 pb-40 overflow-hidden antialiased">
       {/* 헤더 섹션 */}
       <div className="px-8 mb-24">
         <motion.h1 
@@ -35,7 +35,7 @@ const LookbookPage = () => {
           whileInView={{ opacity: 1, y: 0 }}
           className="text-6xl md:text-8xl font-black italic tracking-tighter uppercase"
         >
-          Lookbook<span className="text-purple-500">.</span>
+          Lookbook<span className="text-white/80">.</span>
         </motion.h1>
         <p className="mt-4 text-neutral-500 tracking-mega-wide uppercase text-[10px]">Archive 2026 Collection</p>
       </div>
@@ -52,7 +52,7 @@ const LookbookPage = () => {
             className={`relative flex flex-col ${idx % 2 === 0 ? 'md:flex-row' : 'md:flex-row-reverse'} items-center gap-12`}
           >
             {/* 이미지 섹션 */}
-            <div className={`relative overflow-hidden bg-neutral-900 ${
+            <div className={`relative overflow-hidden bg-[#F5F5F5] ${
               item.size === 'large' ? 'w-full md:w-3/5' : 'w-full md:w-2/5'
             } aspect-[3/4]`}>
               <img 
@@ -60,23 +60,23 @@ const LookbookPage = () => {
                 alt={item.title} 
                 className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-1000 scale-110 hover:scale-100"
               />
-              <div className="absolute inset-0 bg-purple-500/10 mix-blend-overlay"></div>
+              <div className="absolute inset-0 bg-black/5 mix-blend-overlay"></div>
             </div>
 
             {/* 텍스트 섹션 */}
             <div className="flex-1 space-y-4 text-center md:text-left">
-              <span className="text-purple-500 font-mono text-xs italic tracking-widest uppercase">0{idx + 1}</span>
+              <span className="text-white/80 font-mono text-xs italic tracking-widest uppercase">0{idx + 1}</span>
               <h2 className="text-3xl font-black italic uppercase">{item.title}</h2>
               <p className="text-neutral-400 font-light text-sm leading-relaxed break-keep max-w-xs mx-auto md:mx-0">
                 {item.description}
               </p>
               <div className="pt-4 overflow-hidden">
-                <div className="w-12 h-[1px] bg-white/20 group-hover:w-full transition-all duration-500"></div>
+                <div className="w-12 h-[1px] bg-[#E5E5E5] group-hover:w-full transition-all duration-500"></div>
               </div>
             </div>
             
             {/* 배경 데코 텍스트 */}
-            <div className="absolute -z-10 text-[15vw] font-black text-white/5 select-none pointer-events-none -top-20">
+            <div className="absolute -z-10 text-[15vw] font-black text-black/5 select-none pointer-events-none -top-20">
               {idx % 2 === 0 ? 'DOUBLE' : 'NEGATIVE'}
             </div>
           </motion.div>

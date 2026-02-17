@@ -92,12 +92,12 @@ const AddressInput = ({
           value={addressValue}
           onChange={(e) => onAddressChange(e.target.value.slice(0, 400))}
           placeholder={addressPlaceholder}
-          className={`flex-1 bg-neutral-900/50 border border-white/5 px-4 py-3 text-[11px] text-white outline-none focus:border-purple-500/50 placeholder:text-neutral-600 ${inputClassName}`}
+          className={`flex-1 bg-[#F9F9F9] px-4 py-3 text-[11px] text-[#000000] outline-none focus:bg-[#F5F5F5] placeholder:text-[#999999] ${inputClassName}`}
         />
         <button
           type="button"
           onClick={handleClick}
-          className="shrink-0 px-4 py-3 text-[10px] font-bold tracking-widest uppercase border border-purple-500/50 text-purple-500 hover:bg-purple-500/10 transition-colors whitespace-nowrap"
+          className="shrink-0 px-4 py-3 text-[10px] font-bold tracking-widest uppercase border border-[#E5E5E5] text-[#000000] hover:bg-[#F5F5F5] transition-colors whitespace-nowrap"
         >
           주소 찾기
         </button>
@@ -107,7 +107,7 @@ const AddressInput = ({
         value={detailValue}
         onChange={(e) => onDetailChange(e.target.value.slice(0, 100))}
         placeholder={detailPlaceholder}
-        className={`w-full bg-neutral-900/50 border border-white/5 px-4 py-3 text-[11px] text-white outline-none focus:border-purple-500/50 placeholder:text-neutral-600 ${inputClassName}`}
+        className={`w-full bg-[#F9F9F9] px-4 py-3 text-[11px] text-[#000000] outline-none focus:bg-[#F5F5F5] placeholder:text-[#999999] ${inputClassName}`}
       />
     </div>
   );

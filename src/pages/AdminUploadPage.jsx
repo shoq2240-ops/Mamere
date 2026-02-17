@@ -412,7 +412,8 @@ const AdminUploadPage = () => {
             <button
               type="submit"
               disabled={submitting}
-              className="px-8 py-3 bg-white text-black text-[11px] font-medium tracking-widest uppercase hover:bg-white/90 disabled:opacity-50"
+              className="px-8 py-3 bg-white text-[11px] font-medium tracking-widest uppercase hover:bg-white/90 disabled:opacity-50"
+            style={{ color: '#000000' }}
             >
               {submitting ? '처리 중...' : editingId ? '수정' : '등록'}
             </button>

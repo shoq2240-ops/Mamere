@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
+import brandLogo from '../asset/brand.logo.png';
 
 const SAVED_EMAIL_KEY = 'dn_saved_email';
 
@@ -82,29 +83,32 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="min-h-[calc(100dvh-100px)] bg-black flex items-center justify-center px-6 py-4 antialiased">
+    <div className="min-h-[calc(100dvh-100px)] bg-[#FFFFFF] flex items-center justify-center px-6 py-12 antialiased">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: "easeOut" }}
-        className="max-w-sm w-full space-y-6"
+        className="max-w-sm w-full space-y-8"
       >
-        <div className="text-center space-y-2">
-          <h1 className="text-3xl font-black italic uppercase tracking-tighter text-white">Login</h1>
-          <p className="text-[9pt] text-neutral-500 tracking-widest uppercase font-mono">Enter the void</p>
+        <div className="flex flex-col items-center gap-10">
+          <img src={brandLogo} alt="jvng." className="h-20 md:h-24 w-auto object-contain" />
+          <div className="text-center space-y-2">
+            <h1 className="text-2xl font-bold uppercase tracking-[0.2em] text-[#000000]">Login</h1>
+            <p className="text-[9pt] text-[#999999] tracking-[0.15em] uppercase">계정에 로그인하세요</p>
+          </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-3">
+        <form onSubmit={handleSubmit} className="space-y-4">
           {error && (
-            <p className="text-red-500 text-[9pt] text-center">{error}</p>
+            <p className="text-red-600 text-[9pt] text-center">{error}</p>
           )}
           {resetSent && (
-            <p className="text-purple-400 text-[9pt] text-center">
+            <p className="text-[#666666] text-[9pt] text-center">
               비밀번호 재설정 링크를 이메일로 보냈습니다.
             </p>
           )}
           {resetSuccess && (
-            <p className="text-green-400 text-[9pt] text-center">
+            <p className="text-green-600 text-[9pt] text-center">
               비밀번호가 변경되었습니다. 새 비밀번호로 로그인하세요.
             </p>
           )}
@@ -114,7 +118,7 @@ const LoginPage = () => {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            className="w-full bg-neutral-900/30 border border-white/5 px-4 py-3 text-[9pt] text-white outline-none focus:border-purple-500/50 transition-all font-mono placeholder:text-neutral-700"
+            className="w-full bg-[#F9F9F9] px-5 py-4 text-[9pt] text-[#000000] outline-none focus:bg-[#F5F5F5] transition-all placeholder-[#999999] tracking-[0.1em]"
           />
           <input
             type="password"
@@ -122,16 +126,16 @@ const LoginPage = () => {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
-            className="w-full bg-neutral-900/30 border border-white/5 px-4 py-3 text-[9pt] text-white outline-none focus:border-purple-500/50 transition-all font-mono placeholder:text-neutral-700"
+            className="w-full bg-[#F9F9F9] px-5 py-4 text-[9pt] text-[#000000] outline-none focus:bg-[#F5F5F5] transition-all placeholder-[#999999] tracking-[0.1em]"
           />
           <label className="flex items-center gap-3 cursor-pointer group">
             <input
               type="checkbox"
               checked={saveEmail}
               onChange={(e) => setSaveEmail(e.target.checked)}
-              className="w-4 h-4 rounded border-white/20 bg-neutral-900 text-purple-500 focus:ring-purple-500 focus:ring-offset-0"
+              className="w-4 h-4 rounded border-[#CCCCCC] bg-white text-[#000000] focus:ring-[#000000] focus:ring-offset-0"
             />
-            <span className="text-[9pt] text-white/60 group-hover:text-white/80 transition-colors">
+            <span className="text-[9pt] text-[#666666] group-hover:text-[#000000] transition-colors">
               아이디 저장
             </span>
           </label>
@@ -139,16 +143,16 @@ const LoginPage = () => {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-white text-black py-3.5 text-[9pt] font-black uppercase tracking-widest hover:bg-purple-600 hover:text-white transition-all duration-500 disabled:opacity-50"
+            className="w-full bg-[#000000] text-[#FFFFFF] py-4 text-[9pt] font-bold uppercase tracking-[0.15em] hover:opacity-90 transition-opacity disabled:opacity-50"
           >
             {loading ? 'Signing In...' : 'Sign In'}
           </button>
 
-          <div className="relative py-4">
+          <div className="relative py-6">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-white/10" />
+              <div className="w-full border-t border-[#F0F0F0]" />
             </div>
-            <div className="relative flex justify-center text-[9px] uppercase tracking-widest text-white/40">
+            <div className="relative flex justify-center text-[9px] uppercase tracking-[0.15em] text-[#999999] bg-[#FFFFFF] px-4">
               또는
             </div>
           </div>
@@ -158,7 +162,7 @@ const LoginPage = () => {
               type="button"
               onClick={() => handleOAuthSignIn('kakao')}
               disabled={loading}
-              className="flex-1 flex items-center justify-center gap-2 py-3.5 bg-[#FEE500] text-[#191919] text-[9pt] font-bold rounded transition-opacity hover:opacity-90 disabled:opacity-50"
+              className="flex-1 flex items-center justify-center gap-2 py-4 bg-[#FEE500] text-[#191919] text-[9pt] font-bold transition-opacity hover:opacity-90 disabled:opacity-50"
             >
               <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M12 3c5.799 0 10.5 3.664 10.5 8.185 0 4.52-4.701 8.184-10.5 8.184a13.5 13.5 0 01-1.727-.11l-4.408 2.883c-.501.265-.678.236-.472-.413l.892-3.678c-2.88-1.46-4.785-3.99-4.785-6.866C1.5 6.665 6.201 3 12 3z" />
@@ -169,7 +173,7 @@ const LoginPage = () => {
               type="button"
               onClick={() => handleOAuthSignIn('google')}
               disabled={loading}
-              className="flex-1 flex items-center justify-center gap-2 py-3.5 bg-white text-zinc-800 border border-zinc-200 text-[9pt] font-bold rounded transition-opacity hover:bg-zinc-50 disabled:opacity-50"
+              className="flex-1 flex items-center justify-center gap-2 py-4 bg-[#FFFFFF] text-[#333333] border border-[#E5E5E5] text-[9pt] font-bold transition-opacity hover:bg-[#F9F9F9] disabled:opacity-50"
             >
               <svg className="w-5 h-5" viewBox="0 0 24 24">
                 <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -182,16 +186,16 @@ const LoginPage = () => {
           </div>
         </form>
 
-        <div className="flex justify-between items-center text-[9pt] font-bold tracking-widest text-neutral-500 uppercase">
+        <div className="flex justify-between items-center text-[9pt] font-medium tracking-[0.1em] text-[#666666] uppercase">
           <button
             type="button"
             onClick={handleForgotPassword}
             disabled={loading || !email.trim()}
-            className="opacity-80 hover:opacity-100 hover:text-purple-500 transition-colors disabled:opacity-40"
+            className="hover:text-[#000000] transition-colors disabled:opacity-40"
           >
             비밀번호 찾기
           </button>
-          <Link to="/signup" className="hover:text-purple-500 transition-colors underline decoration-purple-500/30 underline-offset-4">
+          <Link to="/signup" className="hover:text-[#000000] transition-colors underline underline-offset-4 decoration-[#CCCCCC] hover:decoration-[#000000]">
             Create Account
           </Link>
         </div>

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import brandLogo from '../asset/brand.logo.png';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCart } from '../store/CartContext';
 import { useAuth } from '../store/AuthContext';
@@ -66,7 +67,7 @@ const Navbar = () => {
 
   return (
     <div className="antialiased" onMouseLeave={() => setHoveredMenu(null)}>
-      <nav className="relative w-full z-[110] bg-black/80 backdrop-blur-xl border-b border-white/5 text-white">
+      <nav className="relative w-full z-[110] bg-[#FFFFFF] text-[#000000]">
         <div className="max-w-[1800px] mx-auto h-14 flex items-center justify-between px-6 relative">
           
           {/* 왼쪽: 메뉴 (오른쪽으로 3cm 이동) */}
@@ -77,7 +78,7 @@ const Navbar = () => {
                   className="relative h-full flex items-center"
                   onMouseEnter={() => setHoveredMenu(link.name)}
                 >
-                  <Link to={link.path} className="hover:text-purple-500 transition-all">{link.name}</Link>
+                  <Link to={link.path} className="hover:opacity-70 transition-all">{link.name}</Link>
                   
                   {/* 데스크톱 하위 메뉴 드롭다운 (Dark Aesthetic) */}
                   <AnimatePresence>
@@ -89,19 +90,19 @@ const Navbar = () => {
                         transition={{ duration: 0.2, ease: 'easeOut' }}
                         className="absolute top-full left-0 mt-1 py-5 px-6 flex flex-col gap-0 min-w-[160px]"
                         style={{ 
-                          background: 'rgba(0,0,0,0.95)',
-                          border: '1px solid rgba(255,255,255,0.08)',
+                          background: '#FFFFFF',
+                          border: '1px solid #F0F0F0',
                         }}
                       >
                         {link.sub.map((sub) => (
                           <Link 
                             key={sub.name} 
                             to={sub.path} 
-                            className="relative py-3 text-[11px] font-light uppercase transition-all duration-200 text-[#888888] hover:text-white group/row"
+                            className="relative py-3 text-[11px] font-light uppercase transition-all duration-200 text-[#333333] hover:text-[#000000] group/row"
                             style={{ letterSpacing: '0.1em' }}
                           >
                             {sub.name}
-                            <span className="absolute bottom-1 left-0 w-0 h-px bg-white transition-all duration-200 group-hover/row:w-full" />
+                            <span className="absolute bottom-1 left-0 w-0 h-px bg-[#000000] transition-all duration-200 group-hover/row:w-full" />
                           </Link>
                         ))}
                       </motion.div>
@@ -111,23 +112,24 @@ const Navbar = () => {
               ))}
           </div>
 
-          {/* 가운데: 로고 (은은한 네온 호버) */}
+          {/* 가운데: 공식 브랜드 로고 (투명 배경 느낌: invert로 어두운 헤더에 맞춤) */}
           <Link
             to="/"
-            className="hidden md:flex absolute left-1/2 -translate-x-1/2 text-[20px] font-black italic tracking-[0.3em] uppercase transition-shadow duration-300 logo-neon-subtle cursor-pointer"
+            className="hidden md:flex absolute left-1/2 -translate-x-1/2 w-auto cursor-pointer opacity-90 hover:opacity-100 transition-opacity"
+            style={{ height: '28px' }}
           >
-            Double <span className="text-purple-500">Negative</span>
+            <img src={brandLogo} alt="jvng." className="h-full w-auto object-contain" />
           </Link>
 
           {/* 모바일: 햄버거 메뉴 (작은 크기) */}
           <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="md:hidden w-8 h-8 -ml-1 flex flex-col justify-center items-center gap-[4px] z-[210]">
-            <motion.span animate={isMobileMenuOpen ? { rotate: 45, y: 5, backgroundColor: "#A855F7" } : { rotate: 0, y: 0, backgroundColor: "#FFFFFF" }} className="w-4 h-[1px] block" />
-            <motion.span animate={isMobileMenuOpen ? { opacity: 0 } : { opacity: 1 }} className="w-4 h-[1px] bg-white block" />
-            <motion.span animate={isMobileMenuOpen ? { rotate: -45, y: -5, backgroundColor: "#A855F7" } : { rotate: 0, y: 0, backgroundColor: "#FFFFFF" }} className="w-4 h-[1px] block" />
+            <motion.span animate={isMobileMenuOpen ? { rotate: 45, y: 5, backgroundColor: "#000000" } : { rotate: 0, y: 0, backgroundColor: "#000000" }} className="w-4 h-[1px] block" />
+            <motion.span animate={isMobileMenuOpen ? { opacity: 0 } : { opacity: 1 }} className="w-4 h-[1px] bg-[#000000] block" />
+            <motion.span animate={isMobileMenuOpen ? { rotate: -45, y: -5, backgroundColor: "#000000" } : { rotate: 0, y: 0, backgroundColor: "#000000" }} className="w-4 h-[1px] block" />
           </button>
 
-          <Link to="/" className="md:hidden absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-[12px] font-black italic tracking-[0.4em] uppercase z-[210] transition-shadow duration-300 logo-neon-subtle">
-            Double <span className="text-purple-500">Negative</span>
+          <Link to="/" className="md:hidden absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-auto z-[210] opacity-90 hover:opacity-100 transition-opacity" style={{ height: '26px' }}>
+            <img src={brandLogo} alt="jvng." className="h-full w-auto object-contain" />
           </Link>
 
           <div className="ml-auto flex items-center gap-2 md:gap-2 z-[210] pr-1 md:pr-0">
@@ -137,7 +139,7 @@ const Navbar = () => {
                 <>
                   <button
                     onClick={() => setAccountOpen(!accountOpen)}
-                    className="text-[10px] font-light tracking-[0.15em] uppercase hover:text-purple-500 transition-all"
+                    className="text-[10px] font-light tracking-[0.15em] uppercase hover:opacity-70 transition-all"
                   >
                     MY PAGE
                   </button>
@@ -149,18 +151,18 @@ const Navbar = () => {
                           initial={{ opacity: 0, y: -8 }}
                           animate={{ opacity: 1, y: 0 }}
                           exit={{ opacity: 0, y: -8 }}
-                          className="absolute right-0 top-full mt-2 py-4 px-6 bg-black/95 border border-white/10 min-w-[160px] z-[120] flex flex-col gap-3"
+                          className="absolute right-0 top-full mt-2 py-4 px-6 bg-[#FFFFFF] border border-[#F0F0F0] min-w-[160px] z-[120] flex flex-col gap-3 shadow-sm"
                         >
-                          <Link to="/orders" onClick={() => setAccountOpen(false)} className="text-[10px] font-light text-white/70 hover:text-white transition-colors tracking-[0.15em] uppercase">ORDERS</Link>
-                          <Link to="/profile" onClick={() => setAccountOpen(false)} className="text-[10px] font-light text-white/70 hover:text-white transition-colors tracking-[0.15em] uppercase">PROFILE</Link>
-                          <button type="button" onClick={() => { handleLogout(); setAccountOpen(false); }} className="text-[10px] font-light text-white/70 hover:text-purple-500 transition-colors tracking-[0.15em] uppercase text-left">LOGOUT</button>
+                          <Link to="/orders" onClick={() => setAccountOpen(false)} className="text-[10px] font-light text-[#666666] hover:text-[#000000] transition-colors tracking-[0.15em] uppercase">ORDERS</Link>
+                          <Link to="/profile" onClick={() => setAccountOpen(false)} className="text-[10px] font-light text-[#666666] hover:text-[#000000] transition-colors tracking-[0.15em] uppercase">PROFILE</Link>
+                          <button type="button" onClick={() => { handleLogout(); setAccountOpen(false); }} className="text-[10px] font-light text-white/70 hover:text-white transition-colors tracking-[0.15em] uppercase text-left">LOGOUT</button>
                         </motion.div>
                       </>
                     )}
                   </AnimatePresence>
                 </>
               ) : (
-                <Link to="/login" className="flex items-center justify-center w-10 h-10 hover:text-purple-500 transition-colors">
+                <Link to="/login" className="flex items-center justify-center w-10 h-10 hover:opacity-70 transition-colors text-[#000000]">
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="1.2" viewBox="0 0 24 24">
                     <circle cx="12" cy="8" r="3.5" stroke="currentColor" />
                     <path d="M6 21c0-4 2.5-7 6-7s6 3 6 7" stroke="currentColor" strokeLinecap="round" />
@@ -168,16 +170,16 @@ const Navbar = () => {
                 </Link>
               )}
             </div>
-            <button onClick={() => { setIsSearchOpen(true); setIsMobileMenuOpen(false); }} className="w-9 h-9 md:w-10 md:h-10 flex items-center justify-center hover:text-purple-500 transition-colors">
+            <button onClick={() => { setIsSearchOpen(true); setIsMobileMenuOpen(false); }} className="w-9 h-9 md:w-10 md:h-10 flex items-center justify-center hover:opacity-70 transition-colors text-[#000000]">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" /></svg>
             </button>
-            <Link to="/cart" className="w-9 h-9 md:w-10 md:h-10 flex items-center justify-center relative hover:text-purple-500 transition-colors">
+            <Link to="/cart" className="w-9 h-9 md:w-10 md:h-10 flex items-center justify-center relative hover:opacity-70 transition-colors text-[#000000]">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" /><path d="M3 6h18" /><path d="M16 10a4 4 0 0 1-8 0" /></svg>
               <AnimatePresence mode="popLayout">
                 {cartCount > 0 && (
                   <motion.span 
                     key={cartCount} initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 1.5, opacity: 0 }}
-                    className="absolute top-2 right-1.5 bg-purple-600 text-white text-[8px] w-4 h-4 rounded-full flex items-center justify-center font-bold"
+                    className="absolute top-2 right-1.5 bg-[#000000] text-[8px] w-4 h-4 rounded-full flex items-center justify-center font-bold text-[#FFFFFF]"
                   >
                     {cartCount}
                   </motion.span>
@@ -191,9 +193,9 @@ const Navbar = () => {
       {/* 모바일 메뉴 (기존 백 기능 완벽 유지) */}
       <AnimatePresence>
         {isMobileMenuOpen && (
-          <motion.div initial={{ x: "-100%" }} animate={{ x: 0 }} exit={{ x: "-100%" }} transition={{ type: "spring", damping: 25, stiffness: 200 }} className="fixed inset-0 bg-black z-[200] flex flex-col pt-20 pb-12 px-8 text-white md:hidden">
+          <motion.div initial={{ x: "-100%" }} animate={{ x: 0 }} exit={{ x: "-100%" }} transition={{ type: "spring", damping: 25, stiffness: 200 }} className="fixed inset-0 bg-[#FFFFFF] z-[200] flex flex-col pt-20 pb-12 px-8 text-[#000000] md:hidden">
             <div className="mb-8 text-left">
-              <button onClick={() => (isWomenOpen || isMenOpen) ? (setIsWomenOpen(false), setIsMenOpen(false)) : setIsMobileMenuOpen(false)} className="flex items-center gap-2 text-[12px] font-light tracking-ultra-wide uppercase text-white/40">
+              <button onClick={() => (isWomenOpen || isMenOpen) ? (setIsWomenOpen(false), setIsMenOpen(false)) : setIsMobileMenuOpen(false)} className="flex items-center gap-2 text-[12px] font-light tracking-ultra-wide uppercase text-[#666666]">
                 <span className="text-xl">←</span> {(isWomenOpen || isMenOpen) ? 'Back to Menu' : 'Back'}
               </button>
             </div>
@@ -203,12 +205,12 @@ const Navbar = () => {
                   <div key={item.name}>
                     {item.sub ? (
                       <>
-                        <button onClick={() => { setIsWomenOpen(item.name === '여성' ? !isWomenOpen : false); setIsMenOpen(item.name === '남성' ? !isMenOpen : false); }} className="text-xl font-bold tracking-tighter uppercase text-left flex items-center justify-between w-full hover:text-purple-500 py-2">
+                        <button onClick={() => { setIsWomenOpen(item.name === '여성' ? !isWomenOpen : false); setIsMenOpen(item.name === '남성' ? !isMenOpen : false); }} className="text-xl font-bold tracking-tighter uppercase text-left flex items-center justify-between w-full hover:opacity-70 py-2">
                           {item.name} <span className="text-lg font-light opacity-20">{(item.name === '여성' ? isWomenOpen : isMenOpen) ? '−' : '+'}</span>
                         </button>
                         <AnimatePresence>
                           {(item.name === '여성' ? isWomenOpen : isMenOpen) && (
-                            <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="flex flex-col space-y-4 mt-4 ml-4 border-l border-purple-500/20 pl-5 text-left text-sm font-light uppercase text-white/80">
+                            <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="flex flex-col space-y-4 mt-4 ml-4 border-l border-[#E5E5E5] pl-5 text-left text-sm font-light uppercase text-[#333333]">
                               {item.sub.map((sub) => (
                                 <button key={sub.name} onClick={() => handleMenuClick(sub.path)}>{sub.name}</button>
                               ))}
@@ -217,23 +219,23 @@ const Navbar = () => {
                         </AnimatePresence>
                       </>
                     ) : (
-                      <button onClick={() => handleMenuClick(item.path)} className="text-xl font-bold tracking-tighter uppercase text-left hover:text-purple-500 py-2">{item.mobileLabel || item.name}</button>
+                      <button onClick={() => handleMenuClick(item.path)} className="text-xl font-bold tracking-tighter uppercase text-left hover:opacity-70 py-2">{item.mobileLabel || item.name}</button>
                     )}
                   </div>
                 ))}
               </div>
-              <div className="flex-shrink-0 pt-8 mt-6 border-t border-white/10 flex flex-col space-y-4 text-[12px]">
-                <button onClick={() => handleMenuClick('/cart')} className="font-bold tracking-[0.12em] uppercase text-purple-500 flex justify-between py-1">Shopping Bag <span>[{cartCount}]</span></button>
+              <div className="flex-shrink-0 pt-8 mt-6 border-t border-[#F0F0F0] flex flex-col space-y-4 text-[12px]">
+                <button onClick={() => handleMenuClick('/cart')} className="font-bold tracking-[0.12em] uppercase text-[#000000] flex justify-between py-1">Shopping Bag <span>[{cartCount}]</span></button>
                 {isLoggedIn ? (
                   <>
-                    <button onClick={() => handleMenuClick('/orders')} className="font-light tracking-[0.12em] uppercase text-white/60 text-left py-1">ORDERS</button>
-                    <button onClick={() => handleMenuClick('/profile')} className="font-light tracking-[0.12em] uppercase text-white/60 text-left py-1">PROFILE</button>
-                    <button onClick={handleLogout} className="font-light tracking-[0.12em] uppercase text-white/40 text-left py-1">LOGOUT</button>
+                    <button onClick={() => handleMenuClick('/orders')} className="font-light tracking-[0.12em] uppercase text-[#666666] text-left py-1">ORDERS</button>
+                    <button onClick={() => handleMenuClick('/profile')} className="font-light tracking-[0.12em] uppercase text-[#666666] text-left py-1">PROFILE</button>
+                    <button onClick={handleLogout} className="font-light tracking-[0.12em] uppercase text-[#999999] text-left py-1">LOGOUT</button>
                   </>
                 ) : (
                   <>
-                    <button onClick={() => handleMenuClick('/login')} className="font-light tracking-[0.12em] uppercase text-white/40 text-left py-1">Login</button>
-                    <button onClick={() => handleMenuClick('/signup')} className="font-light tracking-[0.12em] uppercase text-white/40 text-left py-1">Join Now</button>
+                    <button onClick={() => handleMenuClick('/login')} className="font-light tracking-[0.12em] uppercase text-[#999999] text-left py-1">Login</button>
+                    <button onClick={() => handleMenuClick('/signup')} className="font-light tracking-[0.12em] uppercase text-[#999999] text-left py-1">Join Now</button>
                   </>
                 )}
               </div>
@@ -245,11 +247,11 @@ const Navbar = () => {
       {/* 검색 모달 (기존 로직 유지) */}
       <AnimatePresence>
         {isSearchOpen && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/95 z-[300] flex flex-col items-center pt-40 px-6">
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-[#FFFFFF] z-[300] flex flex-col items-center pt-40 px-6">
             <form onSubmit={handleSearch} className="w-full max-w-2xl relative">
-              <input autoFocus type="text" value={searchInput} onChange={(e) => setSearchInput(e.target.value)} placeholder="SEARCH ARCHIVE" className="w-full bg-transparent border-b border-purple-500 py-4 text-3xl md:text-5xl font-bold italic uppercase outline-none text-white placeholder-white/10" />
+              <input autoFocus type="text" value={searchInput} onChange={(e) => setSearchInput(e.target.value)} placeholder="SEARCH" className="w-full bg-transparent border-b border-[#000000] py-4 text-3xl md:text-5xl font-bold italic uppercase outline-none text-[#000000] placeholder-[#CCCCCC]" />
               <button type="submit" className="hidden">Search</button>
-              <button onClick={() => setIsSearchOpen(false)} className="absolute right-0 top-1/2 -translate-y-1/2 text-purple-500 font-bold text-[10px] uppercase tracking-widest">Close</button>
+              <button onClick={() => setIsSearchOpen(false)} className="absolute right-0 top-1/2 -translate-y-1/2 text-[#000000] font-bold text-[10px] uppercase tracking-widest">Close</button>
             </form>
           </motion.div>
         )}

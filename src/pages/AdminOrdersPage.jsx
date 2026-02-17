@@ -6,7 +6,7 @@ import { useAuth } from '../store/AuthContext';
 
 /** 주문 상태별 라벨 및 색상 */
 const STATUS_OPTIONS = [
-  { value: '결제완료', label: '결제완료', color: 'text-purple-400' },
+  { value: '결제완료', label: '결제완료', color: 'text-white/80' },
   { value: '배송준비중', label: '배송 준비 중', color: 'text-amber-400' },
   { value: '배송중', label: '배송 중', color: 'text-blue-400' },
   { value: '배송완료', label: '배송 완료', color: 'text-emerald-400' },
@@ -445,7 +445,8 @@ const AdminOrdersPage = () => {
                 <button
                   type="button"
                   onClick={() => handleStatusChange(trackingModalOrder.id, '배송중', trackingModalValue)}
-                  className="px-4 py-2 bg-white text-black text-[10px] font-medium uppercase tracking-widest hover:bg-white/90"
+                  className="px-4 py-2 bg-white text-[10px] font-medium uppercase tracking-widest hover:bg-white/90"
+                  style={{ color: '#000000' }}
                 >
                   확인
                 </button>

@@ -5,7 +5,7 @@ import { useAuth } from '../store/AuthContext';
 import { publicTable } from '../lib/supabase';
 
 const STATUS_LABELS = {
-  결제완료: { label: '결제 완료', color: 'text-purple-500' },
+  결제완료: { label: '결제 완료', color: 'text-[#000000]' },
   배송준비중: { label: '배송 준비중', color: 'text-amber-500' },
   배송중: { label: '배송 중', color: 'text-blue-500' },
   배송완료: { label: '배송 완료', color: 'text-green-500' },
@@ -70,25 +70,25 @@ const OrdersPage = () => {
   if (authLoading || !isLoggedIn) return null;
 
   return (
-    <div className="pt-32 pb-20 px-6 min-h-screen bg-black text-white antialiased">
+    <div className="pt-32 pb-20 px-6 min-h-screen bg-[#FFFFFF] text-[#000000] antialiased">
       <div className="max-w-3xl mx-auto">
         <h1 className="text-4xl font-black italic tracking-tighter uppercase mb-2">
           주문 내역
         </h1>
-        <p className="text-[10px] text-white/40 tracking-widest uppercase mb-12">
+        <p className="text-[10px] text-[#999999] tracking-widest uppercase mb-12">
           배송 상황을 확인하세요
         </p>
 
         {loading ? (
           <div className="py-20 text-center">
-            <div className="inline-block w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full animate-spin" />
-            <p className="mt-4 text-[10px] text-white/40 tracking-widest uppercase">불러오는 중...</p>
+            <div className="inline-block w-8 h-8 border-2 border-[#E5E5E5] border-t-transparent rounded-full animate-spin" />
+            <p className="mt-4 text-[10px] text-[#999999] tracking-widest uppercase">불러오는 중...</p>
           </div>
         ) : error ? (
           <p className="text-red-500 text-[11px] text-center py-12">{error}</p>
         ) : orders.length === 0 ? (
           <div className="py-20 text-center border-t border-white/10">
-            <p className="text-white/40 uppercase tracking-widest mb-8 text-sm">주문 내역이 없습니다.</p>
+            <p className="text-[#999999] uppercase tracking-widest mb-8 text-sm">주문 내역이 없습니다.</p>
             <Link to="/shop" className="inline-block border border-white px-8 py-3 text-xs uppercase tracking-widest hover:bg-white hover:text-black transition-all">
               쇼핑하기
             </Link>
@@ -98,7 +98,7 @@ const OrdersPage = () => {
             {orders.map((order) => {
               const statusInfo = STATUS_LABELS[order.status] || {
                 label: order.status || '처리 중',
-                color: 'text-white/60',
+                color: 'text-[#666666]',
               };
               const items = Array.isArray(order.items) ? order.items : [];
 
@@ -111,10 +111,10 @@ const OrdersPage = () => {
                 >
                   <div className="flex flex-wrap justify-between items-start gap-4">
                     <div>
-                      <p className="text-[10px] text-white/40 tracking-widest uppercase">
+                      <p className="text-[10px] text-[#999999] tracking-widest uppercase">
                         {formatDate(order.created_at)}
                       </p>
-                      <p className="text-[9px] text-white/30 font-mono mt-1">주문번호 {order.id?.slice(0, 8)}...</p>
+                      <p className="text-[9px] text-[#999999] font-mono mt-1">주문번호 {order.id?.slice(0, 8)}...</p>
                     </div>
                     <span className={`text-[11px] font-bold ${statusInfo.color}`}>
                       {statusInfo.label}
@@ -127,7 +127,7 @@ const OrdersPage = () => {
                         <span className="text-white/80 truncate max-w-[70%]">
                           {item.name} × {item.quantity}
                         </span>
-                        <span className="text-purple-500 shrink-0">
+                        <span className="text-[#000000] shrink-0">
                           ₩{((parsePrice(item.price) || 0) * (item.quantity || 1)).toLocaleString()}
                         </span>
                       </li>
@@ -135,14 +135,14 @@ const OrdersPage = () => {
                   </ul>
 
                   <div className="flex justify-between items-center border-t border-white/5 pt-4">
-                    <span className="text-[10px] text-white/50">배송지</span>
-                    <span className="text-[11px] text-white/70 text-right max-w-[60%]">
+                    <span className="text-[10px] text-[#666666]">배송지</span>
+                    <span className="text-[11px] text-[#333333] text-right max-w-[60%]">
                       {order.shipping_name || order.customer_name} / {order.shipping_address || order.address}
                     </span>
                   </div>
 
                   <div className="flex justify-end pt-2">
-                    <span className="text-lg font-black italic text-purple-500">
+                    <span className="text-lg font-black italic text-[#000000]">
                       ₩{(order.total_amount ?? order.total_price ?? 0).toLocaleString()}
                     </span>
                   </div>
@@ -155,13 +155,13 @@ const OrdersPage = () => {
         <div className="mt-12 flex gap-4">
           <Link
             to="/profile"
-            className="text-[10px] font-bold tracking-widest uppercase text-white/50 hover:text-purple-500 transition-colors"
+            className="text-[10px] font-bold tracking-widest uppercase text-[#666666] hover:text-[#000000] transition-colors"
           >
             ← 프로필
           </Link>
           <Link
             to="/shop"
-            className="text-[10px] font-bold tracking-widest uppercase text-white/50 hover:text-purple-500 transition-colors"
+            className="text-[10px] font-bold tracking-widest uppercase text-[#666666] hover:text-[#000000] transition-colors"
           >
             쇼핑 계속하기 →
           </Link>

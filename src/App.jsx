@@ -74,7 +74,7 @@ const PageWrapper = ({ children }) => (
       animate={{ opacity: 0 }}
       exit={{ opacity: 1 }}
       transition={{ duration: 0.4, ease: "easeInOut" }}
-      className="fixed inset-0 z-[9999] pointer-events-none mix-blend-screen bg-purple-900/20 noise-overlay"
+      className="fixed inset-0 z-[9999] pointer-events-none opacity-0"
     />
     {children}
   </motion.div>
@@ -87,21 +87,21 @@ function App() {
         <WishlistProvider>
         <Router>
           <ScrollToTop />
-          <div className="flex flex-col h-screen max-h-[100dvh] bg-black text-white antialiased overflow-hidden flex">
+          <div className="flex flex-col h-screen max-h-[100dvh] bg-[#FFFFFF] text-[#000000] antialiased overflow-hidden flex">
             <Toaster
               position="top-center"
               toastOptions={{
                 duration: 2500,
                 style: {
-                  background: '#171717',
-                  color: '#fff',
-                  border: '1px solid rgba(255,255,255,0.1)',
+                  background: '#FFFFFF',
+                  color: '#000000',
+                  border: '1px solid #F0F0F0',
                   borderRadius: 0,
                 },
-                success: { iconTheme: { primary: '#a855f7' } },
+                success: { iconTheme: { primary: '#000000' } },
               }}
             />
-            <header className="sticky top-0 z-[100] flex flex-col flex-none shrink-0">
+            <header className="sticky top-0 z-[100] flex flex-col flex-none shrink-0 bg-[#FFFFFF]">
               <Marquee />
               <Navbar />
             </header>

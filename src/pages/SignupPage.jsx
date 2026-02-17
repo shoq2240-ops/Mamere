@@ -43,7 +43,7 @@ const SignupPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-black flex items-center justify-center px-8 pt-20 antialiased">
+    <div className="min-h-screen bg-[#FFFFFF] flex items-center justify-center px-8 pt-20 antialiased">
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
@@ -60,7 +60,7 @@ const SignupPage = () => {
             <p className="text-red-500 text-[11px] text-center">{error}</p>
           )}
           {message && (
-            <p className="text-purple-400 text-[11px] text-center">{message}</p>
+            <p className="text-[#666666] text-[11px] text-center">{message}</p>
           )}
           <input
             type="email"
@@ -68,7 +68,7 @@ const SignupPage = () => {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            className="w-full bg-neutral-900/30 border border-white/5 px-6 py-4 text-[11px] text-white outline-none focus:border-purple-500/50 transition-all font-mono placeholder:text-neutral-700"
+            className="w-full bg-[#F9F9F9] px-6 py-4 text-[11px] text-white outline-none focus:bg-[#F5F5F5] transition-all font-mono placeholder:text-[#999999]"
           />
           <input
             type="password"
@@ -77,21 +77,21 @@ const SignupPage = () => {
             onChange={(e) => setPassword(e.target.value)}
             required
             minLength={6}
-            className="w-full bg-neutral-900/30 border border-white/5 px-6 py-4 text-[11px] text-white outline-none focus:border-purple-500/50 transition-all font-mono placeholder:text-neutral-700"
+            className="w-full bg-[#F9F9F9] px-6 py-4 text-[11px] text-white outline-none focus:bg-[#F5F5F5] transition-all font-mono placeholder:text-[#999999]"
           />
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-white text-black py-5 text-[11px] font-black uppercase tracking-extra-wide hover:bg-purple-600 hover:text-white transition-all duration-500 disabled:opacity-50"
+            className="w-full bg-[#000000] text-[#FFFFFF] py-5 text-[11px] font-black uppercase tracking-extra-wide hover:opacity-90 transition-all duration-500 disabled:opacity-50"
           >
             {loading ? 'Creating Account...' : 'Create Account'}
           </button>
 
           <div className="relative py-4">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-white/10" />
+              <div className="w-full border-t border-[#F0F0F0]" />
             </div>
-            <div className="relative flex justify-center text-[9px] uppercase tracking-widest text-white/40">
+            <div className="relative flex justify-center text-[9px] uppercase tracking-widest text-[#999999]">
               또는
             </div>
           </div>
@@ -126,7 +126,7 @@ const SignupPage = () => {
         </form>
 
         <div className="text-center text-[9px] font-bold tracking-widest text-neutral-500 uppercase">
-          <Link to="/login" className="hover:text-purple-500 transition-colors">
+          <Link to="/login" className="hover:text-[#000000] transition-colors">
             Already have an account? Sign In
           </Link>
         </div>

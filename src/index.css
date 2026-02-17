@@ -4,25 +4,22 @@
 
 @layer base {
   /* ========================================
-     우영미 스타일 가이드 (Wooyoungmi Style Guide)
+     jvng. 미니멀 오프화이트 테마
      ========================================
-     - 폰트: Pretendard / Noto Sans KR (Light 300)
-     - 자간: 0.05em ~ 0.08em
-     - 정렬: 왼쪽 정렬 또는 정교한 중앙 정렬
-     - 색상: 정제된 검정 #1a1a1a, 연한 회색 #525252
+     - 배경: #FFFFFF, 보조: #F5F5F5 / #F9F9F9
+     - 강조: 딥 블랙 #000000
+     - 폰트: 깔끔한 산세리프, 자간 넓게
   */
   :root {
     --font-sans: 'Pretendard', 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
-    --font-weight-light: 300;
-    --font-weight-regular: 400;
-    --font-weight-medium: 500;
-    --text-on-dark: rgba(232, 232, 232, 0.98);
-    --text-on-dark-muted: rgba(232, 232, 232, 0.7);
-    --text-on-dark-subtle: rgba(232, 232, 232, 0.5);
-    --text-on-light: #1a1a1a;
-    --text-on-light-muted: #525252;
-    --letter-spacing-elegant: 0.05em;
+    --color-bg: #FFFFFF;
+    --color-bg-subtle: #F9F9F9;
+    --color-bg-muted: #F5F5F5;
+    --color-text: #000000;
+    --color-text-muted: #333333;
+    --color-text-subtle: #666666;
     --letter-spacing-wide: 0.08em;
+    --letter-spacing-extra: 0.15em;
   }
 
   * {
@@ -31,11 +28,11 @@
   }
 
   html {
-    @apply bg-black text-white;
+    background-color: var(--color-bg);
+    color: var(--color-text);
     font-family: var(--font-sans);
-    font-weight: var(--font-weight-light);
-    color: var(--text-on-dark);
-    letter-spacing: var(--letter-spacing-elegant);
+    font-weight: 300;
+    letter-spacing: 0.05em;
     overflow-x: hidden;
     height: 100%;
   }
@@ -54,82 +51,31 @@
     overflow-x: hidden;
   }
 
-  /* 우영미 스타일 유틸리티 */
-  .font-elegant {
-    letter-spacing: 0.05em;
-  }
-  .font-italic-accent {
-    font-style: italic;
-  }
-
-  /* 선택 영역 스타일 */
+  /* 선택 영역 */
   ::selection {
-    background-color: rgba(168, 85, 247, 0.3);
-    color: white;
+    background-color: rgba(0, 0, 0, 0.1);
+    color: #000000;
   }
 
-  /* 스크롤바 숨기기 (미니멀한 UI) */
+  /* 스크롤바 숨기기 */
   .scrollbar-hide::-webkit-scrollbar,
   .no-scrollbar::-webkit-scrollbar {
     display: none;
   }
-
   .scrollbar-hide,
   .no-scrollbar {
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
-
-  /* 모바일: 우영미 스타일 유지 */
-  @media (max-width: 768px) {
-    html {
-      font-size: 15px;
-    }
-  }
-
-  /* 상단 로고 네온 호버 (은은한 효과) */
-  .logo-neon-subtle:hover {
-    text-shadow: 0 0 6px rgba(255, 255, 255, 0.4), 0 0 12px rgba(168, 85, 247, 0.25);
-  }
-}
-
-@layer components {
-  /* 노이즈 오버레이 애니메이션 */
-  .noise-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-image: url('https://grainy-gradients.vercel.app/noise.svg');
-    animation: noise-anim 0.2s infinite;
-    pointer-events: none;
-    z-index: 9999;
-  }
 }
 
 @layer utilities {
-  /* 커스텀 유틸리티 */
   .text-balance {
     text-wrap: balance;
   }
 }
 
-@keyframes noise-anim {
-  0% { transform: translate(0, 0); }
-  10% { transform: translate(-5%, -5%); }
-  20% { transform: translate(-10%, 5%); }
-  30% { transform: translate(5%, -10%); }
-  40% { transform: translate(-5%, 15%); }
-  50% { transform: translate(-10%, 5%); }
-  60% { transform: translate(15%, 0); }
-  70% { transform: translate(0, 10%); }
-  80% { transform: translate(-15%, 0); }
-  90% { transform: translate(10%, 5%); }
-  100% { transform: translate(5%, 0); }
-}
-
-/* 마키: 왼쪽에서 시작해 오른쪽 끝까지 무한 반복 */
+/* 마키 애니메이션 */
 @keyframes marquee-scroll {
   from { transform: translateX(-50%); }
   to { transform: translateX(0); }

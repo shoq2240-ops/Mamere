@@ -47,24 +47,24 @@ const WishlistPage = () => {
   }, [wishlist]);
 
   return (
-    <div className="bg-black min-h-screen text-white antialiased pt-24 pb-32 px-8 md:px-12">
+    <div className="bg-[#FFFFFF] min-h-screen text-[#000000] antialiased pt-24 pb-32 px-8 md:px-12">
       <LoginRequiredModal show={showLoginModal} onClose={() => setShowLoginModal(false)} />
       <div className="max-w-6xl mx-auto">
-        <h1 className="text-[10px] tracking-[0.2em] uppercase text-purple-500 font-medium mb-2">Wishlist</h1>
+        <h1 className="text-[10px] tracking-[0.2em] uppercase text-[#000000] font-medium mb-2">Wishlist</h1>
         <h2 className="text-2xl md:text-3xl font-light uppercase tracking-tight mb-12">
           {wishlist.length} {wishlist.length === 1 ? 'item' : 'items'}
         </h2>
 
         {loading ? (
-          <p className="text-[10px] tracking-[0.15em] uppercase text-white/40">Loading...</p>
+          <p className="text-[10px] tracking-[0.15em] uppercase text-[#999999]">Loading...</p>
         ) : products.length === 0 ? (
           <div className="py-24 text-center">
-            <p className="text-[11px] tracking-widest text-white/50 uppercase mb-6">
+            <p className="text-[11px] tracking-widest text-[#666666] uppercase mb-6">
               {wishlist.length > 0 ? '상품을 불러오는 중...' : '위시리스트가 비어 있습니다.'}
             </p>
             <Link
               to="/shop"
-              className="text-[10px] tracking-[0.2em] uppercase text-white/60 hover:text-white border-b border-white/20 pb-1 transition-colors"
+              className="text-[10px] tracking-[0.2em] uppercase text-[#666666] hover:text-[#000000] border-b border-white/20 pb-1 transition-colors"
             >
               쇼핑하러 가기
             </Link>
@@ -73,7 +73,7 @@ const WishlistPage = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
             {products.map((product) => (
               <div key={product.id} className="group relative">
-                <Link to={`/product/${product.id}`} className="block aspect-[3/4] overflow-hidden bg-zinc-900">
+                <Link to={`/product/${product.id}`} className="block aspect-[3/4] overflow-hidden bg-[#F5F5F5]">
                   <img
                     src={product.image}
                     alt={product.name}
@@ -83,7 +83,7 @@ const WishlistPage = () => {
                 <button
                   type="button"
                   onClick={() => toggleWishlist(product.id)}
-                  className="absolute top-3 right-3 p-2 bg-black/50 hover:bg-black/70 transition-colors"
+                  className="absolute top-3 right-3 p-2 bg-black/30 hover:bg-black/50 transition-colors"
                   aria-label="위시리스트에서 제거"
                 >
                   <svg className="w-5 h-5 text-white" fill="currentColor" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
@@ -92,11 +92,11 @@ const WishlistPage = () => {
                 </button>
                 <div className="mt-4 space-y-1">
                   <Link to={`/product/${product.id}`} className="block">
-                    <h3 className="text-[11px] font-medium tracking-widest uppercase text-white/80 group-hover:text-white transition-colors">
+                    <h3 className="text-[11px] font-medium tracking-widest uppercase text-[#000000] group-hover:opacity-80 transition-colors">
                       {product.name}
                     </h3>
                   </Link>
-                  <p className="text-[11px] tracking-widest text-purple-500/80">
+                  <p className="text-[11px] tracking-widest text-[#000000]/80">
                     {formatPrice(product.price)}
                   </p>
                   <button
@@ -108,7 +108,7 @@ const WishlistPage = () => {
                       addToCart({ ...product, price: formatPrice(product.price) });
                       toast.success('장바구니에 추가되었습니다');
                     }}
-                    className="mt-3 w-full py-3 border border-white/20 text-[10px] font-light tracking-[0.2em] uppercase text-white/70 hover:bg-white/5 hover:border-white/40 transition-all"
+                    className="mt-3 w-full py-3 border border-[#E5E5E5] text-[10px] font-light tracking-[0.2em] uppercase text-[#666666] hover:bg-[#F9F9F9] hover:border-[#000000] hover:text-[#000000] transition-all"
                   >
                     ADD TO ARCHIVE
                   </button>
