@@ -10,8 +10,8 @@ import { supabase } from '../lib/supabase';
 
 const Navbar = ({ isScrolled = false, isMenuOpen = false, onMobileMenuChange }) => {
   const [internalMenuOpen, setInternalMenuOpen] = useState(false);
-  const isMenuOpen = onMobileMenuChange ? isMenuOpen : internalMenuOpen;
-  const setIsMenuOpen = onMobileMenuChange ? (open) => onMobileMenuChange(open) : setInternalMenuOpen;
+  const activeMenuOpen = onMobileMenuChange ? isMenuOpen : internalMenuOpen;
+  const handleMenuToggle = onMobileMenuChange ? (open) => onMobileMenuChange(open) : setInternalMenuOpen;
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isWomenOpen, setIsWomenOpen] = useState(false);
   const [isMenOpen, setIsMenOpen] = useState(false);
@@ -35,12 +35,12 @@ const Navbar = ({ isScrolled = false, isMenuOpen = false, onMobileMenuChange }) 
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
-    setIsMenuOpen(false);
+    handleMenuToggle(false);
     navigate('/', { replace: true });
   };
 
   const handleMenuClick = (path) => {
-    setIsMenuOpen(false);
+    handleMenuToggle(false);
     setIsWomenOpen(false);
     setIsMenOpen(false);
     setHoveredMenu(null);
@@ -138,10 +138,10 @@ const Navbar = ({ isScrolled = false, isMenuOpen = false, onMobileMenuChange }) 
           </Link>
 
           {/* 모바일: 햄버거 메뉴 (작은 크기) */}
-          <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="md:hidden w-8 h-8 -ml-1 flex flex-col justify-center items-center gap-[4px] z-[210]">
-            <motion.span animate={isMenuOpen ? { rotate: 45, y: 5, backgroundColor: "#000000" } : { rotate: 0, y: 0, backgroundColor: "#000000" }} className="w-4 h-[1px] block" />
-            <motion.span animate={isMenuOpen ? { opacity: 0 } : { opacity: 1 }} className="w-4 h-[1px] bg-[#000000] block" />
-            <motion.span animate={isMenuOpen ? { rotate: -45, y: -5, backgroundColor: "#000000" } : { rotate: 0, y: 0, backgroundColor: "#000000" }} className="w-4 h-[1px] block" />
+          <button onClick={() => handleMenuToggle(!activeMenuOpen)} className="md:hidden w-8 h-8 -ml-1 flex flex-col justify-center items-center gap-[4px] z-[210]">
+            <motion.span animate={activeMenuOpen ? { rotate: 45, y: 5, backgroundColor: "#000000" } : { rotate: 0, y: 0, backgroundColor: "#000000" }} className="w-4 h-[1px] block" />
+            <motion.span animate={activeMenuOpen ? { opacity: 0 } : { opacity: 1 }} className="w-4 h-[1px] bg-[#000000] block" />
+            <motion.span animate={activeMenuOpen ? { rotate: -45, y: -5, backgroundColor: "#000000" } : { rotate: 0, y: 0, backgroundColor: "#000000" }} className="w-4 h-[1px] block" />
           </button>
 
           <Link to="/" onClick={handleLogoClick} className="md:hidden absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-auto z-[210] opacity-90 hover:opacity-100 transition-opacity" style={{ height: '38px' }}>
@@ -197,7 +197,7 @@ const Navbar = ({ isScrolled = false, isMenuOpen = false, onMobileMenuChange }) 
                 </Link>
               )}
             </div>
-            <button onClick={() => { setIsSearchOpen(true); setIsMenuOpen(false); }} className="w-9 h-9 md:w-10 md:h-10 flex items-center justify-center hover:opacity-70 transition-colors text-[#000000]">
+            <button onClick={() => { setIsSearchOpen(true); handleMenuToggle(false); }} className="w-9 h-9 md:w-10 md:h-10 flex items-center justify-center hover:opacity-70 transition-colors text-[#000000]">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" /></svg>
             </button>
             <Link to="/cart" className="w-9 h-9 md:w-10 md:h-10 flex items-center justify-center relative hover:opacity-70 transition-colors text-[#000000]">
@@ -220,7 +220,7 @@ const Navbar = ({ isScrolled = false, isMenuOpen = false, onMobileMenuChange }) 
       {/* 모바일 메뉴 (Portal: 배경 강제 불투명, 오버레이, z-index 분리) */}
       {typeof document !== 'undefined' && createPortal(
         <AnimatePresence>
-          {isMenuOpen && (
+          {activeMenuOpen && (
             <>
               <motion.div
                 initial={{ opacity: 0 }}
@@ -229,7 +229,7 @@ const Navbar = ({ isScrolled = false, isMenuOpen = false, onMobileMenuChange }) 
                 transition={{ duration: 0.2 }}
                 className="fixed inset-0 z-[249] md:hidden"
                 style={{ backgroundColor: 'rgba(0,0,0,0.25)' }}
-                onClick={() => setIsMenuOpen(false)}
+                onClick={() => handleMenuToggle(false)}
                 aria-hidden="true"
               />
               <motion.div
@@ -241,7 +241,7 @@ const Navbar = ({ isScrolled = false, isMenuOpen = false, onMobileMenuChange }) 
                 style={{ backgroundColor: 'rgba(255,255,255,1)' }}
               >
                 <div className="mb-8 text-left">
-                  <button onClick={() => (isWomenOpen || isMenOpen) ? (setIsWomenOpen(false), setIsMenOpen(false)) : setIsMenuOpen(false)} className="flex items-center gap-2 text-[12px] font-light tracking-ultra-wide uppercase text-[#666666]">
+                  <button onClick={() => (isWomenOpen || isMenOpen) ? (setIsWomenOpen(false), setIsMenOpen(false)) : handleMenuToggle(false)} className="flex items-center gap-2 text-[12px] font-light tracking-ultra-wide uppercase text-[#666666]">
                     <span className="text-xl">←</span> {(isWomenOpen || isMenOpen) ? t('common.backToMenu') : t('common.back')}
                   </button>
                 </div>
