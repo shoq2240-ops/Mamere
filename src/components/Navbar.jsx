@@ -11,7 +11,20 @@ import { supabase } from '../lib/supabase';
 const Navbar = ({ isScrolled = false, isMenuOpen = false, onMobileMenuChange }) => {
   const [internalMenuOpen, setInternalMenuOpen] = useState(false);
   const activeMenuOpen = onMobileMenuChange ? isMenuOpen : internalMenuOpen;
-  const handleMenuToggle = onMobileMenuChange ? (open) => onMobileMenuChange(open) : setInternalMenuOpen;
+
+  const handleMenuToggle = (open) => {
+    if (onMobileMenuChange) {
+      onMobileMenuChange(open);
+    } else {
+      setInternalMenuOpen(open);
+    }
+  };
+
+  const toggleMenu = () => {
+    const nextOpen = !activeMenuOpen;
+    handleMenuToggle(nextOpen);
+    console.log('Menu Toggled:', nextOpen);
+  };
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isWomenOpen, setIsWomenOpen] = useState(false);
   const [isMenOpen, setIsMenOpen] = useState(false);
@@ -138,7 +151,7 @@ const Navbar = ({ isScrolled = false, isMenuOpen = false, onMobileMenuChange }) 
           </Link>
 
           {/* 모바일: 햄버거 메뉴 (작은 크기) */}
-          <button onClick={() => handleMenuToggle(!activeMenuOpen)} className="md:hidden w-8 h-8 -ml-1 flex flex-col justify-center items-center gap-[4px] z-[210]">
+          <button type="button" onClick={toggleMenu} className="md:hidden w-8 h-8 -ml-1 flex flex-col justify-center items-center gap-[4px] z-[400] relative" aria-label={activeMenuOpen ? '메뉴 닫기' : '메뉴 열기'}>
             <motion.span animate={activeMenuOpen ? { rotate: 45, y: 5, backgroundColor: "#000000" } : { rotate: 0, y: 0, backgroundColor: "#000000" }} className="w-4 h-[1px] block" />
             <motion.span animate={activeMenuOpen ? { opacity: 0 } : { opacity: 1 }} className="w-4 h-[1px] bg-[#000000] block" />
             <motion.span animate={activeMenuOpen ? { rotate: -45, y: -5, backgroundColor: "#000000" } : { rotate: 0, y: 0, backgroundColor: "#000000" }} className="w-4 h-[1px] block" />
@@ -227,7 +240,7 @@ const Navbar = ({ isScrolled = false, isMenuOpen = false, onMobileMenuChange }) 
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.2 }}
-                className="fixed inset-0 z-[249] md:hidden"
+                className="fixed inset-0 z-[350] md:hidden"
                 style={{ backgroundColor: 'rgba(0,0,0,0.25)' }}
                 onClick={() => handleMenuToggle(false)}
                 aria-hidden="true"
@@ -237,7 +250,7 @@ const Navbar = ({ isScrolled = false, isMenuOpen = false, onMobileMenuChange }) 
                 animate={{ x: 0 }}
                 exit={{ x: "-100%" }}
                 transition={{ type: "spring", damping: 25, stiffness: 200 }}
-                className="fixed inset-0 z-[250] flex flex-col pt-20 pb-12 px-8 text-[#000000] md:hidden"
+                className="fixed inset-0 z-[400] flex flex-col pt-20 pb-12 px-8 text-[#000000] md:hidden"
                 style={{ backgroundColor: 'rgba(255,255,255,1)' }}
               >
                 <div className="mb-8 text-left">
