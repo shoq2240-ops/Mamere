@@ -94,8 +94,12 @@
   }
 }
 
-/* 마키 애니메이션 */
+/* 마키 애니메이션: 0 → -50% 이동 후 루프 (이중 스트립과 함께 끊김 없음) */
 @keyframes marquee-scroll {
-  from { transform: translateX(-50%); }
-  to { transform: translateX(0); }
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+.animate-marquee {
+  animation: marquee-scroll linear infinite;
 }
