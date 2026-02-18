@@ -8,10 +8,10 @@
      ========================================
      - 배경: #FFFFFF, 보조: #F5F5F5 / #F9F9F9
      - 강조: 딥 블랙 #000000
-     - 폰트: 깔끔한 산세리프, 자간 넓게
+     - 폰트: Helvetica Neue 계열, 위계별 weight
   */
   :root {
-    --font-sans: 'Pretendard', 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-sans: 'Helvetica Neue', Helvetica, Arial, sans-serif;
     --color-bg: #FFFFFF;
     --color-bg-subtle: #F9F9F9;
     --color-bg-muted: #F5F5F5;
@@ -20,6 +20,12 @@
     --color-text-subtle: #666666;
     --letter-spacing-wide: 0.08em;
     --letter-spacing-extra: 0.15em;
+    /* 폰트 위계 */
+    --font-weight-body: 300;
+    --font-weight-emphasis: 500;
+    --font-weight-heading: 600;
+    --font-weight-display: 700;
+    --font-weight-hero: 900;
   }
 
   * {
@@ -31,7 +37,7 @@
     background-color: var(--color-bg);
     color: var(--color-text);
     font-family: var(--font-sans);
-    font-weight: 300;
+    font-weight: var(--font-weight-body);
     letter-spacing: 0.05em;
     overflow-x: hidden;
     height: 100%;
@@ -41,10 +47,23 @@
     font-family: inherit;
     color: inherit;
     letter-spacing: inherit;
+    font-weight: var(--font-weight-body);
     overflow-x: hidden;
     height: 100%;
     margin: 0;
   }
+
+  /* 위계 유틸리티 */
+  .font-display { font-weight: var(--font-weight-display); }
+  .font-heading { font-weight: var(--font-weight-heading); }
+  .font-emphasis { font-weight: var(--font-weight-emphasis); }
+  .font-hero { font-weight: var(--font-weight-hero); }
+
+  /* 제목 위계 (h1~h6) */
+  h1 { font-weight: var(--font-weight-hero); }
+  h2 { font-weight: var(--font-weight-display); }
+  h3 { font-weight: var(--font-weight-heading); }
+  h4, h5, h6 { font-weight: var(--font-weight-emphasis); }
 
   #root {
     min-height: 100%;

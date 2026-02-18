@@ -7,11 +7,16 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['Pretendard', 'Noto Sans KR', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+        sans: ['Helvetica Neue', 'Helvetica', 'Arial', 'sans-serif'],
+        mono: ['Helvetica Neue', 'Helvetica', 'Arial', 'sans-serif'],
       },
       fontWeight: {
         light: '300',
-        'woo-medium': '500',
+        normal: '400',
+        emphasis: '500',
+        heading: '600',
+        display: '700',
+        hero: '900',
       },
       colors: {
         primary: {

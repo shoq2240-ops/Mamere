@@ -43,7 +43,7 @@ const Marquee = ({
 
   return (
     <motion.section
-      className={`relative w-full flex-none overflow-hidden bg-[#F5F5F5] py-[10px] ${className}`}
+      className={`relative w-full flex-none overflow-hidden bg-transparent py-[10px] transition-colors duration-300 ${className}`}
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
       initial={{ opacity: 0.98 }}

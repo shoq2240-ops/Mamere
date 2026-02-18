@@ -1,21 +1,22 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 
 const Footer = () => {
   return (
     <footer className="bg-[#FFFFFF] text-[#666666] py-20 px-8 mt-20">
       <div className="max-w-7xl mx-auto">
         {/* 상단 메뉴: NOTICE, GUIDE 등 */}
-        <div className="flex flex-wrap gap-x-8 gap-y-4 text-[10px] font-bold uppercase tracking-extra-wide mb-12 text-[#666666]">
+        <div className="flex flex-wrap gap-x-8 gap-y-4 text-[10px] font-light uppercase tracking-extra-wide mb-12 text-[#666666]">
           <button className="hover:text-[#000000] transition-colors">Notice</button>
-          <button className="hover:text-[#000000] transition-colors">Agreement</button>
+          <Link to="/terms" className="hover:text-[#000000] transition-colors">Agreement</Link>
           <button className="hover:text-[#000000] transition-colors">Guide</button>
-          <button className="hover:text-[#000000] transition-colors text-[#000000]">Privacy Policy</button>
+          <Link to="/privacy" className="hover:text-[#000000] transition-colors text-[#000000]">Privacy Policy</Link>
           <button className="hover:text-[#000000] transition-colors">Work With Us</button>
         </div>
 
         {/* 기업 정보 영역 */}
         <div className="space-y-2">
-          <div className="flex flex-wrap gap-x-4 gap-y-1 text-[9px] font-mono tracking-tighter leading-relaxed">
+          <div className="flex flex-wrap gap-x-4 gap-y-1 text-[9px] font-light tracking-[0.12em] leading-relaxed">
             <span>COMPANY : jvng. STUDIO</span>
             <span className="text-[#CCCCCC]">|</span>
             <span>CEO : 박재중</span>
@@ -23,7 +24,7 @@ const Footer = () => {
             <span>ADDRESS : SEOUL, KOREA</span>
           </div>
           
-          <div className="flex flex-wrap gap-x-4 gap-y-1 text-[9px] font-mono tracking-tighter leading-relaxed">
+          <div className="flex flex-wrap gap-x-4 gap-y-1 text-[9px] font-light tracking-[0.12em] leading-relaxed">
             <span>TEL : 070-1234-5678</span>
             <span className="text-[#CCCCCC]">|</span>
             <span>BUSINESS LICENSE : 123-45-67890</span>
@@ -31,18 +32,18 @@ const Footer = () => {
             <span>ONLINE LICENSE : 2026-SEOUL-0000</span>
           </div>
 
-          <p className="text-[9px] font-mono mt-6 opacity-60">
+          <p className="text-[9px] font-light tracking-[0.1em] mt-6 opacity-60 leading-relaxed">
             당사는 고객님이 현금 결제한 금액에 대해 토스페이먼츠와 소비자 피해 보상 보험 계약을 체결하여 안전거래를 보장하고 있습니다.
           </p>
         </div>
 
         {/* 카피라이트 */}
         <div className="mt-12 pt-8 border-t border-[#F0F0F0] flex justify-between items-center">
-          <p className="text-[9px] font-mono tracking-ultra-wide uppercase text-[#666666]">
+          <p className="text-[9px] font-light tracking-[0.15em] uppercase text-[#666666]">
             © jvng. All rights reserved.
           </p>
           <div className="flex space-x-4 opacity-70">
-            <span className="text-[8px] border border-[#DDDDDD] px-2 py-1 text-[#666666]">ESCROW SAFE</span>
+            <span className="text-[8px] font-light tracking-[0.1em] border border-[#DDDDDD] px-2 py-1 text-[#666666]">ESCROW SAFE</span>
           </div>
         </div>
       </div>

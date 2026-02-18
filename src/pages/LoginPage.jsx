@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { supabase } from '../lib/supabase';
+import { supabase, getAuthRedirectUrl } from '../lib/supabase';
 import brandLogo from '../asset/brand.logo.png';
 
 const SAVED_EMAIL_KEY = 'dn_saved_email';
@@ -57,7 +57,7 @@ const LoginPage = () => {
     setLoading(true);
     const { error } = await supabase.auth.signInWithOAuth({
       provider,
-      options: { redirectTo: `${window.location.origin}/` },
+      options: { redirectTo: getAuthRedirectUrl('/') },
     });
     setLoading(false);
     if (error) setError(error.message);
@@ -72,7 +72,7 @@ const LoginPage = () => {
     setError('');
     setLoading(true);
     const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-      redirectTo: `${window.location.origin}/login?reset=success`,
+      redirectTo: getAuthRedirectUrl('/login?reset=success'),
     });
     setLoading(false);
     if (error) {

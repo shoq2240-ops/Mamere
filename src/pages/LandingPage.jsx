@@ -60,7 +60,7 @@ const LandingPage = () => {
         >
           <div className="space-y-8">
             <h1 className="text-3xl md:text-4xl font-bold tracking-[0.2em] uppercase">
-              jvng.
+              
             </h1>
             <p className="text-[11px] font-light tracking-[0.15em] uppercase text-[#666666]">
               일상 속에서 빛나는 감각적인 실루엣을 제안합니다
@@ -83,7 +83,7 @@ const LandingPage = () => {
                   newArrivalTab === 'men' ? 'text-[#000000] border-b-2 border-[#000000] -mb-[2px]' : 'text-[#999999] hover:text-[#333333]'
                 }`}
               >
-                남성
+                men
               </button>
               <button
                 type="button"
@@ -92,7 +92,7 @@ const LandingPage = () => {
                   newArrivalTab === 'women' ? 'text-[#000000] border-b-2 border-[#000000] -mb-[2px]' : 'text-[#999999] hover:text-[#333333]'
                 }`}
               >
-                여성
+                women
               </button>
             </div>
             {newArrivalTab === 'men' ? (
@@ -139,7 +139,7 @@ const LandingPage = () => {
         {!loading && !error && newArrivalsByTab.length === 0 && (
           <div className="px-8 py-16 text-center min-h-[20vh] flex items-center justify-center">
             <p className="text-[#999999] text-[9pt] tracking-[0.15em] uppercase">
-              {newArrivalTab === 'men' ? '남성' : '여성'} 신상품이 없습니다.
+              {newArrivalTab === 'men' ? 'men' : 'women'} 신상품이 없습니다.
             </p>
           </div>
         )}

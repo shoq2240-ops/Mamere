@@ -12,8 +12,8 @@ const MAX_IMAGE_SIZE_MB = 5;
 const MAX_IMAGE_BYTES = MAX_IMAGE_SIZE_MB * 1024 * 1024;
 
 const GENDERS = [
-  { value: 'men', label: '남성' },
-  { value: 'women', label: '여성' },
+  { value: 'men', label: 'men' },
+  { value: 'women', label: 'women' },
 ];
 
 const CATEGORIES = [
@@ -234,12 +234,14 @@ const AdminUploadPage = () => {
             <h1 className="text-2xl md:text-3xl font-light uppercase tracking-tight">관리자 · 상품 등록</h1>
             <p className="text-[11px] text-white/50 tracking-[0.1em] uppercase mt-2">상품을 등록·수정·삭제합니다</p>
           </div>
-          <Link
-            to="/admin/orders"
-            className="text-[10px] font-medium tracking-widest uppercase text-white/60 hover:text-white border-b border-white/20 pb-1 w-fit"
-          >
-            주문 관리 →
-          </Link>
+          <div className="flex flex-wrap gap-4">
+            <Link to="/admin/orders" className="text-[10px] font-medium tracking-widest uppercase text-white/60 hover:text-white border-b border-white/20 pb-1 w-fit">
+              주문 관리 →
+            </Link>
+            <Link to="/admin/users" className="text-[10px] font-medium tracking-widest uppercase text-white/60 hover:text-white border-b border-white/20 pb-1 w-fit">
+              회원 관리
+            </Link>
+          </div>
         </div>
 
         {/* 등록 폼 */}
@@ -458,7 +460,7 @@ const AdminUploadPage = () => {
                       )}
                     </div>
                     <p className="text-[11px] text-white/50">
-                      ₩{Number(p.price).toLocaleString()} · {p.gender === 'men' ? '남성' : p.gender === 'women' ? '여성' : '—'} · {getCategoryLabel(p.category)}
+                      ₩{Number(p.price).toLocaleString()} · {p.gender === 'men' ? 'men' : p.gender === 'women' ? 'women' : '—'} · {getCategoryLabel(p.category)}
                       {p.stock_quantity != null && ` · 재고 ${p.stock_quantity}개`}
                     </p>
                   </div>

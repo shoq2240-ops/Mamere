@@ -1,10 +1,10 @@
-import React, { useState } from "react";
-import { Toaster } from "react-hot-toast";
+import React, { useState, useEffect, useRef } from "react";
+import { Toaster, toast } from "react-hot-toast";
 import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { CartProvider, useCart } from "./store/CartContext";
 import { WishlistProvider } from "./store/WishlistContext";
-import { AuthProvider } from "./store/AuthContext";
+import { AuthProvider, useAuth } from "./store/AuthContext";
 import ScrollToTop from "./components/ScrollToTop";
 
 import Navbar from "./components/Navbar";
@@ -25,7 +25,22 @@ import CheckoutPage from './pages/CheckoutPage';
 import OrdersPage from './pages/OrdersPage';
 import AdminUploadPage from './pages/AdminUploadPage';
 import AdminOrdersPage from './pages/AdminOrdersPage';
+import AdminUsersPage from './pages/AdminUsersPage';
+import TermsPage from './pages/TermsPage';
+import PrivacyPage from './pages/PrivacyPage';
 import RequireAdmin from './components/RequireAdmin';
+import CookieBanner from './components/CookieBanner';
+
+const WithdrawnToast = () => {
+  const { withdrawnMessage, clearWithdrawnMessage } = useAuth();
+  useEffect(() => {
+    if (withdrawnMessage) {
+      toast.error(withdrawnMessage);
+      clearWithdrawnMessage();
+    }
+  }, [withdrawnMessage, clearWithdrawnMessage]);
+  return null;
+};
 
 const AnimatedRoutes = () => {
   const location = useLocation();
@@ -51,6 +66,9 @@ const AnimatedRoutes = () => {
         <Route path="/orders" element={<PageWrapper><OrdersPage /></PageWrapper>} />
         <Route path="/admin/upload" element={<PageWrapper><RequireAdmin><AdminUploadPage /></RequireAdmin></PageWrapper>} />
         <Route path="/admin/orders" element={<PageWrapper><RequireAdmin><AdminOrdersPage /></RequireAdmin></PageWrapper>} />
+        <Route path="/admin/users" element={<PageWrapper><RequireAdmin><AdminUsersPage /></RequireAdmin></PageWrapper>} />
+        <Route path="/terms" element={<PageWrapper><TermsPage /></PageWrapper>} />
+        <Route path="/privacy" element={<PageWrapper><PrivacyPage /></PageWrapper>} />
         
         {/* 카테고리별 쇼핑 페이지 */}
         <Route path="/shop/men" element={<PageWrapper><ShopPage category="men" /></PageWrapper>} />
@@ -80,12 +98,56 @@ const PageWrapper = ({ children }) => (
   </motion.div>
 );
 
+function AppContent() {
+  const mainScrollRef = useRef(null);
+  const [isScrolled, setIsScrolled] = useState(false);
+  const { pathname } = useLocation();
+
+  const handleScroll = () => {
+    const el = mainScrollRef.current;
+    if (!el) return;
+    setIsScrolled(el.scrollTop > 0);
+  };
+
+  useEffect(() => {
+    const el = mainScrollRef.current;
+    if (!el) return;
+    setIsScrolled(el.scrollTop > 0);
+  }, [pathname]);
+
+  return (
+    <>
+      <header
+        className={`sticky top-0 z-[150] flex flex-col flex-none shrink-0 transition-all duration-300 ${
+          isScrolled
+            ? 'bg-white/80 backdrop-blur-[10px] border-b border-black/[0.06]'
+            : 'bg-transparent'
+        }`}
+      >
+        <Marquee />
+        <Navbar isScrolled={isScrolled} />
+      </header>
+      <main
+        ref={mainScrollRef}
+        onScroll={handleScroll}
+        id="main-scroll"
+        className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden"
+      >
+        <AnimatedRoutes />
+        <Footer />
+      </main>
+    </>
+  );
+}
+
 function App() {
+
   return (
     <AuthProvider>
       <CartProvider>
         <WishlistProvider>
         <Router>
+          <WithdrawnToast />
           <ScrollToTop />
           <div className="flex flex-col h-screen max-h-[100dvh] bg-[#FFFFFF] text-[#000000] antialiased overflow-hidden flex">
             <Toaster
@@ -101,14 +163,8 @@ function App() {
                 success: { iconTheme: { primary: '#000000' } },
               }}
             />
-            <header className="sticky top-0 z-[100] flex flex-col flex-none shrink-0 bg-[#FFFFFF]">
-              <Marquee />
-              <Navbar />
-            </header>
-            <main id="main-scroll" className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden">
-              <AnimatedRoutes />
-              <Footer />
-            </main>
+            <AppContent />
+            <CookieBanner />
           </div>
         </Router>
         </WishlistProvider>

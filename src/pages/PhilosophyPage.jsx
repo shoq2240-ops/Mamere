@@ -16,7 +16,7 @@ const PhilosophyPage = () => {
             Philosophy
           </h1>
           <h2 className="text-3xl md:text-5xl font-black italic tracking-tighter uppercase leading-tight">
-            jvng.
+
           </h2>
         </motion.div>
 
@@ -30,7 +30,7 @@ const PhilosophyPage = () => {
           {/* 함축된 철학 메시지 */}
           <div className="border-l border-[#E5E5E5] pl-6 md:pl-12">
             <p className="text-lg md:text-2xl font-light leading-relaxed md:leading-loose text-[#000000] break-keep">
-              더블 네거티브는 익숙한 관습과 정형화된 스타일을 <br className="hidden md:block" />
+               <br className="hidden md:block" />
               <span className="font-bold text-white">두 번의 삭제를 통해 거부하며, 그 과정에서 본연의 형체를 드러냅니다.</span>
             </p>
           </div>
@@ -44,7 +44,7 @@ const PhilosophyPage = () => {
             <p className="text-sm md:text-base font-light leading-7 text-[#666666] break-keep">
               이러한 흔적들을 미학으로 승화시켜, 장식적 요소가 아닌 
               진실된 자세만을 제안하고자 합니다. 삭제의 흔적은 곧 
-              더블 네거티브가 지향하는 가장 순수한 형태의 우아함입니다.
+              우리가 지향하는 가장 순수한 형태의 우아함입니다.
             </p>
           </div>
         </motion.div>

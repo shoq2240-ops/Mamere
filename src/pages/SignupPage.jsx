@@ -1,12 +1,15 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
-import { supabase } from '../lib/supabase';
+import { supabase, fetchClientIp, logUserConsent, getAuthRedirectUrl } from '../lib/supabase';
 
 const SignupPage = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [agreeTerms, setAgreeTerms] = useState(false);
+  const [agreePrivacy, setAgreePrivacy] = useState(false);
+  const [agreeMarketing, setAgreeMarketing] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
@@ -16,7 +19,7 @@ const SignupPage = () => {
     setLoading(true);
     const { error } = await supabase.auth.signInWithOAuth({
       provider,
-      options: { redirectTo: `${window.location.origin}/` },
+      options: { redirectTo: getAuthRedirectUrl('/') },
     });
     setLoading(false);
     if (error) setError(error.message);
@@ -26,15 +29,33 @@ const SignupPage = () => {
     e.preventDefault();
     setError('');
     setMessage('');
+    if (!agreeTerms || !agreePrivacy) {
+      setError('이용약관과 개인정보 처리방침에 동의해 주세요.');
+      return;
+    }
     setLoading(true);
 
     const { data, error } = await supabase.auth.signUp({ email, password });
 
-    setLoading(false);
     if (error) {
+      setLoading(false);
       setError(error.message);
       return;
     }
+
+    // 세션 있으면 동의 로그 기록 (IP, 동의 시점)
+    if (data?.user && data?.session) {
+      const ip = await fetchClientIp();
+      await logUserConsent({
+        userId: data.user.id,
+        ipAddress: ip,
+        termsAgreedAt: new Date().toISOString(),
+        privacyAgreedAt: new Date().toISOString(),
+        marketingAgreed: agreeMarketing,
+      });
+    }
+
+    setLoading(false);
     if (data?.user && !data?.session) {
       setMessage('가입 완료. 이메일 확인 링크를 보냈습니다. 메일함을 확인해주세요.');
       return;
@@ -68,7 +89,7 @@ const SignupPage = () => {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            className="w-full bg-[#F9F9F9] px-6 py-4 text-[11px] text-white outline-none focus:bg-[#F5F5F5] transition-all font-mono placeholder:text-[#999999]"
+            className="w-full bg-[#F9F9F9] px-6 py-4 text-[11px] text-[#000000] outline-none focus:bg-[#F5F5F5] transition-all font-mono placeholder:text-[#999999]"
           />
           <input
             type="password"
@@ -77,8 +98,45 @@ const SignupPage = () => {
             onChange={(e) => setPassword(e.target.value)}
             required
             minLength={6}
-            className="w-full bg-[#F9F9F9] px-6 py-4 text-[11px] text-white outline-none focus:bg-[#F5F5F5] transition-all font-mono placeholder:text-[#999999]"
+            className="w-full bg-[#F9F9F9] px-6 py-4 text-[11px] text-[#000000] outline-none focus:bg-[#F5F5F5] transition-all font-mono placeholder:text-[#999999]"
           />
+
+          <div className="space-y-3 py-2">
+            <label className="flex items-start gap-3 cursor-pointer group">
+              <input
+                type="checkbox"
+                checked={agreeTerms}
+                onChange={(e) => setAgreeTerms(e.target.checked)}
+                className="mt-1 w-4 h-4 rounded border-[#CCCCCC] bg-white text-[#000000] focus:ring-[#000000] focus:ring-offset-0"
+              />
+              <span className="text-[10px] text-[#333333] group-hover:text-[#000000] transition-colors">
+                <Link to="/terms" target="_blank" className="underline underline-offset-2">이용약관</Link> 전체 내용을 확인했으며 이에 동의합니다. (필수)
+              </span>
+            </label>
+            <label className="flex items-start gap-3 cursor-pointer group">
+              <input
+                type="checkbox"
+                checked={agreePrivacy}
+                onChange={(e) => setAgreePrivacy(e.target.checked)}
+                className="mt-1 w-4 h-4 rounded border-[#CCCCCC] bg-white text-[#000000] focus:ring-[#000000] focus:ring-offset-0"
+              />
+              <span className="text-[10px] text-[#333333] group-hover:text-[#000000] transition-colors">
+                <Link to="/privacy" target="_blank" className="underline underline-offset-2">개인정보 처리방침</Link> 전체 내용을 확인했으며 이에 동의합니다. (필수)
+              </span>
+            </label>
+            <label className="flex items-start gap-3 cursor-pointer group">
+              <input
+                type="checkbox"
+                checked={agreeMarketing}
+                onChange={(e) => setAgreeMarketing(e.target.checked)}
+                className="mt-1 w-4 h-4 rounded border-[#CCCCCC] bg-white text-[#000000] focus:ring-[#000000] focus:ring-offset-0"
+              />
+              <span className="text-[10px] text-[#333333] group-hover:text-[#000000] transition-colors">
+                마케팅 수신에 동의합니다. (선택)
+              </span>
+            </label>
+          </div>
+
           <button
             type="submit"
             disabled={loading}
@@ -100,7 +158,7 @@ const SignupPage = () => {
             <button
               type="button"
               onClick={() => handleOAuthSignIn('kakao')}
-              disabled={loading}
+              disabled={loading || !agreeTerms || !agreePrivacy}
               className="flex-1 flex items-center justify-center gap-2 py-4 bg-[#FEE500] text-[#191919] text-[10px] font-bold rounded transition-opacity hover:opacity-90 disabled:opacity-50"
             >
               <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
@@ -111,7 +169,7 @@ const SignupPage = () => {
             <button
               type="button"
               onClick={() => handleOAuthSignIn('google')}
-              disabled={loading}
+              disabled={loading || !agreeTerms || !agreePrivacy}
               className="flex-1 flex items-center justify-center gap-2 py-4 bg-white text-zinc-800 border border-zinc-200 text-[10px] font-bold rounded transition-opacity hover:bg-zinc-50 disabled:opacity-50"
             >
               <svg className="w-5 h-5" viewBox="0 0 24 24">

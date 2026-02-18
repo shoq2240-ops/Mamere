@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import brandLogo from '../asset/brand.logo.png';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCart } from '../store/CartContext';
 import { useAuth } from '../store/AuthContext';
 import { supabase } from '../lib/supabase';
 
-const Navbar = () => {
+const Navbar = ({ isScrolled = false }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isWomenOpen, setIsWomenOpen] = useState(false);
@@ -17,6 +17,16 @@ const Navbar = () => {
   const { cartCount } = useCart();
   const { isLoggedIn } = useAuth();
   const navigate = useNavigate();
+  const { pathname } = useLocation();
+
+  const handleLogoClick = (e) => {
+    if (pathname === '/') {
+      e.preventDefault();
+      window.scrollTo(0, 0);
+      const main = document.getElementById('main-scroll');
+      if (main) main.scrollTo(0, 0);
+    }
+  };
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -41,10 +51,10 @@ const Navbar = () => {
     }
   };
 
-  // 메뉴 데이터 구조: 여성, 남성 (아웃웨어/상의/하의), 컬렉션, 스토리
+  // 메뉴 데이터 구조: women, men (아웃웨어/상의/하의), 컬렉션, 스토리
   const navLinks = [
     { 
-      name: '여성', 
+      name: 'women', 
       path: '/shop/women',
       sub: [
         { name: '아웃웨어', path: '/shop/women?sub=outerwear' },
@@ -53,7 +63,7 @@ const Navbar = () => {
       ]
     },
     { 
-      name: '남성', 
+      name: 'men', 
       path: '/shop/men',
       sub: [
         { name: '아웃웨어', path: '/shop/men?sub=outerwear' },
@@ -61,17 +71,17 @@ const Navbar = () => {
         { name: '하의', path: '/shop/men?sub=bottom' },
       ]
     },
-    { name: '컬렉션', path: '/collection', mobileLabel: 'Collection' },
-    { name: '스토리', path: '/philosophy', mobileLabel: 'Story' },
+    { name: 'COLLECTION', path: '/collection', mobileLabel: 'Collection' },
+    { name: 'ABOUT', path: '/philosophy', mobileLabel: 'ABOUT' },
   ];
 
   return (
     <div className="antialiased" onMouseLeave={() => setHoveredMenu(null)}>
-      <nav className="relative w-full z-[110] bg-[#FFFFFF] text-[#000000]">
+      <nav className="relative w-full z-[150] bg-transparent text-[#000000] transition-all duration-300">
         <div className="max-w-[1800px] mx-auto h-14 flex items-center justify-between px-6 relative">
           
           {/* 왼쪽: 메뉴 (오른쪽으로 3cm 이동) */}
-          <div className="hidden md:flex items-center gap-8 text-[9pt] font-light tracking-widest uppercase h-14 flex-1 ml-[3cm]">
+          <div className="hidden md:flex items-center gap-8 text-[9pt] font-medium tracking-widest uppercase h-14 flex-1 ml-[3cm]">
             {navLinks.map((link) => (
                 <div 
                   key={link.name}
@@ -98,7 +108,7 @@ const Navbar = () => {
                           <Link 
                             key={sub.name} 
                             to={sub.path} 
-                            className="relative py-3 text-[11px] font-light uppercase transition-all duration-200 text-[#333333] hover:text-[#000000] group/row"
+                            className="relative py-3 text-[11px] font-medium uppercase transition-all duration-200 text-[#333333] hover:text-[#000000] group/row"
                             style={{ letterSpacing: '0.1em' }}
                           >
                             {sub.name}
@@ -112,11 +122,12 @@ const Navbar = () => {
               ))}
           </div>
 
-          {/* 가운데: 공식 브랜드 로고 (투명 배경 느낌: invert로 어두운 헤더에 맞춤) */}
+          {/* 가운데: 공식 브랜드 로고 */}
           <Link
             to="/"
+            onClick={handleLogoClick}
             className="hidden md:flex absolute left-1/2 -translate-x-1/2 w-auto cursor-pointer opacity-90 hover:opacity-100 transition-opacity"
-            style={{ height: '28px' }}
+            style={{ height: '46px' }}
           >
             <img src={brandLogo} alt="jvng." className="h-full w-auto object-contain" />
           </Link>
@@ -128,7 +139,7 @@ const Navbar = () => {
             <motion.span animate={isMobileMenuOpen ? { rotate: -45, y: -5, backgroundColor: "#000000" } : { rotate: 0, y: 0, backgroundColor: "#000000" }} className="w-4 h-[1px] block" />
           </button>
 
-          <Link to="/" className="md:hidden absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-auto z-[210] opacity-90 hover:opacity-100 transition-opacity" style={{ height: '26px' }}>
+          <Link to="/" onClick={handleLogoClick} className="md:hidden absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-auto z-[210] opacity-90 hover:opacity-100 transition-opacity" style={{ height: '38px' }}>
             <img src={brandLogo} alt="jvng." className="h-full w-auto object-contain" />
           </Link>
 
@@ -205,12 +216,12 @@ const Navbar = () => {
                   <div key={item.name}>
                     {item.sub ? (
                       <>
-                        <button onClick={() => { setIsWomenOpen(item.name === '여성' ? !isWomenOpen : false); setIsMenOpen(item.name === '남성' ? !isMenOpen : false); }} className="text-xl font-bold tracking-tighter uppercase text-left flex items-center justify-between w-full hover:opacity-70 py-2">
-                          {item.name} <span className="text-lg font-light opacity-20">{(item.name === '여성' ? isWomenOpen : isMenOpen) ? '−' : '+'}</span>
+                        <button onClick={() => { setIsWomenOpen(item.name === 'women' ? !isWomenOpen : false); setIsMenOpen(item.name === 'men' ? !isMenOpen : false); }} className="text-xl font-medium tracking-tighter uppercase text-left flex items-center justify-between w-full hover:opacity-70 py-2">
+                          {item.name} <span className="text-lg font-light opacity-20">{(item.name === 'women' ? isWomenOpen : isMenOpen) ? '−' : '+'}</span>
                         </button>
                         <AnimatePresence>
-                          {(item.name === '여성' ? isWomenOpen : isMenOpen) && (
-                            <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="flex flex-col space-y-4 mt-4 ml-4 border-l border-[#E5E5E5] pl-5 text-left text-sm font-light uppercase text-[#333333]">
+                          {(item.name === 'women' ? isWomenOpen : isMenOpen) && (
+                            <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="flex flex-col space-y-4 mt-4 ml-4 border-l border-[#E5E5E5] pl-5 text-left text-sm font-medium uppercase text-[#333333]">
                               {item.sub.map((sub) => (
                                 <button key={sub.name} onClick={() => handleMenuClick(sub.path)}>{sub.name}</button>
                               ))}
@@ -219,7 +230,7 @@ const Navbar = () => {
                         </AnimatePresence>
                       </>
                     ) : (
-                      <button onClick={() => handleMenuClick(item.path)} className="text-xl font-bold tracking-tighter uppercase text-left hover:opacity-70 py-2">{item.mobileLabel || item.name}</button>
+                      <button onClick={() => handleMenuClick(item.path)} className="text-xl font-medium tracking-tighter uppercase text-left hover:opacity-70 py-2">{item.mobileLabel || item.name}</button>
                     )}
                   </div>
                 ))}

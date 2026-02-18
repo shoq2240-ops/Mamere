@@ -68,7 +68,7 @@ const ShopPage = ({ category }) => {
         <div>
           <h1 className="text-[9px] md:text-[10px] tracking-[0.2em] uppercase text-[#666666] font-bold mb-2 md:mb-3">Selection</h1>
           <h2 className="text-lg md:text-2xl font-light uppercase tracking-tight leading-none text-[#000000]">
-            {category === 'men' ? '남성' : category === 'women' ? '여성' : '남성 · 여성'}
+            {category === 'men' ? 'men' : category === 'women' ? 'women' : 'men · women'}
           </h2>
         </div>
         <span className="text-[9px] md:text-[10px] font-light text-[#999999] tracking-[0.15em] uppercase mb-2">
@@ -109,9 +109,9 @@ const ShopPage = ({ category }) => {
               {searchTerm
                 ? `찾으시는 제품 "${searchTerm}"이(가) 현재 아카이브에 존재하지 않습니다.`
                 : category === 'men'
-                  ? '남성 카테고리에 등록된 제품이 없습니다.'
+                  ? 'men 카테고리에 등록된 제품이 없습니다.'
                   : category === 'women'
-                    ? '여성 카테고리에 등록된 제품이 없습니다.'
+                    ? 'women 카테고리에 등록된 제품이 없습니다.'
                     : '등록된 제품이 없습니다.'}
             </p>
             {category ? (

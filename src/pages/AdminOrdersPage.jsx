@@ -207,12 +207,14 @@ const AdminOrdersPage = () => {
               주문 현황을 한눈에 파악하고 관리합니다
             </p>
           </div>
-          <Link
-            to="/admin/upload"
-            className="text-[10px] font-medium tracking-widest uppercase text-white/60 hover:text-white border-b border-white/20 pb-1 w-fit"
-          >
-            ← 상품 등록으로
-          </Link>
+          <div className="flex flex-wrap gap-4">
+            <Link to="/admin/users" className="text-[10px] font-medium tracking-widest uppercase text-white/60 hover:text-white border-b border-white/20 pb-1 w-fit">
+              회원 관리
+            </Link>
+            <Link to="/admin/upload" className="text-[10px] font-medium tracking-widest uppercase text-white/60 hover:text-white border-b border-white/20 pb-1 w-fit">
+              ← 상품 등록으로
+            </Link>
+          </div>
         </div>
 
         {/* 1. 핵심 지표 요약 (Stats Cards) */}
