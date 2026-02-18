@@ -73,7 +73,7 @@ const SignupPage = () => {
       >
         <div className="text-center space-y-4">
           <h1 className="text-5xl font-black italic uppercase tracking-tighter text-white">Sign Up</h1>
-          <p className="text-[10px] text-neutral-500 tracking-mega-wide uppercase font-mono">Join the archive</p>
+          <p className="text-[10px] font-light text-neutral-500 tracking-mega-wide uppercase">Join the archive</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -89,7 +89,7 @@ const SignupPage = () => {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            className="w-full bg-[#F9F9F9] px-6 py-4 text-[11px] text-[#000000] outline-none focus:bg-[#F5F5F5] transition-all font-mono placeholder:text-[#999999]"
+            className="w-full bg-[#F9F9F9] px-6 py-4 text-[11px] text-[#000000] outline-none focus:bg-[#F5F5F5] transition-all font-light placeholder:text-[#999999]"
           />
           <input
             type="password"
@@ -98,7 +98,7 @@ const SignupPage = () => {
             onChange={(e) => setPassword(e.target.value)}
             required
             minLength={6}
-            className="w-full bg-[#F9F9F9] px-6 py-4 text-[11px] text-[#000000] outline-none focus:bg-[#F5F5F5] transition-all font-mono placeholder:text-[#999999]"
+            className="w-full bg-[#F9F9F9] px-6 py-4 text-[11px] text-[#000000] outline-none focus:bg-[#F5F5F5] transition-all font-light placeholder:text-[#999999]"
           />
 
           <div className="space-y-3 py-2">

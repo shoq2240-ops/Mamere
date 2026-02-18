@@ -5,6 +5,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { CartProvider, useCart } from "./store/CartContext";
 import { WishlistProvider } from "./store/WishlistContext";
 import { AuthProvider, useAuth } from "./store/AuthContext";
+import { LanguageProvider } from "./store/LanguageContext";
 import ScrollToTop from "./components/ScrollToTop";
 
 import Navbar from "./components/Navbar";
@@ -101,6 +102,7 @@ const PageWrapper = ({ children }) => (
 function AppContent() {
   const mainScrollRef = useRef(null);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { pathname } = useLocation();
 
   const handleScroll = () => {
@@ -115,17 +117,20 @@ function AppContent() {
     setIsScrolled(el.scrollTop > 0);
   }, [pathname]);
 
+  // 메뉴 열림 시 헤더는 isScrolled와 관계없이 불투명 유지
+  const headerBgClass = isMobileMenuOpen
+    ? 'bg-[#FFFFFF] border-b border-black/[0.06]'
+    : isScrolled
+      ? 'bg-white/80 backdrop-blur-[10px] border-b border-black/[0.06]'
+      : 'bg-transparent';
+
   return (
     <>
       <header
-        className={`sticky top-0 z-[150] flex flex-col flex-none shrink-0 transition-all duration-300 ${
-          isScrolled
-            ? 'bg-white/80 backdrop-blur-[10px] border-b border-black/[0.06]'
-            : 'bg-transparent'
-        }`}
+        className={`sticky top-0 z-[150] flex flex-col flex-none shrink-0 transition-all duration-300 ${headerBgClass}`}
       >
         <Marquee />
-        <Navbar isScrolled={isScrolled} />
+        <Navbar isScrolled={isScrolled} isMobileMenuOpen={isMobileMenuOpen} onMobileMenuChange={setIsMobileMenuOpen} />
       </header>
       <main
         ref={mainScrollRef}
@@ -144,6 +149,7 @@ function App() {
 
   return (
     <AuthProvider>
+      <LanguageProvider>
       <CartProvider>
         <WishlistProvider>
         <Router>
@@ -169,6 +175,7 @@ function App() {
         </Router>
         </WishlistProvider>
       </CartProvider>
+      </LanguageProvider>
     </AuthProvider>
   );
 }

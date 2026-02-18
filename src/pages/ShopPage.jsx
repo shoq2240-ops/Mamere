@@ -59,7 +59,7 @@ const ShopPage = ({ category }) => {
             setSearchTerm(val);
             setSearchParams(val ? { search: val } : {});
           }}
-          className="w-full bg-transparent border-b border-[#E5E5E5] py-3 md:py-4 text-[11px] md:text-[12px] font-light tracking-[0.15em] uppercase outline-none focus:border-[#000000] transition-colors placeholder:text-[#CCCCCC] text-[#000000]"
+          className="w-full bg-transparent border-b border-[#E5E5E5] py-3 md:py-4 text-[11px] md:text-[12px] font-light tracking-[0.15em] uppercase outline-none focus:border-[#000000] transition-colors placeholder:text-[#CCCCCC] placeholder:font-light text-[#000000]"
         />
       </div>
       

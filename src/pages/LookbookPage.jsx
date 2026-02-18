@@ -65,7 +65,7 @@ const LookbookPage = () => {
 
             {/* 텍스트 섹션 */}
             <div className="flex-1 space-y-4 text-center md:text-left">
-              <span className="text-white/80 font-mono text-xs italic tracking-widest uppercase">0{idx + 1}</span>
+              <span className="text-[#999999] text-[10px] font-light tracking-widest uppercase">0{idx + 1}</span>
               <h2 className="text-3xl font-black italic uppercase">{item.title}</h2>
               <p className="text-neutral-400 font-light text-sm leading-relaxed break-keep max-w-xs mx-auto md:mx-0">
                 {item.description}

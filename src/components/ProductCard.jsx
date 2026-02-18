@@ -82,7 +82,7 @@ const ProductCard = ({ product, onAddToCart, variant = 'grid', grayscale = false
             </svg>
           </button>
         </div>
-        <p className={`font-light tracking-widest text-[#333333] ${variant === 'carousel' ? 'text-[11px] font-semibold' : 'text-[12px] md:text-[13px]'}`}>
+        <p className={`font-light tracking-widest text-[#333333] ${variant === 'carousel' ? 'text-[11px] font-medium' : 'text-[12px] md:text-[13px]'}`}>
           {formatPrice(product.price)}
         </p>
         {/* Add to Archive (grid 전용): 품절 시 SOLD OUT 비활성화 */}
