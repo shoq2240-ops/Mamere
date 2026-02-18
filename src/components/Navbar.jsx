@@ -8,9 +8,10 @@ import { useAuth } from '../store/AuthContext';
 import { useLanguage } from '../store/LanguageContext';
 import { supabase } from '../lib/supabase';
 
-const Navbar = ({ isScrolled = false, isMenuOpen = false, onMobileMenuChange }) => {
+const Navbar = ({ isScrolled = false, isMobileMenuOpen = false, onMobileMenuChange }) => {
   const [internalMenuOpen, setInternalMenuOpen] = useState(false);
-  const activeMenuOpen = onMobileMenuChange ? isMenuOpen : internalMenuOpen;
+  // App에서 isMobileMenuOpen을 넘기므로 그 값 사용, 없으면 internalMenuOpen 사용
+  const activeMenuOpen = onMobileMenuChange ? isMobileMenuOpen : internalMenuOpen;
 
   const handleMenuToggle = (open) => {
     if (onMobileMenuChange) {
@@ -22,8 +23,8 @@ const Navbar = ({ isScrolled = false, isMenuOpen = false, onMobileMenuChange }) 
 
   const toggleMenu = () => {
     const nextOpen = !activeMenuOpen;
+    console.log('Menu Clicked!', nextOpen);
     handleMenuToggle(nextOpen);
-    console.log('Menu Toggled:', nextOpen);
   };
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isWomenOpen, setIsWomenOpen] = useState(false);
@@ -230,7 +231,7 @@ const Navbar = ({ isScrolled = false, isMenuOpen = false, onMobileMenuChange }) 
         </div>
       </nav>
 
-      {/* 모바일 메뉴 (Portal: 배경 강제 불투명, 오버레이, z-index 분리) */}
+      {/* 모바일 메뉴 (Portal: 배경 #FFFFFF 불투명, z-index 9999) */}
       {typeof document !== 'undefined' && createPortal(
         <AnimatePresence>
           {activeMenuOpen && (
@@ -240,8 +241,8 @@ const Navbar = ({ isScrolled = false, isMenuOpen = false, onMobileMenuChange }) 
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.2 }}
-                className="fixed inset-0 z-[350] md:hidden"
-                style={{ backgroundColor: 'rgba(0,0,0,0.25)' }}
+                className="fixed inset-0 md:hidden"
+                style={{ zIndex: 9998, backgroundColor: 'rgba(0,0,0,0.25)' }}
                 onClick={() => handleMenuToggle(false)}
                 aria-hidden="true"
               />
@@ -250,8 +251,8 @@ const Navbar = ({ isScrolled = false, isMenuOpen = false, onMobileMenuChange }) 
                 animate={{ x: 0 }}
                 exit={{ x: "-100%" }}
                 transition={{ type: "spring", damping: 25, stiffness: 200 }}
-                className="fixed inset-0 z-[400] flex flex-col pt-20 pb-12 px-8 text-[#000000] md:hidden"
-                style={{ backgroundColor: 'rgba(255,255,255,1)' }}
+                className="fixed inset-0 flex flex-col pt-20 pb-12 px-8 text-[#000000] md:hidden"
+                style={{ zIndex: 9999, backgroundColor: '#FFFFFF' }}
               >
                 <div className="mb-8 text-left">
                   <button onClick={() => (isWomenOpen || isMenOpen) ? (setIsWomenOpen(false), setIsMenOpen(false)) : handleMenuToggle(false)} className="flex items-center gap-2 text-[12px] font-light tracking-ultra-wide uppercase text-[#666666]">
