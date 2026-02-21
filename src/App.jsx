@@ -123,19 +123,22 @@ function AppContent() {
     setIsScrolled(el.scrollTop > 0);
   }, [pathname]);
 
-  // 메뉴 열림 시 헤더는 isScrolled와 관계없이 불투명 유지
-  const headerBgClass = isMobileMenuOpen
-    ? 'bg-[#FFFFFF] border-b border-black/[0.06]'
-    : isScrolled
-      ? 'bg-white/80 backdrop-blur-[10px] border-b border-black/[0.06]'
-      : 'bg-transparent';
+  const isAdmin = pathname.startsWith('/admin');
+  // 관리자 페이지: 헤더 항상 다크
+  const headerBgClass = isAdmin
+    ? 'bg-[#000000] border-b border-white/10'
+    : isMobileMenuOpen
+      ? 'bg-[#FFFFFF] border-b border-black/[0.06]'
+      : isScrolled
+        ? 'bg-white/80 backdrop-blur-[10px] border-b border-black/[0.06]'
+        : 'bg-transparent';
 
   return (
     <>
       <header
         className={`sticky top-0 z-[150] flex flex-col flex-none shrink-0 transition-all duration-300 ${headerBgClass}`}
       >
-        <Marquee />
+        {!isAdmin && <Marquee />}
         <Navbar isScrolled={isScrolled} isMobileMenuOpen={isMobileMenuOpen} onMobileMenuChange={setIsMobileMenuOpen} />
       </header>
       <main

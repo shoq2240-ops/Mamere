@@ -71,6 +71,30 @@ const Navbar = ({ isScrolled = false, isMobileMenuOpen = false, onMobileMenuChan
   };
 
   // 메뉴 데이터 구조: women, men (아웃웨어/상의/하의), 컬렉션, 스토리
+  const isAdmin = pathname.startsWith('/admin');
+
+  /** 관리자 페이지 전용 헤더: jvng. 로고 + 다크 테마 */
+  if (isAdmin) {
+    return (
+      <div className="antialiased">
+        <nav className="relative w-full z-[150] bg-[#000000] text-[#FDFDFB] border-b border-white/10 transition-all duration-300">
+          <div className="max-w-[1800px] mx-auto h-14 flex items-center justify-between px-6 md:px-10">
+            <Link to="/" className="flex items-center opacity-90 hover:opacity-100 transition-opacity" style={{ height: '38px' }}>
+              <img src={brandLogo} alt="jvng." className="h-full w-auto object-contain invert" />
+            </Link>
+            <div className="flex items-center gap-6 md:gap-8 text-[10px] font-light tracking-[0.12em] uppercase">
+              <Link to="/admin/orders" className="text-white/70 hover:text-white transition-colors">주문 관리</Link>
+              <Link to="/admin/upload" className="text-white/70 hover:text-white transition-colors">상품 등록</Link>
+              <Link to="/admin/users" className="text-white/70 hover:text-white transition-colors">회원 관리</Link>
+              <span className="text-white/30">|</span>
+              <Link to="/" className="text-white/70 hover:text-white transition-colors">메인으로</Link>
+            </div>
+          </div>
+        </nav>
+      </div>
+    );
+  }
+
   const navLinks = [
     { 
       name: 'women', 

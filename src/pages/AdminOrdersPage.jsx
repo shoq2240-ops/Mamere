@@ -4,12 +4,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { publicTable, supabase } from '../lib/supabase';
 import { useAuth } from '../store/AuthContext';
 
-/** 주문 상태별 라벨 및 색상 */
+/** 주문 상태별 라벨 및 색상 (jvng. 블랙/화이트·레드 포인트) */
 const STATUS_OPTIONS = [
   { value: '결제완료', label: '결제완료', color: 'text-white/80' },
-  { value: '배송준비중', label: '배송 준비 중', color: 'text-amber-400' },
-  { value: '배송중', label: '배송 중', color: 'text-blue-400' },
-  { value: '배송완료', label: '배송 완료', color: 'text-emerald-400' },
+  { value: '배송준비중', label: '배송 준비 중', color: 'text-amber-400/90' },
+  { value: '배송중', label: '배송 중', color: 'text-white/90' },
+  { value: '배송완료', label: '배송 완료', color: 'text-[#FDFDFB]' },
   { value: '취소됨', label: '취소됨', color: 'text-red-400' },
 ];
 
@@ -197,28 +197,28 @@ const AdminOrdersPage = () => {
   if (authLoading || !isLoggedIn) return null;
 
   return (
-    <div className="min-h-screen bg-black text-white pt-28 pb-24 px-6">
+    <div className="min-h-screen bg-[#0a0a0a] text-[#FDFDFB] pt-24 pb-24 px-8 md:px-12 lg:px-16">
       <div className="max-w-6xl mx-auto">
         {/* 헤더 */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-10">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-12">
           <div>
-            <h1 className="text-2xl md:text-3xl font-light uppercase tracking-tight">주문 관리</h1>
+            <h1 className="text-2xl md:text-3xl font-light uppercase tracking-tight text-[#FDFDFB]">주문 관리</h1>
             <p className="text-[11px] text-white/50 tracking-[0.1em] uppercase mt-2">
               주문 현황을 한눈에 파악하고 관리합니다
             </p>
           </div>
-          <div className="flex flex-wrap gap-4">
-            <Link to="/admin/users" className="text-[10px] font-medium tracking-widest uppercase text-white/60 hover:text-white border-b border-white/20 pb-1 w-fit">
+          <div className="flex flex-wrap gap-6">
+            <Link to="/admin/users" className="text-[10px] font-medium tracking-[0.12em] uppercase text-white/60 hover:text-[#FDFDFB] transition-colors">
               회원 관리
             </Link>
-            <Link to="/admin/upload" className="text-[10px] font-medium tracking-widest uppercase text-white/60 hover:text-white border-b border-white/20 pb-1 w-fit">
+            <Link to="/admin/upload" className="text-[10px] font-medium tracking-[0.12em] uppercase text-white/60 hover:text-[#FDFDFB] transition-colors">
               ← 상품 등록으로
             </Link>
           </div>
         </div>
 
         {/* 1. 핵심 지표 요약 (Stats Cards) */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-5 mb-12">
           {[
             { key: '신규주문', label: '신규 주문', value: stats.신규주문 },
             { key: '결제완료', label: '결제 완료', value: stats.결제완료 },
@@ -229,17 +229,17 @@ const AdminOrdersPage = () => {
               key={s.key}
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
-              className="border border-white/10 p-6 text-center"
+              className="bg-[#000000]/40 p-6 md:p-8 text-center shadow-[0_1px_0_0_rgba(255,255,255,0.06)]"
             >
-              <p className="text-[10px] font-medium tracking-widest uppercase text-white/50 mb-2">{s.label}</p>
-              <p className="text-3xl font-light tracking-tight">{s.value}</p>
+              <p className="text-[10px] font-medium tracking-[0.12em] uppercase text-white/50 mb-2">{s.label}</p>
+              <p className="text-3xl font-light tracking-tight text-[#FDFDFB]">{s.value}</p>
               <p className="text-[9px] text-white/30 mt-1">건</p>
             </motion.div>
           ))}
         </div>
 
         {/* 2. 필터 + 검색 + 엑셀 다운로드 */}
-        <div className="flex flex-col md:flex-row md:items-center gap-4 mb-6">
+        <div className="flex flex-col md:flex-row md:items-center gap-4 mb-8">
           <div className="flex flex-wrap gap-2">
             {[
               { value: 'all', label: '전체' },
@@ -252,10 +252,10 @@ const AdminOrdersPage = () => {
                   setStatusFilter(f.value);
                   setCurrentPage(1);
                 }}
-                className={`px-4 py-2 text-[10px] font-medium tracking-widest uppercase border transition-colors ${
+                className={`px-4 py-2.5 text-[10px] font-medium tracking-[0.12em] uppercase transition-colors ${
                   statusFilter === f.value
-                    ? 'border-white text-white bg-white/5'
-                    : 'border-white/20 text-white/60 hover:border-white/40 hover:text-white/80'
+                    ? 'bg-[#FDFDFB] text-[#000000]'
+                    : 'text-white/60 hover:text-[#FDFDFB] shadow-[0_1px_0_0_rgba(255,255,255,0.1)]'
                 }`}
               >
                 {f.label}
@@ -271,12 +271,12 @@ const AdminOrdersPage = () => {
                 setCurrentPage(1);
               }}
               placeholder="고객명 또는 주문번호 검색"
-              className="flex-1 min-w-0 bg-white/5 border border-white/10 px-4 py-2 text-[11px] text-white placeholder-white/30 outline-none focus:border-white/30"
+              className="flex-1 min-w-0 bg-white/[0.06] px-4 py-2.5 text-[11px] text-[#FDFDFB] placeholder-white/30 outline-none focus:bg-white/[0.08] transition-colors shadow-[0_1px_0_0_rgba(255,255,255,0.06)]"
             />
             <button
               type="button"
               onClick={handleExportCSV}
-              className="px-4 py-2 border border-white/20 text-[10px] font-medium tracking-widest uppercase hover:bg-white/5 shrink-0"
+              className="px-4 py-2.5 bg-[#FDFDFB] text-[#000000] text-[10px] font-medium tracking-[0.12em] uppercase hover:bg-white transition-colors shrink-0"
             >
               CSV 다운로드
             </button>
@@ -286,7 +286,7 @@ const AdminOrdersPage = () => {
         {error && <p className="text-red-400 text-[11px] mb-4">{error}</p>}
 
         {/* 3. 주문 목록 테이블 */}
-        <div className="border border-white/10 overflow-hidden">
+        <div className="bg-[#000000]/40 overflow-hidden shadow-[0_1px_0_0_rgba(255,255,255,0.06)]">
           {loading ? (
             <div className="py-20 text-center">
               <div className="inline-block w-8 h-8 border border-white/30 border-t-white rounded-full animate-spin" />
@@ -298,13 +298,13 @@ const AdminOrdersPage = () => {
             <div className="overflow-x-auto">
               <table className="w-full text-left">
                 <thead>
-                  <tr className="border-b border-white/10">
-                    <th className="px-4 py-4 text-[10px] font-medium tracking-widest uppercase text-white/50">주문번호</th>
-                    <th className="px-4 py-4 text-[10px] font-medium tracking-widest uppercase text-white/50">주문일시</th>
-                    <th className="px-4 py-4 text-[10px] font-medium tracking-widest uppercase text-white/50">고객명</th>
-                    <th className="px-4 py-4 text-[10px] font-medium tracking-widest uppercase text-white/50">상품명</th>
-                    <th className="px-4 py-4 text-[10px] font-medium tracking-widest uppercase text-white/50">결제금액</th>
-                    <th className="px-4 py-4 text-[10px] font-medium tracking-widest uppercase text-white/50">주문상태</th>
+                  <tr className="border-b border-white/[0.08]">
+                    <th className="px-5 py-5 text-[10px] font-medium tracking-[0.12em] uppercase text-white/50">주문번호</th>
+                    <th className="px-5 py-5 text-[10px] font-medium tracking-[0.12em] uppercase text-white/50">주문일시</th>
+                    <th className="px-5 py-5 text-[10px] font-medium tracking-[0.12em] uppercase text-white/50">고객명</th>
+                    <th className="px-5 py-5 text-[10px] font-medium tracking-[0.12em] uppercase text-white/50">상품명</th>
+                    <th className="px-5 py-5 text-[10px] font-medium tracking-[0.12em] uppercase text-white/50">결제금액</th>
+                    <th className="px-5 py-5 text-[10px] font-medium tracking-[0.12em] uppercase text-white/50">주문상태</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -322,22 +322,22 @@ const AdminOrdersPage = () => {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         onClick={() => setSelectedOrder(order)}
-                        className={`border-b border-white/5 cursor-pointer hover:bg-white/[0.02] transition-colors ${
+                        className={`border-b border-white/[0.06] cursor-pointer hover:bg-white/[0.03] transition-colors ${
                           alert ? 'animate-pulse bg-amber-500/5' : ''
                         }`}
                       >
-                        <td className="px-4 py-3 text-[11px] font-mono text-white/70">
+                        <td className="px-5 py-4 text-[11px] font-mono text-white/70">
                           {order.id?.slice(0, 8)}...
                         </td>
-                        <td className="px-4 py-3 text-[11px] text-white/70">{formatDate(order.created_at)}</td>
-                        <td className="px-4 py-3 text-[11px] text-white/80">{order.shipping_name || order.customer_name || '-'}</td>
-                        <td className="px-4 py-3 text-[11px] text-white/70 max-w-[200px] truncate" title={itemNames}>
+                        <td className="px-5 py-4 text-[11px] text-white/70">{formatDate(order.created_at)}</td>
+                        <td className="px-5 py-4 text-[11px] text-white/80">{order.shipping_name || order.customer_name || '-'}</td>
+                        <td className="px-5 py-4 text-[11px] text-white/70 max-w-[200px] truncate" title={itemNames}>
                           {itemNames}
                         </td>
-                        <td className="px-4 py-3 text-[11px] text-white/80">
+                        <td className="px-5 py-4 text-[11px] text-white/80">
                           ₩{(order.total_amount ?? order.total_price ?? 0).toLocaleString()}
                         </td>
-                        <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
+                        <td className="px-5 py-4" onClick={(e) => e.stopPropagation()}>
                           <select
                             value={order.status || ''}
                             onChange={(e) => {
@@ -348,7 +348,7 @@ const AdminOrdersPage = () => {
                                 handleStatusChange(order.id, v);
                               }
                             }}
-                            className={`bg-transparent border border-white/20 px-2 py-1 text-[11px] outline-none focus:border-white/40 ${statusInfo.color}`}
+                            className={`bg-white/[0.06] px-3 py-2 text-[11px] outline-none focus:bg-white/[0.08] transition-colors shadow-[0_1px_0_0_rgba(255,255,255,0.06)] ${statusInfo.color}`}
                           >
                             {STATUS_OPTIONS.map((s) => (
                               <option key={s.value} value={s.value} className="bg-zinc-900 text-white">
@@ -368,12 +368,12 @@ const AdminOrdersPage = () => {
 
         {/* 4. 페이지네이션 */}
         {totalPages > 1 && (
-          <div className="flex items-center justify-center gap-2 mt-6">
+          <div className="flex items-center justify-center gap-3 mt-8">
             <button
               type="button"
               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
               disabled={currentPage <= 1}
-              className="px-4 py-2 border border-white/20 text-[10px] uppercase disabled:opacity-30 disabled:cursor-not-allowed hover:bg-white/5"
+              className="px-4 py-2.5 text-[10px] font-medium tracking-[0.12em] uppercase text-white/70 hover:text-[#FDFDFB] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
             >
               이전
             </button>
@@ -384,7 +384,7 @@ const AdminOrdersPage = () => {
               type="button"
               onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
               disabled={currentPage >= totalPages}
-              className="px-4 py-2 border border-white/20 text-[10px] uppercase disabled:opacity-30 disabled:cursor-not-allowed hover:bg-white/5"
+              className="px-4 py-2.5 text-[10px] font-medium tracking-[0.12em] uppercase text-white/70 hover:text-[#FDFDFB] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
             >
               다음
             </button>
@@ -414,7 +414,7 @@ const AdminOrdersPage = () => {
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
               onClick={(e) => e.stopPropagation()}
-              className="w-full max-w-md bg-black border border-white/10 p-6"
+              className="w-full max-w-md bg-[#0a0a0a] p-8 shadow-[0_1px_0_0_rgba(255,255,255,0.08)]"
             >
               <h3 className="text-[11px] font-medium tracking-[0.15em] uppercase text-white/70 mb-4">
                 송장 번호 입력 (선택)
@@ -427,7 +427,7 @@ const AdminOrdersPage = () => {
                 value={trackingModalValue}
                 onChange={(e) => setTrackingModalValue(e.target.value)}
                 placeholder="송장 번호를 입력하세요"
-                className="w-full bg-white/5 border border-white/10 px-4 py-3 text-sm text-white placeholder-white/30 outline-none focus:border-white/30 mb-4"
+                className="w-full bg-white/[0.06] px-4 py-3.5 text-sm text-[#FDFDFB] placeholder-white/30 outline-none focus:bg-white/[0.08] mb-4 transition-colors shadow-[0_1px_0_0_rgba(255,255,255,0.06)]"
                 autoFocus
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
@@ -440,15 +440,14 @@ const AdminOrdersPage = () => {
                 <button
                   type="button"
                   onClick={() => setTrackingModalOrder(null)}
-                  className="px-4 py-2 border border-white/20 text-[10px] uppercase tracking-widest hover:bg-white/5"
+                  className="px-4 py-2.5 text-[10px] font-medium tracking-[0.12em] uppercase text-white/70 hover:text-[#FDFDFB] transition-colors"
                 >
                   취소
                 </button>
                 <button
                   type="button"
                   onClick={() => handleStatusChange(trackingModalOrder.id, '배송중', trackingModalValue)}
-                  className="px-4 py-2 bg-white text-[10px] font-medium uppercase tracking-widest hover:bg-white/90"
-                  style={{ color: '#000000' }}
+                  className="px-6 py-2.5 bg-[#FDFDFB] text-[#000000] text-[10px] font-medium tracking-[0.12em] uppercase hover:bg-white transition-colors"
                 >
                   확인
                 </button>
@@ -473,7 +472,7 @@ const AdminOrdersPage = () => {
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
               onClick={(e) => e.stopPropagation()}
-              className="w-full max-w-lg max-h-[85vh] overflow-y-auto bg-black border border-white/10 p-6"
+              className="w-full max-w-lg max-h-[85vh] overflow-y-auto bg-[#0a0a0a] p-8 shadow-[0_1px_0_0_rgba(255,255,255,0.08)]"
             >
               <div className="flex justify-between items-start mb-6">
                 <h2 className="text-[11px] font-medium tracking-[0.15em] uppercase text-white/70">
@@ -541,7 +540,7 @@ const AdminOrdersPage = () => {
                   </ul>
                 </div>
 
-                <div className="pt-4 border-t border-white/10 flex justify-between items-center">
+                <div className="pt-4 border-t border-white/[0.08] flex justify-between items-center">
                   <span className="text-[10px] text-white/50 uppercase tracking-widest">총 결제금액</span>
                   <span className="text-lg font-light text-white">₩{(selectedOrder.total_amount ?? selectedOrder.total_price ?? 0).toLocaleString()}</span>
                 </div>
@@ -561,10 +560,10 @@ const AdminOrdersPage = () => {
                             handleStatusChange(selectedOrder.id, s.value);
                           }
                         }}
-                        className={`px-3 py-2 text-[10px] uppercase tracking-widest border ${
+                        className={`px-3 py-2 text-[10px] font-medium tracking-[0.12em] uppercase transition-colors ${
                           (selectedOrder.status || '') === s.value
-                            ? 'border-white text-white'
-                            : 'border-white/20 text-white/60 hover:border-white/40'
+                            ? 'bg-[#FDFDFB] text-[#000000]'
+                            : 'text-white/60 hover:text-[#FDFDFB]'
                         }`}
                       >
                         {s.label}
@@ -589,7 +588,7 @@ const AdminOrdersPage = () => {
                           }
                         }}
                         placeholder="송장 번호 입력 후 포커스 아웃 시 저장"
-                        className="w-full bg-white/5 border border-white/10 px-3 py-2 text-[11px] text-white placeholder-white/30 outline-none focus:border-white/30"
+                        className="w-full bg-white/[0.06] px-3 py-2.5 text-[11px] text-[#FDFDFB] placeholder-white/30 outline-none focus:bg-white/[0.08] transition-colors shadow-[0_1px_0_0_rgba(255,255,255,0.06)]"
                       />
                     </div>
                   )}

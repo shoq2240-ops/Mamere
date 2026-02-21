@@ -227,18 +227,18 @@ const AdminUploadPage = () => {
   if (authLoading || !isLoggedIn) return null;
 
   return (
-    <div className="min-h-screen bg-black text-white pt-28 pb-24 px-6">
+    <div className="min-h-screen bg-[#0a0a0a] text-[#FDFDFB] pt-24 pb-24 px-8 md:px-12 lg:px-16">
       <div className="max-w-4xl mx-auto">
-        <div className="border-b border-white/10 pb-6 mb-10 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+        <div className="pb-8 mb-12 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 border-b border-white/10">
           <div>
-            <h1 className="text-2xl md:text-3xl font-light uppercase tracking-tight">관리자 · 상품 등록</h1>
+            <h1 className="text-2xl md:text-3xl font-light uppercase tracking-tight text-[#FDFDFB]">관리자 · 상품 등록</h1>
             <p className="text-[11px] text-white/50 tracking-[0.1em] uppercase mt-2">상품을 등록·수정·삭제합니다</p>
           </div>
-          <div className="flex flex-wrap gap-4">
-            <Link to="/admin/orders" className="text-[10px] font-medium tracking-widest uppercase text-white/60 hover:text-white border-b border-white/20 pb-1 w-fit">
+          <div className="flex flex-wrap gap-6">
+            <Link to="/admin/orders" className="text-[10px] font-medium tracking-[0.12em] uppercase text-white/60 hover:text-[#FDFDFB] transition-colors">
               주문 관리 →
             </Link>
-            <Link to="/admin/users" className="text-[10px] font-medium tracking-widest uppercase text-white/60 hover:text-white border-b border-white/20 pb-1 w-fit">
+            <Link to="/admin/users" className="text-[10px] font-medium tracking-[0.12em] uppercase text-white/60 hover:text-[#FDFDFB] transition-colors">
               회원 관리
             </Link>
           </div>
@@ -249,33 +249,33 @@ const AdminUploadPage = () => {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           onSubmit={handleSubmit}
-          className="border border-white/10 p-6 md:p-8 mb-12"
+          className="bg-[#000000]/40 shadow-[0_1px_0_0_rgba(255,255,255,0.06)] p-8 md:p-10 mb-14"
         >
-          <h2 className="text-[11px] font-medium tracking-[0.15em] uppercase text-white/70 mb-6">
+          <h2 className="text-[11px] font-medium tracking-[0.15em] uppercase text-white/70 mb-8">
             {editingId ? '상품 수정' : '새 상품 등록'}
           </h2>
 
           <div className="space-y-6">
             <div>
-              <label className="block text-[10px] font-medium tracking-widest uppercase text-white/50 mb-2">상품명 *</label>
+              <label className="block text-[10px] font-medium tracking-[0.12em] uppercase text-white/50 mb-2">상품명 *</label>
               <input
                 type="text"
                 value={form.name}
                 onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
                 placeholder="상품명 입력"
-                className="w-full bg-white/5 border border-white/10 px-4 py-3 text-sm text-white placeholder-white/30 outline-none focus:border-white/30"
+                className="w-full bg-white/[0.06] px-4 py-3.5 text-sm text-[#FDFDFB] placeholder-white/30 outline-none focus:bg-white/[0.08] transition-colors shadow-[0_1px_0_0_rgba(255,255,255,0.06)]"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-[10px] font-medium tracking-widest uppercase text-white/50 mb-2">가격 (원) *</label>
+              <label className="block text-[10px] font-medium tracking-[0.12em] uppercase text-white/50 mb-2">가격 (원) *</label>
               <input
                 type="text"
                 value={form.price}
                 onChange={(e) => setForm((f) => ({ ...f, price: e.target.value }))}
                 placeholder="예: 890000"
-                className="w-full bg-white/5 border border-white/10 px-4 py-3 text-sm text-white placeholder-white/30 outline-none focus:border-white/30"
+                className="w-full bg-white/[0.06] px-4 py-3.5 text-sm text-[#FDFDFB] placeholder-white/30 outline-none focus:bg-white/[0.08] transition-colors shadow-[0_1px_0_0_rgba(255,255,255,0.06)]"
                 required
               />
             </div>
@@ -289,7 +289,7 @@ const AdminUploadPage = () => {
                   onChange={(e) => setForm((f) => ({ ...f, descFreeShipping: e.target.value }))}
                   placeholder="예: 영업일 기준 1~3일 내 배송, 배송비 무료, 무료 반품"
                   rows={2}
-                  className="w-full bg-white/5 border border-white/10 px-4 py-3 text-sm text-white placeholder-white/20 outline-none focus:border-white/30 resize-none"
+                  className="w-full bg-white/[0.06] px-4 py-3.5 text-sm text-[#FDFDFB] placeholder-white/20 outline-none focus:bg-white/[0.08] resize-none transition-colors shadow-[0_1px_0_0_rgba(255,255,255,0.06)]"
                 />
               </div>
               <div>
@@ -299,7 +299,7 @@ const AdminUploadPage = () => {
                   onChange={(e) => setForm((f) => ({ ...f, descDetails: e.target.value }))}
                   placeholder="예: OUTSHELL: POLYESTER 100%, MADE IN KOREA, DRY CLEAN ONLY"
                   rows={3}
-                  className="w-full bg-white/5 border border-white/10 px-4 py-3 text-sm text-white placeholder-white/20 outline-none focus:border-white/30 resize-none"
+                  className="w-full bg-white/[0.06] px-4 py-3.5 text-sm text-[#FDFDFB] placeholder-white/20 outline-none focus:bg-white/[0.08] resize-none transition-colors shadow-[0_1px_0_0_rgba(255,255,255,0.06)]"
                 />
               </div>
               <div>
@@ -309,14 +309,14 @@ const AdminUploadPage = () => {
                   onChange={(e) => setForm((f) => ({ ...f, descSizeFit: e.target.value }))}
                   placeholder="예: Model is 185cm tall and wearing size 48. Sleeve measured by center back."
                   rows={2}
-                  className="w-full bg-white/5 border border-white/10 px-4 py-3 text-sm text-white placeholder-white/20 outline-none focus:border-white/30 resize-none"
+                  className="w-full bg-white/[0.06] px-4 py-3.5 text-sm text-[#FDFDFB] placeholder-white/20 outline-none focus:bg-white/[0.08] resize-none transition-colors shadow-[0_1px_0_0_rgba(255,255,255,0.06)]"
                 />
               </div>
               <p className="text-[9px] text-white/30">비워두면 상세 페이지에서 해당 메뉴가 표시되지 않습니다</p>
             </div>
 
             {/* [재고 및 품절] 재고 개수 입력 + 수동 품절 토글 스위치 */}
-            <div className="space-y-4 pt-2 border-t border-white/5 mt-6 pt-6">
+            <div className="space-y-4 pt-6 mt-6 border-t border-white/[0.06]">
               <p className="text-[10px] font-medium tracking-widest uppercase text-white/50">재고 및 품절</p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
@@ -327,7 +327,7 @@ const AdminUploadPage = () => {
                     value={form.stockQuantity}
                     onChange={(e) => setForm((f) => ({ ...f, stockQuantity: e.target.value }))}
                     placeholder="0"
-                    className="w-full bg-white/5 border border-white/10 px-4 py-3 text-sm text-white placeholder-white/30 outline-none focus:border-white/30"
+                    className="w-full bg-white/[0.06] px-4 py-3.5 text-sm text-[#FDFDFB] placeholder-white/30 outline-none focus:bg-white/[0.08] transition-colors shadow-[0_1px_0_0_rgba(255,255,255,0.06)]"
                   />
                   <p className="text-[9px] text-white/30 mt-1">0이면 자동 품절로 표시됩니다</p>
                 </div>
@@ -369,7 +369,7 @@ const AdminUploadPage = () => {
                 <select
                   value={form.gender}
                   onChange={(e) => setForm((f) => ({ ...f, gender: e.target.value }))}
-                  className="w-full bg-white/5 border border-white/10 px-4 py-3 text-sm text-white outline-none focus:border-white/30"
+                  className="w-full bg-white/[0.06] px-4 py-3.5 text-sm text-[#FDFDFB] outline-none focus:bg-white/[0.08] transition-colors shadow-[0_1px_0_0_rgba(255,255,255,0.06)]"
                 >
                   {GENDERS.map((g) => (
                     <option key={g.value} value={g.value} className="bg-zinc-900 text-white">{g.label}</option>
@@ -381,7 +381,7 @@ const AdminUploadPage = () => {
                 <select
                   value={form.category}
                   onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))}
-                  className="w-full bg-white/5 border border-white/10 px-4 py-3 text-sm text-white outline-none focus:border-white/30"
+                  className="w-full bg-white/[0.06] px-4 py-3.5 text-sm text-[#FDFDFB] outline-none focus:bg-white/[0.08] transition-colors shadow-[0_1px_0_0_rgba(255,255,255,0.06)]"
                 >
                   {CATEGORIES.map((c) => (
                     <option key={c.value} value={c.value} className="bg-zinc-900 text-white">{c.label}</option>
@@ -393,12 +393,12 @@ const AdminUploadPage = () => {
             <div>
               <label className="block text-[10px] font-medium tracking-widest uppercase text-white/50 mb-2">이미지 *</label>
               <div className="flex flex-col sm:flex-row gap-4 items-start">
-                <label className="flex-shrink-0 px-6 py-3 border border-white/20 text-[11px] font-medium tracking-widest uppercase cursor-pointer hover:bg-white/5 transition-colors">
+                <label className="flex-shrink-0 px-6 py-3.5 bg-[#FDFDFB] text-[#000000] text-[11px] font-medium tracking-[0.12em] uppercase cursor-pointer hover:bg-white transition-colors">
                   파일 선택
                   <input type="file" accept=".jpg,.jpeg,.png,.webp,.gif,image/jpeg,image/png,image/webp,image/gif" onChange={onFileChange} className="hidden" />
                 </label>
                 {form.imagePreview && (
-                  <div className="w-24 h-32 bg-white/5 overflow-hidden border border-white/10">
+                  <div className="w-24 h-32 bg-white/[0.06] overflow-hidden shadow-[0_1px_0_0_rgba(255,255,255,0.06)]">
                     <img src={form.imagePreview} alt="미리보기" className="w-full h-full object-cover" />
                   </div>
                 )}
@@ -408,14 +408,13 @@ const AdminUploadPage = () => {
           </div>
 
           {error && <p className="mt-4 text-red-400 text-[11px]">{error}</p>}
-          {success && <p className="mt-4 text-emerald-400 text-[11px]">{success}</p>}
+          {success && <p className="mt-4 text-[#FDFDFB]/80 text-[11px]">{success}</p>}
 
-          <div className="mt-8 flex gap-4">
+          <div className="mt-10 flex gap-4">
             <button
               type="submit"
               disabled={submitting}
-              className="px-8 py-3 bg-white text-[11px] font-medium tracking-widest uppercase hover:bg-white/90 disabled:opacity-50"
-            style={{ color: '#000000' }}
+              className="px-8 py-3.5 bg-[#FDFDFB] text-[#000000] text-[11px] font-medium tracking-[0.12em] uppercase hover:bg-white disabled:opacity-50 transition-colors"
             >
               {submitting ? '처리 중...' : editingId ? '수정' : '등록'}
             </button>
@@ -423,7 +422,7 @@ const AdminUploadPage = () => {
               <button
                 type="button"
                 onClick={resetForm}
-                className="px-6 py-3 border border-white/20 text-[11px] font-medium tracking-widest uppercase hover:bg-white/5"
+                className="px-6 py-3.5 text-[11px] font-medium tracking-[0.12em] uppercase text-white/70 hover:text-[#FDFDFB] transition-colors shadow-[0_1px_0_0_rgba(255,255,255,0.1)]"
               >
                 취소
               </button>
@@ -432,29 +431,29 @@ const AdminUploadPage = () => {
         </motion.form>
 
         {/* 상품 목록 */}
-        <section>
-          <h2 className="text-[11px] font-medium tracking-[0.15em] uppercase text-white/70 mb-6">등록된 상품 목록</h2>
+        <section className="pt-4">
+          <h2 className="text-[11px] font-medium tracking-[0.15em] uppercase text-white/70 mb-8">등록된 상품 목록</h2>
           {loading ? (
             <p className="text-white/40 text-sm">로딩 중...</p>
           ) : products.length === 0 ? (
             <p className="text-white/40 text-sm">등록된 상품이 없습니다</p>
           ) : (
-            <ul className="space-y-4">
+            <ul className="space-y-0">
               {products.map((p) => (
                 <motion.li
                   key={p.id}
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  className="flex items-center gap-4 py-4 border-b border-white/10"
+                  className="flex items-center gap-6 py-5 border-b border-white/[0.06] last:border-0"
                 >
-                  <div className="w-14 h-18 bg-white/5 overflow-hidden flex-shrink-0">
+                  <div className="w-14 h-18 bg-white/[0.06] overflow-hidden flex-shrink-0 shadow-[0_1px_0_0_rgba(255,255,255,0.06)]">
                     {p.image && <img src={p.image} alt="" className="w-full h-full object-cover" />}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <p className="text-sm font-medium truncate">{p.name}</p>
+                      <p className="text-sm font-medium truncate text-[#FDFDFB]">{p.name}</p>
                       {isSoldOut(p) && (
-                        <span className="flex-shrink-0 px-2 py-0.5 text-[9px] font-medium tracking-widest uppercase bg-white/10 text-white/70 border border-white/20">
+                        <span className="flex-shrink-0 px-2 py-0.5 text-[9px] font-medium tracking-[0.12em] uppercase bg-white/10 text-white/70">
                           품절
                         </span>
                       )}
@@ -468,14 +467,14 @@ const AdminUploadPage = () => {
                     <button
                       type="button"
                       onClick={() => handleEdit(p)}
-                      className="px-4 py-2 text-[10px] font-medium tracking-widest uppercase border border-white/20 hover:bg-white/5"
+                      className="px-4 py-2.5 text-[10px] font-medium tracking-[0.12em] uppercase text-white/80 hover:text-[#FDFDFB] transition-colors shadow-[0_1px_0_0_rgba(255,255,255,0.1)]"
                     >
                       수정
                     </button>
                     <button
                       type="button"
                       onClick={() => handleDelete(p.id)}
-                      className="px-4 py-2 text-[10px] font-medium tracking-widest uppercase border border-red-500/30 text-red-400 hover:bg-red-500/10"
+                      className="px-4 py-2.5 text-[10px] font-medium tracking-[0.12em] uppercase text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors"
                     >
                       삭제
                     </button>

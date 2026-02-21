@@ -9,7 +9,6 @@ import { useProducts } from '../hooks/useProducts';
 import { ProductCarouselSkeleton, LoadingMessage } from '../components/ProductSkeleton';
 import ProductCard from '../components/ProductCard';
 import LookbookSection from '../components/LookbookSection';
-import flower3 from '../asset/flower3.png';
 
 const LandingPage = () => {
   const { addToCart } = useCart();
@@ -59,8 +58,16 @@ const LandingPage = () => {
           transition={{ duration: 0.8, ease: 'easeOut' }}
           className="absolute inset-2 md:inset-6 flex justify-center items-center bg-gradient-to-b from-[#0a0a0a] via-[#000000] to-[#0a0a0a]"
         >
-          <img src={flower3} alt="" className="w-full max-h-full h-auto object-contain object-center z-0" />
-          {/* 동영상 사용 시: <video src="/hero.mp4" className="w-full h-full object-contain z-0" autoPlay muted loop playsInline /> */}
+          <picture className="absolute inset-0 w-full h-full z-0">
+            <source media="(min-width: 1024px)" srcSet="/desktop-hero.png" />
+            <img
+              src="/mobile-hero.png"
+              alt=""
+              className="absolute inset-0 w-full h-full object-cover object-center"
+              decoding="async"
+              fetchPriority="high"
+            />
+          </picture>
         </motion.div>
       </section>
 

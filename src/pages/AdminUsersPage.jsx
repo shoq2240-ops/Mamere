@@ -60,94 +60,94 @@ const AdminUsersPage = () => {
   const withdrawnCount = profiles.filter((p) => p.is_withdrawn === true).length;
 
   return (
-    <div className="min-h-screen bg-[#FFFFFF] text-[#000000] pt-28 pb-24 px-6">
+    <div className="min-h-screen bg-[#0a0a0a] text-[#FDFDFB] pt-24 pb-24 px-8 md:px-12 lg:px-16">
       <div className="max-w-5xl mx-auto">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-12 pb-8 border-b border-white/10">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight uppercase">회원 관리</h1>
-            <p className="text-[11px] text-[#666666] tracking-[0.1em] uppercase mt-2">
+            <h1 className="text-2xl md:text-3xl font-light uppercase tracking-tight text-[#FDFDFB]">회원 관리</h1>
+            <p className="text-[11px] text-white/50 tracking-[0.1em] uppercase mt-2">
               전체 {profiles.length}명 · 탈퇴 {withdrawnCount}명
             </p>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-6">
             <Link
               to="/admin/orders"
-              className="text-[10px] font-medium tracking-widest uppercase text-[#666666] hover:text-[#000000] border-b border-[#E5E5E5] pb-1"
+              className="text-[10px] font-medium tracking-[0.12em] uppercase text-white/60 hover:text-[#FDFDFB] transition-colors"
             >
               주문 관리
             </Link>
             <Link
               to="/admin/upload"
-              className="text-[10px] font-medium tracking-widest uppercase text-[#666666] hover:text-[#000000] border-b border-[#E5E5E5] pb-1"
+              className="text-[10px] font-medium tracking-[0.12em] uppercase text-white/60 hover:text-[#FDFDFB] transition-colors"
             >
               상품 등록
             </Link>
           </div>
         </div>
 
-        <div className="flex flex-col sm:flex-row gap-4 mb-8">
+        <div className="flex flex-col sm:flex-row gap-4 mb-10">
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="이름, 전화번호 검색..."
-            className="flex-1 bg-[#F9F9F9] px-4 py-3 text-[11px] text-[#000000] outline-none focus:bg-[#F5F5F5] placeholder:text-[#999999]"
+            className="flex-1 bg-white/[0.06] px-4 py-3.5 text-[11px] text-[#FDFDFB] placeholder-white/30 outline-none focus:bg-white/[0.08] transition-colors shadow-[0_1px_0_0_rgba(255,255,255,0.06)]"
           />
-          <label className="flex items-center gap-2 cursor-pointer shrink-0">
+          <label className="flex items-center gap-2 cursor-pointer shrink-0 text-white/70 hover:text-[#FDFDFB] transition-colors">
             <input
               type="checkbox"
               checked={showWithdrawnOnly}
               onChange={(e) => setShowWithdrawnOnly(e.target.checked)}
-              className="w-4 h-4 rounded border-[#CCCCCC] text-[#000000] focus:ring-[#000000]"
+              className="w-4 h-4 rounded border-white/30 bg-white/[0.06] text-[#000000] focus:ring-white/30"
             />
-            <span className="text-[10px] font-medium tracking-widest uppercase">탈퇴 회원만 보기</span>
+            <span className="text-[10px] font-medium tracking-[0.12em] uppercase">탈퇴 회원만 보기</span>
           </label>
         </div>
 
         {error && (
-          <p className="text-red-600 text-[11px] mb-4">{error}</p>
+          <p className="text-red-400 text-[11px] mb-4">{error}</p>
         )}
 
         {loading ? (
-          <p className="text-[10px] text-[#999999] tracking-widest uppercase">불러오는 중...</p>
+          <p className="text-[10px] text-white/50 tracking-[0.12em] uppercase">불러오는 중...</p>
         ) : (
-          <div className="border border-[#F0F0F0] overflow-hidden">
+          <div className="bg-[#000000]/40 overflow-hidden shadow-[0_1px_0_0_rgba(255,255,255,0.06)]">
             <table className="w-full text-left">
               <thead>
-                <tr className="border-b border-[#F0F0F0]">
-                  <th className="px-4 py-4 text-[10px] font-medium tracking-widest uppercase text-[#666666]">이름</th>
-                  <th className="px-4 py-4 text-[10px] font-medium tracking-widest uppercase text-[#666666]">전화번호</th>
-                  <th className="px-4 py-4 text-[10px] font-medium tracking-widest uppercase text-[#666666]">상태</th>
-                  <th className="px-4 py-4 text-[10px] font-medium tracking-widest uppercase text-[#666666]">동의일시</th>
+                <tr className="border-b border-white/[0.08]">
+                  <th className="px-5 py-5 text-[10px] font-medium tracking-[0.12em] uppercase text-white/50">이름</th>
+                  <th className="px-5 py-5 text-[10px] font-medium tracking-[0.12em] uppercase text-white/50">전화번호</th>
+                  <th className="px-5 py-5 text-[10px] font-medium tracking-[0.12em] uppercase text-white/50">상태</th>
+                  <th className="px-5 py-5 text-[10px] font-medium tracking-[0.12em] uppercase text-white/50">동의일시</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredProfiles.map((p) => (
                   <tr
                     key={p.id}
-                    className={`border-b border-[#F5F5F5] ${
-                      p.is_withdrawn ? 'bg-[#F9F9F9]' : ''
+                    className={`border-b border-white/[0.06] last:border-0 ${
+                      p.is_withdrawn ? 'bg-white/[0.02]' : ''
                     }`}
                   >
-                    <td className="px-4 py-3 text-[11px]">
-                      <span className={p.is_withdrawn ? 'text-[#999999] line-through' : ''}>
+                    <td className="px-5 py-4 text-[11px]">
+                      <span className={p.is_withdrawn ? 'text-white/40 line-through' : 'text-[#FDFDFB]'}>
                         {p.name || p.full_name || '-'}
                       </span>
                       {p.is_admin && (
-                        <span className="ml-2 text-[9px] font-bold uppercase text-[#666666]">관리자</span>
+                        <span className="ml-2 text-[9px] font-bold uppercase text-white/50">관리자</span>
                       )}
                     </td>
-                    <td className="px-4 py-3 text-[11px] text-[#666666]">{p.phone || '-'}</td>
-                    <td className="px-4 py-3">
+                    <td className="px-5 py-4 text-[11px] text-white/60">{p.phone || '-'}</td>
+                    <td className="px-5 py-4">
                       {p.is_withdrawn ? (
-                        <span className="text-[9px] font-bold uppercase text-[#999999] border border-[#E5E5E5] px-2 py-0.5">
+                        <span className="text-[9px] font-bold uppercase text-white/40">
                           탈퇴
                         </span>
                       ) : (
-                        <span className="text-[9px] font-medium uppercase text-[#333333]">정상</span>
+                        <span className="text-[9px] font-medium uppercase text-[#FDFDFB]">정상</span>
                       )}
                     </td>
-                    <td className="px-4 py-3 text-[11px] text-[#666666]">
+                    <td className="px-5 py-4 text-[11px] text-white/60">
                       {p.agreed_at ? formatDate(p.agreed_at) : '-'}
                     </td>
                   </tr>
@@ -155,7 +155,7 @@ const AdminUsersPage = () => {
               </tbody>
             </table>
             {filteredProfiles.length === 0 && (
-              <div className="py-16 text-center text-[#999999] text-[11px]">조건에 맞는 회원이 없습니다.</div>
+              <div className="py-16 text-center text-white/40 text-[11px]">조건에 맞는 회원이 없습니다.</div>
             )}
           </div>
         )}
