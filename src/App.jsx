@@ -29,6 +29,9 @@ import AdminOrdersPage from './pages/AdminOrdersPage';
 import AdminUsersPage from './pages/AdminUsersPage';
 import TermsPage from './pages/TermsPage';
 import PrivacyPage from './pages/PrivacyPage';
+import FAQPage from './pages/FAQPage';
+import ShippingPage from './pages/ShippingPage';
+import ReturnsPage from './pages/ReturnsPage';
 import RequireAdmin from './components/RequireAdmin';
 import CookieBanner from './components/CookieBanner';
 
@@ -70,6 +73,9 @@ const AnimatedRoutes = () => {
         <Route path="/admin/users" element={<PageWrapper><RequireAdmin><AdminUsersPage /></RequireAdmin></PageWrapper>} />
         <Route path="/terms" element={<PageWrapper><TermsPage /></PageWrapper>} />
         <Route path="/privacy" element={<PageWrapper><PrivacyPage /></PageWrapper>} />
+        <Route path="/faq" element={<PageWrapper><FAQPage /></PageWrapper>} />
+        <Route path="/shipping" element={<PageWrapper><ShippingPage /></PageWrapper>} />
+        <Route path="/returns" element={<PageWrapper><ReturnsPage /></PageWrapper>} />
         
         {/* 카테고리별 쇼핑 페이지 */}
         <Route path="/shop/men" element={<PageWrapper><ShopPage category="men" /></PageWrapper>} />

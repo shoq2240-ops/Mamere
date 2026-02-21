@@ -9,6 +9,7 @@ import { useProducts } from '../hooks/useProducts';
 import { ProductCarouselSkeleton, LoadingMessage } from '../components/ProductSkeleton';
 import ProductCard from '../components/ProductCard';
 import LookbookSection from '../components/LookbookSection';
+import flower3 from '../asset/flower3.png';
 
 const LandingPage = () => {
   const { addToCart } = useCart();
@@ -50,22 +51,16 @@ const LandingPage = () => {
     <div className="bg-[#FFFFFF] text-[#000000] antialiased overflow-x-hidden relative">
       <LoginRequiredModal show={showLoginModal} onClose={() => setShowLoginModal(false)} />
 
-      {/* 1. HERO SECTION */}
-      <section className="min-h-[80vh] flex flex-col items-center justify-center py-20 px-6">
+      {/* 1. 메인 히어로: 풀스크린 캔버스, 모바일 여백 축소 + 부드러운 그라데이션 배경 */}
+      <section className="relative w-[100vw] h-[100vh] min-h-[100dvh] p-2 md:p-6 m-0 overflow-hidden bg-[#000000]">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, ease: 'easeOut' }}
-          className="w-full max-w-2xl mx-auto text-center"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.8, ease: 'easeOut' }}
+          className="absolute inset-2 md:inset-6 flex justify-center items-center bg-gradient-to-b from-[#0a0a0a] via-[#000000] to-[#0a0a0a]"
         >
-          <div className="space-y-8">
-            <h1 className="text-3xl md:text-4xl font-bold tracking-[0.2em] uppercase">
-              
-            </h1>
-            <p className="text-[11px] font-light tracking-[0.15em] uppercase text-[#666666]">
-              일상 속에서 빛나는 감각적인 실루엣을 제안합니다
-            </p>
-          </div>
+          <img src={flower3} alt="" className="w-full max-h-full h-auto object-contain object-center z-0" />
+          {/* 동영상 사용 시: <video src="/hero.mp4" className="w-full h-full object-contain z-0" autoPlay muted loop playsInline /> */}
         </motion.div>
       </section>
 
