@@ -114,7 +114,8 @@ const AdminOrdersPage = () => {
       list = list.filter(
         (o) =>
           ((o.shipping_name || o.customer_name || '').toLowerCase().includes(q)) ||
-          (o.id || '').toLowerCase().includes(q)
+          (o.id || '').toLowerCase().includes(q) ||
+          (o.order_number || '').toLowerCase().includes(q)
       );
     }
     return list;
@@ -178,7 +179,7 @@ const AdminOrdersPage = () => {
       const items = Array.isArray(o.items) ? o.items : [];
       const itemNames = items.map((i) => `${i.name || ''} x${i.quantity || 1}`).join('; ');
       return [
-        o.id || '',
+        o.order_number || o.id || '',
         formatDate(o.created_at),
         o.shipping_name || o.customer_name || '',
         itemNames,
@@ -331,8 +332,8 @@ const AdminOrdersPage = () => {
                           alert ? 'animate-pulse bg-amber-500/5' : ''
                         }`}
                       >
-                        <td className="px-5 py-4 text-[11px] font-mono text-white/70">
-                          {order.id?.slice(0, 8)}...
+                        <td className="px-5 py-4 text-[11px] font-mono text-white/70" title={order.order_number || order.id}>
+                          {order.order_number || (order.id ? `${String(order.id).slice(0, 8)}…` : '-')}
                         </td>
                         <td className="px-5 py-4 text-[11px] text-white/70">{formatDate(order.created_at)}</td>
                         <td className="px-5 py-4 text-[11px] text-white/80">{order.shipping_name || order.customer_name || '-'}</td>

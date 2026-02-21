@@ -38,7 +38,14 @@ const productErrorMessage = (err) => {
     return 'products 테이블에 필요한 컬럼이 없습니다. Supabase Dashboard > SQL Editor에서 프로젝트 루트의 supabase-products-columns-sync.sql 파일 내용을 실행해 주세요. (한 번만 실행하면 됩니다.)';
   }
   if (/row-level security policy|violates row-level security/i.test(msg)) {
-    return '상품 등록 권한이 없습니다. (1) Supabase SQL Editor에서 supabase-set-admin.sql 을 열고, 내용 중 UUID를 Authentication > Users 의 본인 User UID로 바꾼 뒤 전체 실행하세요. (2) 브라우저에서 로그아웃 후 다시 로그인하고, 이 페이지를 새로고침한 뒤 다시 시도하세요. (3) 그래도 안 되면 SQL에서 확인: SELECT id, full_name, is_admin FROM profiles WHERE id = \'본인-UUID\'; 로 is_admin = true 인지 보세요.';
+    // Storage(objects) RLS 실패면 Storage 안내, products 테이블이면 관리자 안내
+    if (/table\s+["']?objects["']?|storage|bucket/i.test(msg)) {
+      return '이미지 업로드 권한이 없습니다. Supabase Dashboard > Storage > product-images 버킷 > Policies에서 authenticated 사용자의 INSERT를 허용하는 정책을 추가하세요.';
+    }
+    if (/table\s+["']?products["']?/i.test(msg) || !/objects|storage|bucket/i.test(msg)) {
+      return '상품 등록 권한이 없습니다. 현재 로그인한 계정 ID가 Supabase profiles의 is_admin=true인 계정과 같은지 확인하세요. (아래 "현재 로그인" ID와 profiles.id가 일치해야 합니다.) 그래도 안 되면 supabase-products-allow-authenticated.sql 을 실행해 로그인 사용자 모두 허용할 수 있습니다.';
+    }
+    return msg || '요청에 실패했습니다.';
   }
   return msg || '요청에 실패했습니다.';
 };
@@ -164,7 +171,7 @@ function SortableThumb({ item, onDelete, onSetMain, onCrop, isMain }) {
 
 const AdminUploadPage = () => {
   const navigate = useNavigate();
-  const { isLoggedIn, loading: authLoading } = useAuth();
+  const { user, isLoggedIn, loading: authLoading } = useAuth();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -464,6 +471,9 @@ const AdminUploadPage = () => {
         is_manual_soldout: form.isManualSoldout,
       };
 
+      // insert/update 시 서버가 최신 세션으로 인식하도록 세션 갱신
+      await supabase.auth.getSession();
+
       if (editingId) {
         const { error: err } = await publicTable('products').update(row).eq('id', editingId);
         if (err) throw err;
@@ -476,6 +486,7 @@ const AdminUploadPage = () => {
       resetForm();
       fetchProducts();
     } catch (err) {
+      console.error('[AdminUpload] 등록/수정 실패', err?.message, err);
       setError(productErrorMessage(err) || '등록에 실패했습니다.');
     } finally {
       setSubmitting(false);
@@ -573,6 +584,11 @@ const AdminUploadPage = () => {
             <p className="text-[11px] tracking-[0.1em] uppercase mt-2 text-[#666666]">
               상품을 등록·수정·삭제합니다
             </p>
+            {user?.id && (
+              <p className="text-[10px] text-[#999999] mt-1.5 font-mono" title="Supabase profiles.id와 일치해야 상품 등록이 됩니다">
+                현재 로그인: {user.email ?? user.id} · ID: {user.id}
+              </p>
+            )}
           </div>
           <div className="flex flex-wrap gap-6">
             <Link to="/admin/orders" className="text-[10px] font-medium tracking-[0.12em] uppercase text-[#666666] hover:text-[#000000] transition-colors">

@@ -54,12 +54,12 @@ const CheckoutPage = () => {
   // 클라이언트 기준 표시용 합계 (UI용)
   const displayTotal = cart.reduce((sum, item) => sum + parsePrice(item.price) * item.quantity, 0);
 
-  // 장바구니 비어 있으면 카트로 (로그인/비로그인 공통)
+  // 장바구니 비어 있으면 카트로 (주문 완료 화면이 아닐 때만)
   useEffect(() => {
-    if (!authLoading && cart.length === 0) {
+    if (!authLoading && cart.length === 0 && !orderSuccessData) {
       navigate('/cart', { replace: true });
     }
-  }, [authLoading, cart.length, navigate]);
+  }, [authLoading, cart.length, navigate, orderSuccessData]);
 
   // 로그인 시 프로필에서 배송지 정보 로드
   useEffect(() => {
@@ -124,7 +124,7 @@ const CheckoutPage = () => {
     }
 
     if (!name || !shippingAddress.trim() || !phone || phone.length < 9) {
-      setError('이름, 기본 주소, 전화번호를 모두 입력해주세요.');
+      setError('이름, 주소, 전화번호를 모두 입력해주세요.');
       return;
     }
 
@@ -278,7 +278,10 @@ const CheckoutPage = () => {
           address: addressFull,
           shipping_address: addressFull,
         };
-        const { error: orderError } = await publicTable('orders').insert(orderPayload);
+        const { data: guestOrderRow, error: orderError } = await publicTable('orders')
+          .insert(orderPayload)
+          .select('id')
+          .single();
 
         setSubmitting(false);
         if (orderError) {
@@ -291,10 +294,13 @@ const CheckoutPage = () => {
           const { error: stockError } = await supabase.rpc('deduct_stock', { p_product_id: item.id, p_quantity: qty });
           if (stockError) {
             setSubmitting(false);
+            if (guestOrderRow?.id) {
+              await publicTable('orders').update({ status: '취소됨' }).eq('id', guestOrderRow.id);
+            }
             const isInsufficient = (stockError.message || '').toUpperCase().includes('INSUFFICIENT_STOCK') || stockError.code === 'P0001';
             setError(isInsufficient
-              ? '재고가 부족하여 재고 반영에 실패했습니다. 주문은 접수되었습니다. 고객센터로 문의해 주세요.'
-              : '재고 반영 중 오류가 발생했습니다. 주문은 접수되었습니다. 고객센터로 문의해 주세요.');
+              ? '재고가 부족하여 주문이 취소되었습니다. 장바구니에서 수량을 조정 후 다시 결제해 주세요.'
+              : '재고 반영 중 오류가 발생하여 주문이 취소되었습니다. 다시 시도해 주세요.');
             clearCart();
             return;
           }
@@ -302,11 +308,11 @@ const CheckoutPage = () => {
 
         clearCart();
         toast.success('주문이 완료되었습니다');
-        setOrderSuccessData({ orderNumber, guestEmail: guestEmailTrimmed });
+        setOrderSuccessData({ orderNumber, guestEmail: guestEmailTrimmed, isGuest: true });
         return;
       }
 
-      // 로그인 사용자: 프로필 참고 후 주문 저장
+      // 로그인 사용자: 프로필 참고 후 주문 저장 (회원도 order_number 부여해 조회·관리 일관성)
       const { data: profile } = await publicTable('profiles')
         .select('full_name, name, address, phone')
         .eq('id', user.id)
@@ -322,9 +328,11 @@ const CheckoutPage = () => {
         return;
       }
 
+      const memberOrderNumber = generateOrderNumber();
       const orderPayload = {
         user_id: user.id,
         is_guest: false,
+        order_number: memberOrderNumber,
         items,
         status: '결제완료',
         customer_name: shippingNameFinal,
@@ -336,7 +344,10 @@ const CheckoutPage = () => {
         address: shippingAddressFinal,
         shipping_address: shippingAddressFinal,
       };
-      const { error: orderError } = await publicTable('orders').insert(orderPayload);
+      const { data: insertedOrder, error: orderError } = await publicTable('orders')
+        .insert(orderPayload)
+        .select('id')
+        .single();
 
       setSubmitting(false);
       if (orderError) {
@@ -348,11 +359,12 @@ const CheckoutPage = () => {
         const qty = Math.max(1, Math.min(MAX_QUANTITY, Math.floor(item.quantity || 1)));
         const { error: stockError } = await supabase.rpc('deduct_stock', { p_product_id: item.id, p_quantity: qty });
         if (stockError) {
-          setSubmitting(false);
+          stockFailed = true;
+          await publicTable('orders').update({ status: '취소됨' }).eq('id', insertedOrder?.id);
           const isInsufficient = (stockError.message || '').toUpperCase().includes('INSUFFICIENT_STOCK') || stockError.code === 'P0001';
           setError(isInsufficient
-            ? '재고가 부족하여 재고 반영에 실패했습니다. 주문은 접수되었습니다. 고객센터로 문의해 주세요.'
-            : '재고 반영 중 오류가 발생했습니다. 주문은 접수되었습니다. 고객센터로 문의해 주세요.');
+            ? '재고가 부족하여 주문이 취소되었습니다. 장바구니에서 수량을 조정 후 다시 결제해 주세요.'
+            : '재고 반영 중 오류가 발생하여 주문이 취소되었습니다. 다시 시도해 주세요.');
           clearCart();
           return;
         }
@@ -360,17 +372,18 @@ const CheckoutPage = () => {
 
       clearCart();
       toast.success('주문이 완료되었습니다');
-      navigate('/cart?order=success', { replace: true });
+      setOrderSuccessData({ orderNumber: memberOrderNumber, isGuest: false });
     } catch (err) {
       setSubmitting(false);
       setError(err?.message || '결제 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.');
     }
   };
 
-  if (authLoading || cart.length === 0) return null;
+  if (authLoading) return null;
 
-  // 게스트 주문 완료 화면: 주문 번호 + 안내
+  // 주문 완료 화면: 주문 번호 + 안내 (게스트/회원 공통) — 장바구니 비어 있어도 표시
   if (orderSuccessData) {
+    const isGuestSuccess = orderSuccessData.isGuest === true;
     return (
       <div className="pt-32 pb-20 px-6 min-h-screen bg-[#FFFFFF] text-[#000000] antialiased">
         <div className="max-w-2xl mx-auto text-center">
@@ -392,18 +405,35 @@ const CheckoutPage = () => {
               {orderSuccessData.orderNumber}
             </p>
             <p className="text-[11px] text-[#666666] leading-relaxed">
-              이메일과 주문번호로 추후 조회가 가능합니다.
-              <br />
-              주문 확인 메일이 {orderSuccessData.guestEmail} 로 발송됩니다.
+              {isGuestSuccess ? (
+                <>
+                  이메일과 주문번호로 추후 조회가 가능합니다.
+                  <br />
+                  주문 확인 메일이 {orderSuccessData.guestEmail} 로 발송됩니다.
+                </>
+              ) : (
+                <>
+                  주문 내역은 마이페이지에서 확인하실 수 있습니다.
+                </>
+              )}
             </p>
           </motion.div>
           <div className="flex gap-4 justify-center flex-wrap">
-            <Link
-              to="/order-lookup"
-              className="bg-[#000000] text-[#FFFFFF] px-6 py-3 text-[11px] font-black tracking-widest uppercase hover:opacity-90 transition-colors"
-            >
-              주문 조회
-            </Link>
+            {isGuestSuccess ? (
+              <Link
+                to="/order-lookup"
+                className="bg-[#000000] text-[#FFFFFF] px-6 py-3 text-[11px] font-black tracking-widest uppercase hover:opacity-90 transition-colors"
+              >
+                주문 조회
+              </Link>
+            ) : (
+              <Link
+                to="/orders"
+                className="bg-[#000000] text-[#FFFFFF] px-6 py-3 text-[11px] font-black tracking-widest uppercase hover:opacity-90 transition-colors"
+              >
+                주문 내역
+              </Link>
+            )}
             <Link
               to="/"
               className="border border-[#000000] px-6 py-3 text-[11px] font-bold tracking-widest uppercase hover:bg-[#000000] hover:text-[#FFFFFF] transition-colors"
@@ -421,6 +451,8 @@ const CheckoutPage = () => {
       </div>
     );
   }
+
+  if (cart.length === 0) return null;
 
   return (
     <div className="pt-32 pb-20 px-6 min-h-screen bg-[#FFFFFF] text-[#000000] antialiased">

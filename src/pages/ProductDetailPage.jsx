@@ -30,9 +30,13 @@ const ProductDetailPage = () => {
   const { addRecentlyViewed } = useRecentlyViewed();
   const [imgError, setImgError] = useState(false);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const [addQty, setAddQty] = useState(1);
 
   const product = products.find((p) => String(p.id) === String(id));
   const soldOut = isSoldOut(product);
+  const maxQty = product
+    ? Math.min(99, Math.max(1, Number(product.stock_quantity) ?? 99))
+    : 1;
   const images = product?.images ? toArray(product.images) : [];
   const imageList = images.length > 0
     ? images.map((img) => (typeof img === 'string' ? { url: img, isMain: false } : { url: img?.url || img?.src, isMain: !!img?.isMain })).filter((i) => i.url)
@@ -55,8 +59,9 @@ const ProductDetailPage = () => {
       toast.error('품절된 상품입니다.');
       return;
     }
-    addToCart(product);
-    toast.success('장바구니에 추가되었습니다.');
+    const qty = Math.max(1, Math.min(maxQty, Math.floor(addQty) || 1));
+    for (let i = 0; i < qty; i++) addToCart(product);
+    toast.success(`장바구니에 ${qty}개 추가되었습니다.`);
   };
 
   const handleWishlistClick = (e) => {
@@ -161,6 +166,43 @@ const ProductDetailPage = () => {
             <p className="mt-2 text-[10px] md:text-xs font-light tracking-[0.08em] text-[#2C2C2C]">
               {formatPrice(product.price)}
             </p>
+            {!soldOut && maxQty > 0 && (
+              <div className="mt-4 flex items-center gap-3">
+                <span className="text-[10px] font-medium tracking-widest uppercase text-[#666666]">수량</span>
+                <div className="flex items-center border border-[#E8E4DF]">
+                  <button
+                    type="button"
+                    onClick={() => setAddQty((q) => Math.max(1, q - 1))}
+                    className="w-9 h-9 flex items-center justify-center text-[#666666] hover:text-[#1a1a1a]"
+                    aria-label="수량 줄이기"
+                  >
+                    −
+                  </button>
+                  <input
+                    type="number"
+                    min={1}
+                    max={maxQty}
+                    value={addQty}
+                    onChange={(e) => {
+                      const v = parseInt(e.target.value, 10);
+                      if (!Number.isNaN(v)) setAddQty(Math.max(1, Math.min(maxQty, v)));
+                    }}
+                    className="w-12 h-9 text-center text-[11px] bg-transparent border-x border-[#E8E4DF] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setAddQty((q) => Math.min(maxQty, q + 1))}
+                    className="w-9 h-9 flex items-center justify-center text-[#666666] hover:text-[#1a1a1a]"
+                    aria-label="수량 늘리기"
+                  >
+                    +
+                  </button>
+                </div>
+                {maxQty < 99 && (
+                  <span className="text-[10px] text-[#8B8B8B]">(재고 {maxQty}개)</span>
+                )}
+              </div>
+            )}
             <div className="mt-6">
               <button
                 type="button"
