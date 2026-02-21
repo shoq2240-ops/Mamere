@@ -4,6 +4,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import brandLogo from '../asset/brand.logo.png';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCart } from '../store/CartContext';
+import { useWishlist } from '../store/WishlistContext';
 import { useAuth } from '../store/AuthContext';
 import { useLanguage } from '../store/LanguageContext';
 import { supabase } from '../lib/supabase';
@@ -33,6 +34,8 @@ const Navbar = ({ isScrolled = false, isMobileMenuOpen = false, onMobileMenuChan
   const [accountOpen, setAccountOpen] = useState(false);
   const [searchInput, setSearchInput] = useState("");
   const { cartCount } = useCart();
+  const { wishlist } = useWishlist();
+  const wishlistCount = Array.isArray(wishlist) ? wishlist.length : 0;
   const { isLoggedIn } = useAuth();
   const { locale, toggleLocale, t } = useLanguage();
   const navigate = useNavigate();
@@ -80,7 +83,7 @@ const Navbar = ({ isScrolled = false, isMobileMenuOpen = false, onMobileMenuChan
         <nav className="relative w-full z-[150] bg-[#000000] text-[#FDFDFB] border-b border-white/10 transition-all duration-300">
           <div className="max-w-[1800px] mx-auto h-14 flex items-center justify-between px-6 md:px-10">
             <Link to="/" className="flex items-center opacity-90 hover:opacity-100 transition-opacity" style={{ height: '38px' }}>
-              <img src={brandLogo} alt="jvng." className="h-full w-auto object-contain invert" />
+              <img src={brandLogo} alt="jvng." className="h-full w-auto object-contain invert" decoding="async" />
             </Link>
             <div className="flex items-center gap-6 md:gap-8 text-[10px] font-light tracking-[0.12em] uppercase">
               <Link to="/admin/orders" className="text-white/70 hover:text-white transition-colors">주문 관리</Link>
@@ -172,7 +175,7 @@ const Navbar = ({ isScrolled = false, isMobileMenuOpen = false, onMobileMenuChan
             className="hidden md:flex absolute left-1/2 -translate-x-1/2 w-auto cursor-pointer opacity-90 hover:opacity-100 transition-opacity"
             style={{ height: '46px' }}
           >
-            <img src={brandLogo} alt="jvng." className="h-full w-auto object-contain" />
+            <img src={brandLogo} alt="jvng." className="h-full w-auto object-contain" decoding="async" />
           </Link>
 
           {/* 모바일: 햄버거 메뉴 (작은 크기) */}
@@ -183,7 +186,7 @@ const Navbar = ({ isScrolled = false, isMobileMenuOpen = false, onMobileMenuChan
           </button>
 
           <Link to="/" onClick={handleLogoClick} className="md:hidden absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-auto z-[210] opacity-90 hover:opacity-100 transition-opacity" style={{ height: '38px' }}>
-            <img src={brandLogo} alt="jvng." className="h-full w-auto object-contain" />
+            <img src={brandLogo} alt="jvng." className="h-full w-auto object-contain" decoding="async" />
           </Link>
 
           <div className="ml-auto flex items-center gap-2 md:gap-2 z-[210] pr-1 md:pr-0">
@@ -218,6 +221,7 @@ const Navbar = ({ isScrolled = false, isMobileMenuOpen = false, onMobileMenuChan
                           exit={{ opacity: 0, y: -8 }}
                           className="absolute right-0 top-full mt-2 py-4 px-6 bg-[#FFFFFF] border border-[#F0F0F0] min-w-[160px] z-[120] flex flex-col gap-3 shadow-sm"
                         >
+                          <Link to="/wishlist" onClick={() => setAccountOpen(false)} className="text-[10px] font-light text-[#666666] hover:text-[#000000] transition-colors tracking-[0.15em] uppercase">WISHLIST</Link>
                           <Link to="/orders" onClick={() => setAccountOpen(false)} className="text-[10px] font-light text-[#666666] hover:text-[#000000] transition-colors tracking-[0.15em] uppercase">ORDERS</Link>
                           <Link to="/profile" onClick={() => setAccountOpen(false)} className="text-[10px] font-light text-[#666666] hover:text-[#000000] transition-colors tracking-[0.15em] uppercase">PROFILE</Link>
                           <button type="button" onClick={() => { handleLogout(); setAccountOpen(false); }} className="text-[10px] font-light text-[#666666] hover:text-[#000000] transition-colors tracking-[0.15em] uppercase text-left">LOGOUT</button>
@@ -238,6 +242,16 @@ const Navbar = ({ isScrolled = false, isMobileMenuOpen = false, onMobileMenuChan
             <button onClick={() => { setIsSearchOpen(true); handleMenuToggle(false); }} className="w-9 h-9 md:w-10 md:h-10 flex items-center justify-center hover:opacity-70 transition-colors text-[#000000]">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" /></svg>
             </button>
+            <Link to="/wishlist" className="w-9 h-9 md:w-10 md:h-10 flex items-center justify-center relative hover:opacity-70 transition-colors text-[#000000]" aria-label="위시리스트">
+              <svg className="w-5 h-5" fill={wishlistCount > 0 ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
+              </svg>
+              {wishlistCount > 0 && (
+                <span className="absolute top-2 right-1.5 bg-[#000000] text-[8px] min-w-[14px] h-3.5 px-1 rounded-full flex items-center justify-center font-bold text-[#FFFFFF]">
+                  {wishlistCount}
+                </span>
+              )}
+            </Link>
             <Link to="/cart" className="w-9 h-9 md:w-10 md:h-10 flex items-center justify-center relative hover:opacity-70 transition-colors text-[#000000]">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" /><path d="M3 6h18" /><path d="M16 10a4 4 0 0 1-8 0" /></svg>
               <AnimatePresence mode="popLayout">
@@ -310,6 +324,7 @@ const Navbar = ({ isScrolled = false, isMobileMenuOpen = false, onMobileMenuChan
                   </div>
                   <div className="flex-shrink-0 pt-8 mt-6 border-t border-[#F0F0F0] flex flex-col space-y-4 text-[12px]">
                     <button onClick={() => handleMenuClick('/cart')} className="font-bold tracking-[0.12em] uppercase text-[#000000] flex justify-between py-1">Shopping Bag <span>[{cartCount}]</span></button>
+                    <button onClick={() => handleMenuClick('/wishlist')} className="font-light tracking-[0.12em] uppercase text-[#666666] text-left py-1 flex justify-between">WISHLIST {wishlistCount > 0 ? <span>[{wishlistCount}]</span> : null}</button>
                     {isLoggedIn ? (
                       <>
                         <button onClick={() => handleMenuClick('/orders')} className="font-light tracking-[0.12em] uppercase text-[#666666] text-left py-1">ORDERS</button>

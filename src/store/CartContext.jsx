@@ -90,7 +90,14 @@ export const CartProvider = ({ children }) => {
     );
   };
 
-  const clearCart = () => setCart([]);
+  const clearCart = () => {
+    setCart([]);
+    try {
+      localStorage.removeItem('dn_cart');
+    } catch {
+      // ignore
+    }
+  };
 
   const cartCount = cart.reduce((total, item) => total + item.quantity, 0);
 

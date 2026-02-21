@@ -3,12 +3,15 @@ import { motion } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../store/AuthContext';
 import { publicTable } from '../lib/supabase';
+import OrderTrackingStepper from '../components/OrderTrackingStepper';
+import OrderTrackingBlock from '../components/OrderTrackingBlock';
 
 const STATUS_LABELS = {
   결제완료: { label: '결제 완료', color: 'text-[#000000]' },
-  배송준비중: { label: '배송 준비중', color: 'text-amber-500' },
-  배송중: { label: '배송 중', color: 'text-blue-500' },
-  배송완료: { label: '배송 완료', color: 'text-green-500' },
+  배송준비중: { label: '배송 준비 중', color: 'text-[#333333]' },
+  배송중: { label: '배송 중', color: 'text-[#000000]' },
+  배송완료: { label: '배송 완료', color: 'text-[#000000]' },
+  취소됨: { label: '취소됨', color: 'text-[#999999]' },
 };
 
 const parsePrice = (price) => {
@@ -107,7 +110,7 @@ const OrdersPage = () => {
                   key={order.id}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="border border-white/10 p-6 space-y-4"
+                  className="border border-[#E8E8E8] p-6 space-y-4 bg-[#FFFFFF]"
                 >
                   <div className="flex flex-wrap justify-between items-start gap-4">
                     <div>
@@ -121,10 +124,17 @@ const OrdersPage = () => {
                     </span>
                   </div>
 
-                  <ul className="space-y-2 border-t border-white/5 pt-4">
+                  {/* 5단계 배송 스테퍼 */}
+                  {order.status !== '취소됨' && (
+                    <div className="py-3 border-t border-[#F0F0F0]">
+                      <OrderTrackingStepper status={order.status} />
+                    </div>
+                  )}
+
+                  <ul className="space-y-2 border-t border-[#F0F0F0] pt-4">
                     {items.map((item, i) => (
                       <li key={i} className="flex justify-between text-[11px]">
-                        <span className="text-white/80 truncate max-w-[70%]">
+                        <span className="text-[#333333] truncate max-w-[70%]">
                           {item.name} × {item.quantity}
                         </span>
                         <span className="text-[#000000] shrink-0">
@@ -134,12 +144,17 @@ const OrdersPage = () => {
                     ))}
                   </ul>
 
-                  <div className="flex justify-between items-center border-t border-white/5 pt-4">
+                  <div className="flex justify-between items-center border-t border-[#F0F0F0] pt-4">
                     <span className="text-[10px] text-[#666666]">배송지</span>
                     <span className="text-[11px] text-[#333333] text-right max-w-[60%]">
                       {order.shipping_name || order.customer_name} / {order.shipping_address || order.address}
                     </span>
                   </div>
+
+                  {/* 실시간 택배 추적 (운송장 등록 시) */}
+                  {order.tracking_number && (
+                    <OrderTrackingBlock order={order} />
+                  )}
 
                   <div className="flex justify-end pt-2">
                     <span className="text-lg font-black italic text-[#000000]">

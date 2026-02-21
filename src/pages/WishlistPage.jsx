@@ -3,8 +3,6 @@ import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useWishlist } from '../store/WishlistContext';
 import { useCart } from '../store/CartContext';
-import { useAuth } from '../store/AuthContext';
-import LoginRequiredModal from '../components/LoginRequiredModal';
 import { publicTable } from '../lib/supabase';
 
 const formatPrice = (price) => {
@@ -18,8 +16,6 @@ const formatPrice = (price) => {
 const WishlistPage = () => {
   const { wishlist, toggleWishlist } = useWishlist();
   const { addToCart } = useCart();
-  const { isLoggedIn } = useAuth();
-  const [showLoginModal, setShowLoginModal] = useState(false);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -36,7 +32,10 @@ const WishlistPage = () => {
           .select('*')
           .in('id', wishlist);
         if (error) throw error;
-        setProducts(data ?? []);
+        const list = data ?? [];
+        const orderMap = new Map(wishlist.map((id, i) => [String(id), i]));
+        list.sort((a, b) => (orderMap.get(String(a.id)) ?? 999) - (orderMap.get(String(b.id)) ?? 999));
+        setProducts(list);
       } catch {
         setProducts([]);
       } finally {
@@ -46,9 +45,13 @@ const WishlistPage = () => {
     fetchProducts();
   }, [wishlist]);
 
+  const handleAddToCart = (product) => {
+    addToCart({ ...product, price: formatPrice(product.price) });
+    toast.success('장바구니에 추가되었습니다');
+  };
+
   return (
     <div className="bg-[#FFFFFF] min-h-screen text-[#000000] antialiased pt-24 pb-32 px-8 md:px-12">
-      <LoginRequiredModal show={showLoginModal} onClose={() => setShowLoginModal(false)} />
       <div className="max-w-6xl mx-auto">
         <h1 className="text-[10px] tracking-[0.2em] uppercase text-[#000000] font-medium mb-2">Wishlist</h1>
         <h2 className="text-2xl md:text-3xl font-light uppercase tracking-tight mb-12">
@@ -77,6 +80,8 @@ const WishlistPage = () => {
                   <img
                     src={product.image}
                     alt={product.name}
+                    loading="lazy"
+                    decoding="async"
                     className="w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-[1.02] transition-all duration-500"
                   />
                 </Link>
@@ -100,14 +105,7 @@ const WishlistPage = () => {
                     {formatPrice(product.price)}
                   </p>
                   <button
-                    onClick={() => {
-                      if (!isLoggedIn) {
-                        setShowLoginModal(true);
-                        return;
-                      }
-                      addToCart({ ...product, price: formatPrice(product.price) });
-                      toast.success('장바구니에 추가되었습니다');
-                    }}
+                    onClick={() => handleAddToCart(product)}
                     className="mt-3 w-full py-3 border border-[#E5E5E5] text-[10px] font-light tracking-[0.2em] uppercase text-[#666666] hover:bg-[#F9F9F9] hover:border-[#000000] hover:text-[#000000] transition-all"
                   >
                     ADD TO ARCHIVE

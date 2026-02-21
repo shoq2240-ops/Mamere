@@ -3,18 +3,17 @@ import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useCart } from '../store/CartContext';
-import { useAuth } from '../store/AuthContext';
-import LoginRequiredModal from '../components/LoginRequiredModal';
 import { useProducts } from '../hooks/useProducts';
+import { useRecentlyViewed } from '../hooks/useRecentlyViewed';
 import { ProductCarouselSkeleton, LoadingMessage } from '../components/ProductSkeleton';
 import ProductCard from '../components/ProductCard';
 import LookbookSection from '../components/LookbookSection';
+import FAQ from '../components/FAQ';
 import flower3 from '../asset/flower3.png';
 
 const LandingPage = () => {
   const { addToCart } = useCart();
-  const { isLoggedIn } = useAuth();
-  const [showLoginModal, setShowLoginModal] = useState(false);
+  const { items: recentlyViewedItems } = useRecentlyViewed();
   const [newArrivalTab, setNewArrivalTab] = useState('men');
 
   const { products, loading, error } = useProducts();
@@ -29,10 +28,6 @@ const LandingPage = () => {
   const handleAddToCart = (product, e) => {
     e?.preventDefault?.();
     e?.stopPropagation?.();
-    if (!isLoggedIn) {
-      setShowLoginModal(true);
-      return;
-    }
     addToCart(product);
     toast.success('장바구니에 추가되었습니다');
   };
@@ -49,24 +44,17 @@ const LandingPage = () => {
 
   return (
     <div className="bg-[#FFFFFF] text-[#000000] antialiased overflow-x-hidden relative">
-      <LoginRequiredModal show={showLoginModal} onClose={() => setShowLoginModal(false)} />
-
-      {/* 1. 메인 히어로: asset flower3.png, 테두리 없음 */}
-      <section className="relative w-[100vw] h-[100vh] min-h-[100dvh] p-2 md:p-6 m-0 overflow-hidden bg-[#000000]">
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.8, ease: 'easeOut' }}
-          className="absolute inset-2 md:inset-6 flex justify-center items-center bg-gradient-to-b from-[#0a0a0a] via-[#000000] to-[#0a0a0a]"
-        >
+      {/* 1. 메인 히어로: flower3.png 전체 화면 */}
+      <section className="relative w-[100vw] h-[100vh] min-h-[100dvh] m-0 overflow-hidden bg-[#000000]">
+        <div className="absolute inset-0 w-full h-full">
           <img
             src={flower3}
-            alt=""
-            className="absolute inset-0 w-full h-full object-cover object-center z-0"
+            alt="히어로 이미지"
+            className="w-full h-full object-cover object-center block"
             decoding="async"
-            fetchPriority="high"
+            loading="eager"
           />
-        </motion.div>
+        </div>
       </section>
 
       {/* 2. NEW ARRIVALS */}
@@ -126,9 +114,9 @@ const LandingPage = () => {
             <button onClick={() => scroll(newRef, 'left')} className="absolute left-4 top-[55%] z-20 opacity-0 group-hover/new:opacity-100 transition-all text-[#666666] hover:text-[#000000]"><svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="0.5" d="M15 19l-7-7 7-7" /></svg></button>
             <button onClick={() => scroll(newRef, 'right')} className="absolute right-4 top-[55%] z-20 opacity-0 group-hover/new:opacity-100 transition-all text-[#666666] hover:text-[#000000]"><svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="0.5" d="M9 5l7 7-7 7" /></svg></button>
 
-            <div ref={newRef} className="flex overflow-x-auto gap-4 md:gap-8 px-6 md:px-12 scrollbar-hide snap-x no-scrollbar" style={{ scrollbarWidth: 'none' }}>
+            <div ref={newRef} className="flex overflow-x-auto gap-4 md:gap-6 px-6 md:px-12 scrollbar-hide snap-x no-scrollbar" style={{ scrollbarWidth: 'none' }}>
               {newArrivalsByTab.map((product) => (
-                <div key={product.id} className="w-[calc(50%-8px)] min-w-[calc(50%-8px)] sm:w-[calc(33.333%-12px)] sm:min-w-[calc(33.333%-12px)] md:min-w-[calc(25%-18px)] md:w-auto snap-start flex-shrink-0">
+                <div key={product.id} className="w-[160px] min-w-[160px] sm:w-[180px] sm:min-w-[180px] md:w-[200px] md:min-w-[200px] snap-start flex-shrink-0">
                   <ProductCard product={product} onAddToCart={handleAddToCart} variant="carousel" />
                 </div>
               ))}
@@ -167,7 +155,7 @@ const LandingPage = () => {
 
             <div ref={bestRef} className="flex overflow-x-auto gap-4 md:gap-6 px-6 md:px-12 scrollbar-hide snap-x no-scrollbar" style={{ scrollbarWidth: 'none' }}>
               {bestSellers.map((product) => (
-                <div key={product.id} className="w-[calc(50%-8px)] min-w-[calc(50%-8px)] sm:w-[calc(33.333%-12px)] sm:min-w-[calc(33.333%-12px)] md:min-w-[calc(20%-16px)] md:w-auto snap-start flex-shrink-0">
+                <div key={product.id} className="w-[160px] min-w-[160px] sm:w-[180px] sm:min-w-[180px] md:w-[200px] md:min-w-[200px] snap-start flex-shrink-0">
                   <ProductCard product={product} onAddToCart={handleAddToCart} variant="carousel" grayscale />
                 </div>
               ))}
@@ -182,7 +170,57 @@ const LandingPage = () => {
         )}
       </section>
 
+      {/* Recently Viewed (localStorage, 최대 5개) */}
+      {recentlyViewedItems.length > 0 && (
+        <section className="py-12 md:py-16 border-t border-[#F0F0F0]">
+          <div className="px-6 md:px-12 mb-4">
+            <p className="text-[9px] font-light tracking-[0.2em] uppercase text-[#999999]">Recently Viewed</p>
+          </div>
+          <div className="flex gap-4 overflow-x-auto scrollbar-hide px-6 md:px-12 pb-2">
+            {recentlyViewedItems.slice(0, 5).map((p) => (
+              <Link
+                key={p.id}
+                to={`/product/${p.id}`}
+                className="flex-shrink-0 w-20 md:w-24 group"
+              >
+                <div className="aspect-[3/4] overflow-hidden bg-[#F5F5F5] mb-1.5">
+                  {p.image && (
+                    <img
+                      src={p.image}
+                      alt={p.name}
+                      loading="lazy"
+                      decoding="async"
+                      className="w-full h-full object-cover opacity-70 group-hover:opacity-100 transition-opacity duration-300"
+                    />
+                  )}
+                </div>
+                <p className="text-[8px] md:text-[9px] font-light tracking-widest text-[#666666] group-hover:text-[#000000] truncate transition-colors">
+                  {p.name}
+                </p>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
+
       <LookbookSection />
+
+      {/* FAQ: 메인에서 미리보기 + 전체는 /faq 페이지에서 */}
+      <section className="py-16 md:py-24 border-t border-[#F0F0F0]">
+        <div className="px-6 md:px-12 mb-8">
+          <p className="text-[#999999] text-[8pt] md:text-[9pt] font-bold tracking-[0.2em] uppercase mb-2">Customer Service</p>
+          <h2 className="text-lg md:text-2xl font-light uppercase tracking-tight leading-none">FAQ</h2>
+        </div>
+        <FAQ showTitle={false} className="pt-0 pb-0" />
+        <div className="max-w-2xl mx-auto px-6 md:px-8 mt-8 text-center">
+          <Link
+            to="/faq"
+            className="inline-block text-[10px] font-light tracking-[0.15em] uppercase text-[#666666] hover:text-[#000000] border-b border-[#000000] pb-1 transition-colors"
+          >
+            자주 묻는 질문 전체 보기
+          </Link>
+        </div>
+      </section>
 
       <footer className="py-20 text-center">
         <p className="text-[10px] font-light tracking-[0.2em] uppercase text-[#999999]">Archive 2026</p>

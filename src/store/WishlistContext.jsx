@@ -26,12 +26,17 @@ export const WishlistProvider = ({ children }) => {
   }, [wishlist]);
 
   const toggleWishlist = (productId) => {
-    setWishlist((prev) =>
-      prev.includes(productId) ? prev.filter((id) => id !== productId) : [...prev, productId]
-    );
+    if (productId == null) return;
+    const id = typeof productId === 'number' ? productId : Number(productId);
+    const numId = Number.isNaN(id) ? productId : id;
+    setWishlist((prev) => {
+      const has = prev.some((w) => w == numId || w === productId);
+      return has ? prev.filter((w) => w != numId && w !== productId) : [...prev, numId];
+    });
   };
 
-  const isInWishlist = (productId) => wishlist.includes(productId);
+  const isInWishlist = (productId) =>
+    productId != null && wishlist.some((w) => w == productId);
 
   return (
     <WishlistContext.Provider value={{ wishlist, toggleWishlist, isInWishlist }}>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, lazy, Suspense } from "react";
 import { Toaster, toast } from "react-hot-toast";
 import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
@@ -11,29 +11,38 @@ import ScrollToTop from "./components/ScrollToTop";
 import Navbar from "./components/Navbar";
 import Marquee from "./components/Marquee";
 import Footer from './components/Footer';
-import LandingPage from "./pages/LandingPage";
-import PhilosophyPage from './pages/PhilosophyPage';
-import ShopPage from "./pages/ShopPage";
-import LookbookPage from "./pages/LookbookPage";
-import ProductDetailPage from "./pages/ProductDetailPage";
-import WishlistPage from "./pages/WishlistPage";
-import CollectionPage from './pages/CollectionPage';
-import LoginPage from './pages/LoginPage';
-import SignupPage from './pages/SignupPage';
-import ProfilePage from './pages/ProfilePage';
-import CartPage from './pages/CartPage';
-import CheckoutPage from './pages/CheckoutPage';
-import OrdersPage from './pages/OrdersPage';
-import AdminUploadPage from './pages/AdminUploadPage';
-import AdminOrdersPage from './pages/AdminOrdersPage';
-import AdminUsersPage from './pages/AdminUsersPage';
-import TermsPage from './pages/TermsPage';
-import PrivacyPage from './pages/PrivacyPage';
-import FAQPage from './pages/FAQPage';
-import ShippingPage from './pages/ShippingPage';
-import ReturnsPage from './pages/ReturnsPage';
 import RequireAdmin from './components/RequireAdmin';
 import CookieBanner from './components/CookieBanner';
+
+// 라우트별 코드 스플리팅 (Lazy Loading) — 초기 번들 축소
+const LandingPage = lazy(() => import('./pages/LandingPage'));
+const PhilosophyPage = lazy(() => import('./pages/PhilosophyPage'));
+const ShopPage = lazy(() => import('./pages/ShopPage'));
+const LookbookPage = lazy(() => import('./pages/LookbookPage'));
+const ProductDetailPage = lazy(() => import('./pages/ProductDetailPage'));
+const WishlistPage = lazy(() => import('./pages/WishlistPage'));
+const CollectionPage = lazy(() => import('./pages/CollectionPage'));
+const LoginPage = lazy(() => import('./pages/LoginPage'));
+const SignupPage = lazy(() => import('./pages/SignupPage'));
+const ProfilePage = lazy(() => import('./pages/ProfilePage'));
+const CartPage = lazy(() => import('./pages/CartPage'));
+const CheckoutPage = lazy(() => import('./pages/CheckoutPage'));
+const OrdersPage = lazy(() => import('./pages/OrdersPage'));
+const OrderLookupPage = lazy(() => import('./pages/OrderLookupPage'));
+const AdminUploadPage = lazy(() => import('./pages/AdminUploadPage'));
+const AdminOrdersPage = lazy(() => import('./pages/AdminOrdersPage'));
+const AdminUsersPage = lazy(() => import('./pages/AdminUsersPage'));
+const TermsPage = lazy(() => import('./pages/TermsPage'));
+const PrivacyPage = lazy(() => import('./pages/PrivacyPage'));
+const FAQPage = lazy(() => import('./pages/FAQPage'));
+const ShippingPage = lazy(() => import('./pages/ShippingPage'));
+const ReturnsPage = lazy(() => import('./pages/ReturnsPage'));
+
+const PageLoadFallback = () => (
+  <div className="min-h-[60vh] flex items-center justify-center" aria-hidden="true">
+    <div className="w-8 h-8 border-2 border-[#000000] border-t-transparent rounded-full animate-spin" />
+  </div>
+);
 
 const WithdrawnToast = () => {
   const { withdrawnMessage, clearWithdrawnMessage } = useAuth();
@@ -51,8 +60,9 @@ const AnimatedRoutes = () => {
   const { addToCart } = useCart(); // 👈 Context에서 함수를 직접 가져옵니다.
 
   return (
-    <AnimatePresence mode="wait">
-      <Routes location={location} key={location.pathname}>
+    <Suspense fallback={<PageLoadFallback />}>
+      <AnimatePresence mode="wait">
+        <Routes location={location} key={location.pathname}>
         {/* LandingPage에 Context의 addToCart 함수를 전달합니다. */}
         <Route path="/" element={<PageWrapper><LandingPage addToCart={addToCart} /></PageWrapper>} />
         
@@ -68,6 +78,7 @@ const AnimatedRoutes = () => {
         <Route path="/cart" element={<PageWrapper><CartPage /></PageWrapper>} />
         <Route path="/checkout" element={<PageWrapper><CheckoutPage /></PageWrapper>} />
         <Route path="/orders" element={<PageWrapper><OrdersPage /></PageWrapper>} />
+        <Route path="/order-lookup" element={<PageWrapper><OrderLookupPage /></PageWrapper>} />
         <Route path="/admin/upload" element={<PageWrapper><RequireAdmin><AdminUploadPage /></RequireAdmin></PageWrapper>} />
         <Route path="/admin/orders" element={<PageWrapper><RequireAdmin><AdminOrdersPage /></RequireAdmin></PageWrapper>} />
         <Route path="/admin/users" element={<PageWrapper><RequireAdmin><AdminUsersPage /></RequireAdmin></PageWrapper>} />
@@ -80,8 +91,9 @@ const AnimatedRoutes = () => {
         {/* 카테고리별 쇼핑 페이지 */}
         <Route path="/shop/men" element={<PageWrapper><ShopPage category="men" /></PageWrapper>} />
         <Route path="/shop/women" element={<PageWrapper><ShopPage category="women" /></PageWrapper>} />
-      </Routes>
-    </AnimatePresence>
+        </Routes>
+      </AnimatePresence>
+    </Suspense>
   );
 };
 

@@ -23,54 +23,63 @@ const parsePrice = (price) => {
   return 0;
 };
 
+// 주문 번호 생성 (게스트 조회용)
+const generateOrderNumber = () => {
+  const date = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+  const rand = Math.random().toString(36).slice(2, 8).toUpperCase();
+  return `DN-${date}-${rand}`;
+};
+
+const isValidEmail = (s) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test((s ?? '').trim());
+
 const CheckoutPage = () => {
   const navigate = useNavigate();
   const { user, isLoggedIn, loading: authLoading } = useAuth();
-  const { cart, clearCart, cartCount } = useCart();
+  const { cart, clearCart } = useCart();
 
+  const isGuest = !authLoading && !isLoggedIn;
+
+  const [guestEmail, setGuestEmail] = useState('');
   const [shippingName, setShippingName] = useState('');
   const [shippingAddress, setShippingAddress] = useState('');
   const [shippingAddressDetail, setShippingAddressDetail] = useState('');
   const [shippingPhone, setShippingPhone] = useState('');
   const [initialProfile, setInitialProfile] = useState(null);
   const [saveAsDefault, setSaveAsDefault] = useState(false);
-  const [profileLoading, setProfileLoading] = useState(true);
+  const [profileLoading, setProfileLoading] = useState(!isGuest);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [orderSuccessData, setOrderSuccessData] = useState(null);
 
   // 클라이언트 기준 표시용 합계 (UI용)
   const displayTotal = cart.reduce((sum, item) => sum + parsePrice(item.price) * item.quantity, 0);
 
-  // 비로그인 → 로그인 페이지
+  // 장바구니 비어 있으면 카트로 (로그인/비로그인 공통)
   useEffect(() => {
-    if (!authLoading && !isLoggedIn) {
-      navigate('/login', { replace: true });
-    }
-  }, [authLoading, isLoggedIn, navigate]);
-
-  // 장바구니 비어 있으면 카트로
-  useEffect(() => {
-    if (!authLoading && isLoggedIn && cart.length === 0) {
+    if (!authLoading && cart.length === 0) {
       navigate('/cart', { replace: true });
     }
-  }, [authLoading, isLoggedIn, cart.length, navigate]);
+  }, [authLoading, cart.length, navigate]);
 
-  // 프로필에서 배송지 정보 로드
+  // 로그인 시 프로필에서 배송지 정보 로드
   useEffect(() => {
-    if (!user?.id) return;
+    if (!user?.id) {
+      if (isGuest) setProfileLoading(false);
+      return;
+    }
 
     const loadProfile = async () => {
       setProfileLoading(true);
       const { data } = await publicTable('profiles')
-        .select('full_name, address, phone')
+        .select('full_name, name, address, phone')
         .eq('id', user.id)
         .maybeSingle();
 
       setProfileLoading(false);
       if (data) {
-        const name = data.full_name ?? '';
+        const name = (data.full_name ?? data.name ?? '').trim();
         const { base, detail } = splitAddress(data.address ?? '');
-        const phone = data.phone ?? '';
+        const phone = (data.phone ?? '').trim();
         setShippingName(name);
         setShippingAddress(base);
         setShippingAddressDetail(detail);
@@ -82,7 +91,7 @@ const CheckoutPage = () => {
     };
 
     loadProfile();
-  }, [user?.id]);
+  }, [user?.id, isGuest]);
 
   const trim = (s) => (s ?? '').trim();
   const currentAddressFull = combineAddress(shippingAddress, shippingAddressDetail);
@@ -98,19 +107,29 @@ const CheckoutPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!user?.id || cart.length === 0) return;
+    if (cart.length === 0) return;
+    if (!isGuest && !user?.id) return;
 
     const name = shippingName.trim().slice(0, 100);
     const addressFull = combineAddress(shippingAddress, shippingAddressDetail).slice(0, 500);
     const phoneDigits = shippingPhone.trim().replace(/\D/g, '');
     const phone = phoneDigits.slice(0, 11);
+
+    if (isGuest) {
+      const email = (guestEmail ?? '').trim();
+      if (!isValidEmail(email)) {
+        setError('주문 조회용 이메일을 올바르게 입력해주세요.');
+        return;
+      }
+    }
+
     if (!name || !shippingAddress.trim() || !phone || phone.length < 9) {
       setError('이름, 기본 주소, 전화번호를 모두 입력해주세요.');
       return;
     }
 
     if (!PORTONE_STORE_ID || !PORTONE_CHANNEL_KEY) {
-      setError('결제 설정이 완료되지 않았습니다. .env에 VITE_PORTONE_STORE_ID, VITE_PORTONE_CHANNEL_KEY를 확인해주세요.');
+      setError('결제 기능이 일시적으로 준비 중입니다. 잠시 후 다시 시도해 주세요.');
       return;
     }
 
@@ -125,7 +144,7 @@ const CheckoutPage = () => {
 
     if (productsError) {
       setSubmitting(false);
-      setError('상품 정보를 불러올 수 없습니다. ' + productsError.message);
+      setError('상품 정보를 불러올 수 없습니다. 장바구니를 비운 뒤 다시 시도해 주세요.');
       return;
     }
 
@@ -160,8 +179,22 @@ const CheckoutPage = () => {
       return;
     }
 
-    // 서버 가격 기준으로 총액 계산 (수량 상한 99 적용)
     const MAX_QUANTITY = 99;
+    // 결제 전 재고 부족 검사: 주문 수량이 현재 재고를 초과하면 결제 중단
+    const insufficientStockProduct = cart.find((item) => {
+      const p = productMap[item.id];
+      if (!p) return false;
+      const need = Math.max(1, Math.min(MAX_QUANTITY, Math.floor(item.quantity || 1)));
+      const have = Number(p.stock_quantity) ?? 0;
+      return have < need;
+    });
+    if (insufficientStockProduct) {
+      setSubmitting(false);
+      setError(`'${insufficientStockProduct.name}' 상품의 재고가 부족합니다. 수량을 줄이거나 장바구니에서 제거 후 다시 시도해주세요.`);
+      return;
+    }
+
+    // 서버 가격 기준으로 총액 계산 (수량 상한 99 적용)
     const totalAmount = cart.reduce(
       (sum, item) => sum + (priceMap[item.id] ?? 0) * Math.max(1, Math.min(MAX_QUANTITY, Math.floor(item.quantity || 1))),
       0
@@ -184,9 +217,7 @@ const CheckoutPage = () => {
         { onConflict: 'id' }
       );
       if (profileError) {
-        setSubmitting(false);
-        setError(profileError.message);
-        return;
+        toast.error('기본 배송지로 저장하지 못했습니다. 결제는 계속 진행됩니다.');
       }
     }
 
@@ -223,78 +254,173 @@ const CheckoutPage = () => {
       // 결제 실패
       if (response?.code) {
         setSubmitting(false);
-        setError(response.message || '결제에 실패했습니다.');
+        setError(response.message || '결제가 완료되지 않았습니다. 다시 시도해 주세요.');
         return;
       }
 
-      // 결제 성공 → profiles에서 이름/주소 조회 후 주문 저장
-      const { data: profile, error: profileFetchError } = await publicTable('profiles')
-        .select('full_name, address, phone')
+      if (isGuest) {
+        // 게스트 주문: user_id null, is_guest true, guest_email, order_number
+        const orderNumber = generateOrderNumber();
+        const guestEmailTrimmed = (guestEmail ?? '').trim();
+        const orderPayload = {
+          user_id: null,
+          is_guest: true,
+          guest_email: guestEmailTrimmed,
+          order_number: orderNumber,
+          items,
+          status: '결제완료',
+          customer_name: name,
+          shipping_name: name,
+          phone,
+          shipping_phone: phone,
+          total_price: totalAmount,
+          total_amount: totalAmount,
+          address: addressFull,
+          shipping_address: addressFull,
+        };
+        const { error: orderError } = await publicTable('orders').insert(orderPayload);
+
+        setSubmitting(false);
+        if (orderError) {
+          setError('주문 저장에 실패했습니다. 고객센터로 문의해 주세요.');
+          return;
+        }
+
+        for (const item of items) {
+          const qty = Math.max(1, Math.min(MAX_QUANTITY, Math.floor(item.quantity || 1)));
+          const { error: stockError } = await supabase.rpc('deduct_stock', { p_product_id: item.id, p_quantity: qty });
+          if (stockError) {
+            setSubmitting(false);
+            const isInsufficient = (stockError.message || '').toUpperCase().includes('INSUFFICIENT_STOCK') || stockError.code === 'P0001';
+            setError(isInsufficient
+              ? '재고가 부족하여 재고 반영에 실패했습니다. 주문은 접수되었습니다. 고객센터로 문의해 주세요.'
+              : '재고 반영 중 오류가 발생했습니다. 주문은 접수되었습니다. 고객센터로 문의해 주세요.');
+            clearCart();
+            return;
+          }
+        }
+
+        clearCart();
+        toast.success('주문이 완료되었습니다');
+        setOrderSuccessData({ orderNumber, guestEmail: guestEmailTrimmed });
+        return;
+      }
+
+      // 로그인 사용자: 프로필 참고 후 주문 저장
+      const { data: profile } = await publicTable('profiles')
+        .select('full_name, name, address, phone')
         .eq('id', user.id)
         .maybeSingle();
 
-      if (profileFetchError || !profile) {
+      const shippingNameFinal = (profile?.full_name ?? profile?.name ?? name).trim() || name.trim();
+      const shippingAddressFinal = (profile?.address ?? addressFull).trim() || addressFull.trim();
+      const shippingPhoneFinal = (profile?.phone ?? shippingPhone.trim()).trim() || shippingPhone.trim();
+
+      if (!shippingNameFinal || !shippingAddressFinal || !shippingPhoneFinal) {
         setSubmitting(false);
-        setError(profileFetchError?.message || '배송 정보를 불러올 수 없습니다.');
+        setError('이름, 주소, 전화번호를 모두 입력해주세요.');
         return;
       }
 
-      const shippingNameFromProfile = profile.full_name ?? name;
-      const shippingAddressFromProfile = profile.address ?? addressFull;
-      const shippingPhoneFromProfile = profile.phone ?? shippingPhone.trim();
-
-      if (!shippingNameFromProfile || !shippingAddressFromProfile || !shippingPhoneFromProfile) {
-        setSubmitting(false);
-        setError('프로필에 이름, 주소, 전화번호를 입력해주세요.');
-        return;
-      }
-
-      // 컬럼명 이중 매핑: 기존/신규 스키마 모두 호환 (불일치 에러 방지)
       const orderPayload = {
         user_id: user.id,
+        is_guest: false,
         items,
         status: '결제완료',
-        customer_name: shippingNameFromProfile,
-        shipping_name: shippingNameFromProfile,
-        phone: shippingPhoneFromProfile,
-        shipping_phone: shippingPhoneFromProfile,
+        customer_name: shippingNameFinal,
+        shipping_name: shippingNameFinal,
+        phone: shippingPhoneFinal,
+        shipping_phone: shippingPhoneFinal,
         total_price: totalAmount,
         total_amount: totalAmount,
-        address: shippingAddressFromProfile,
-        shipping_address: shippingAddressFromProfile,
+        address: shippingAddressFinal,
+        shipping_address: shippingAddressFinal,
       };
       const { error: orderError } = await publicTable('orders').insert(orderPayload);
 
       setSubmitting(false);
       if (orderError) {
-        setError(orderError.message);
+        setError('주문 저장에 실패했습니다. 고객센터로 문의해 주세요.');
         return;
       }
 
-      // [자동화] 결제 완료 후 재고 차감
-      // stock_quantity에서 구매 수량을 빼고, 0이 되면 상품 상세 페이지에서 자동으로 SOLD OUT 표시됨
       for (const item of items) {
         const qty = Math.max(1, Math.min(MAX_QUANTITY, Math.floor(item.quantity || 1)));
-        const { data: prod } = await publicTable('products')
-          .select('stock_quantity')
-          .eq('id', item.id)
-          .single();
-        const current = prod?.stock_quantity ?? 0;
-        const newStock = Math.max(0, current - qty);
-        await publicTable('products').update({ stock_quantity: newStock }).eq('id', item.id);
+        const { error: stockError } = await supabase.rpc('deduct_stock', { p_product_id: item.id, p_quantity: qty });
+        if (stockError) {
+          setSubmitting(false);
+          const isInsufficient = (stockError.message || '').toUpperCase().includes('INSUFFICIENT_STOCK') || stockError.code === 'P0001';
+          setError(isInsufficient
+            ? '재고가 부족하여 재고 반영에 실패했습니다. 주문은 접수되었습니다. 고객센터로 문의해 주세요.'
+            : '재고 반영 중 오류가 발생했습니다. 주문은 접수되었습니다. 고객센터로 문의해 주세요.');
+          clearCart();
+          return;
+        }
       }
 
-      setSubmitting(false);
       clearCart();
       toast.success('주문이 완료되었습니다');
       navigate('/cart?order=success', { replace: true });
     } catch (err) {
       setSubmitting(false);
-      setError(err?.message || '결제 처리 중 오류가 발생했습니다.');
+      setError(err?.message || '결제 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.');
     }
   };
 
-  if (authLoading || !isLoggedIn || cart.length === 0) return null;
+  if (authLoading || cart.length === 0) return null;
+
+  // 게스트 주문 완료 화면: 주문 번호 + 안내
+  if (orderSuccessData) {
+    return (
+      <div className="pt-32 pb-20 px-6 min-h-screen bg-[#FFFFFF] text-[#000000] antialiased">
+        <div className="max-w-2xl mx-auto text-center">
+          <h1 className="text-4xl font-black italic tracking-tighter uppercase mb-2">
+            주문 완료
+          </h1>
+          <p className="text-[10px] text-[#999999] tracking-widest uppercase mb-10">
+            결제가 정상적으로 완료되었습니다
+          </p>
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="border border-[#F0F0F0] p-8 mb-8"
+          >
+            <p className="text-[10px] font-bold tracking-widest uppercase text-[#666666] mb-2">
+              주문 번호
+            </p>
+            <p className="text-3xl font-black italic tracking-tight text-[#000000] mb-6 break-all">
+              {orderSuccessData.orderNumber}
+            </p>
+            <p className="text-[11px] text-[#666666] leading-relaxed">
+              이메일과 주문번호로 추후 조회가 가능합니다.
+              <br />
+              주문 확인 메일이 {orderSuccessData.guestEmail} 로 발송됩니다.
+            </p>
+          </motion.div>
+          <div className="flex gap-4 justify-center flex-wrap">
+            <Link
+              to="/order-lookup"
+              className="bg-[#000000] text-[#FFFFFF] px-6 py-3 text-[11px] font-black tracking-widest uppercase hover:opacity-90 transition-colors"
+            >
+              주문 조회
+            </Link>
+            <Link
+              to="/"
+              className="border border-[#000000] px-6 py-3 text-[11px] font-bold tracking-widest uppercase hover:bg-[#000000] hover:text-[#FFFFFF] transition-colors"
+            >
+              홈으로
+            </Link>
+            <Link
+              to="/shop"
+              className="border border-[#000000] px-6 py-3 text-[11px] font-bold tracking-widest uppercase hover:bg-[#000000] hover:text-[#FFFFFF] transition-colors"
+            >
+              쇼핑 계속하기
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="pt-32 pb-20 px-6 min-h-screen bg-[#FFFFFF] text-[#000000] antialiased">
@@ -303,7 +429,9 @@ const CheckoutPage = () => {
           Checkout
         </h1>
         <p className="text-[10px] text-[#999999] tracking-widest uppercase mb-10">
-          배송지 정보를 확인하고 결제를 완료하세요
+          {isGuest
+            ? '게스트로 결제합니다. 이메일과 배송지를 입력해주세요.'
+            : '배송지 정보를 확인하고 결제를 완료하세요'}
         </p>
 
         <motion.form
@@ -312,6 +440,29 @@ const CheckoutPage = () => {
           onSubmit={handleSubmit}
           className="space-y-8"
         >
+          {isGuest && (
+            <section className="border border-[#F0F0F0] p-6 space-y-4">
+              <h2 className="text-[11px] font-bold tracking-widest uppercase text-[#000000] mb-4">
+                주문 조회용 이메일
+              </h2>
+              <p className="text-[10px] text-[#666666] mb-3">
+                주문 완료 후 이메일과 주문번호로 조회할 수 있습니다.
+              </p>
+              <input
+                type="email"
+                value={guestEmail}
+                onChange={(e) => setGuestEmail(e.target.value.slice(0, 255))}
+                placeholder="example@email.com"
+                className="w-full bg-[#F9F9F9] px-4 py-3 text-[11px] text-[#000000] outline-none focus:bg-[#F5F5F5] placeholder:text-[#999999]"
+                autoComplete="email"
+              />
+              <p className="text-[10px] text-[#999999]">
+                로그인하시면 주문 내역을 마이페이지에서 바로 확인할 수 있습니다.{' '}
+                <Link to="/login" className="underline hover:text-[#000000]">로그인</Link>
+              </p>
+            </section>
+          )}
+
           {/* 배송지 정보 */}
           <section className="border border-[#F0F0F0] p-6 space-y-4">
             <h2 className="text-[11px] font-bold tracking-widest uppercase text-[#000000] mb-4">
@@ -401,7 +552,7 @@ const CheckoutPage = () => {
             </Link>
             <button
               type="submit"
-              disabled={submitting || profileLoading}
+              disabled={submitting || (!isGuest && profileLoading)}
               className="flex-1 bg-[#000000] text-[#FFFFFF] py-4 text-[11px] font-black tracking-widest uppercase hover:opacity-90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {submitting ? '처리 중...' : '결제하기'}

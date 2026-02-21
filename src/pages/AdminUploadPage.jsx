@@ -1,10 +1,28 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { useDropzone } from 'react-dropzone';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import Cropper from 'react-easy-crop';
 import { supabase, publicTable } from '../lib/supabase';
 import { useAuth } from '../store/AuthContext';
 import { parseDescription, serializeDescription } from '../lib/descriptionSections';
 import { isSoldOut } from '../lib/productStock';
+import { resizeAndCompressImage } from '../lib/imageOptimize';
 
 const STORAGE_BUCKET = 'product-images';
 const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'];
@@ -28,6 +46,109 @@ const getCategoryLabel = (val) => {
   return found ? found.label : val;
 };
 
+const createImageId = () => `img-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+
+/** react-easy-crop용: crop 영역으로 이미지 blob 생성 */
+async function getCroppedImg(imageSrc, pixelCrop) {
+  const image = await createImage(imageSrc);
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+  canvas.width = pixelCrop.width;
+  canvas.height = pixelCrop.height;
+  ctx.drawImage(
+    image,
+    pixelCrop.x, pixelCrop.y, pixelCrop.width, pixelCrop.height,
+    0, 0, pixelCrop.width, pixelCrop.height
+  );
+  return new Promise((resolve) => {
+    canvas.toBlob((blob) => resolve(blob), 'image/jpeg', 0.9);
+  });
+}
+
+function createImage(url) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => resolve(img);
+    img.onerror = reject;
+    img.src = url;
+  });
+}
+
+function SortableThumb({ item, onDelete, onSetMain, onCrop, isMain }) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: item.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`relative w-24 h-28 flex-shrink-0 rounded overflow-hidden border-2 bg-[#E8E8E8] ${
+        isMain ? 'border-[#000000] ring-2 ring-[#000000]/20' : 'border-[#DDDDDD]'
+      } ${isDragging ? 'z-10 opacity-90 shadow-lg' : ''}`}
+    >
+      <img
+        src={item.url}
+        alt=""
+        className="w-full h-full object-cover"
+        loading="lazy"
+        decoding="async"
+      />
+      {item.progress !== undefined && item.progress < 100 && (
+        <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+          <span className="text-[10px] font-bold text-white">{item.progress}%</span>
+        </div>
+      )}
+      {isMain && (
+        <div className="absolute bottom-0 left-0 right-0 bg-[#000000] text-[9px] text-white text-center py-0.5 font-medium">
+          대표
+        </div>
+      )}
+      <button
+        type="button"
+        onClick={(e) => { e.preventDefault(); e.stopPropagation(); onDelete(item.id); }}
+        className="absolute top-0.5 right-0.5 w-5 h-5 rounded-full bg-black/70 text-white flex items-center justify-center text-xs hover:bg-red-600 transition-colors"
+        aria-label="삭제"
+      >
+        ×
+      </button>
+      <button
+        type="button"
+        onClick={(e) => { e.preventDefault(); e.stopPropagation(); onSetMain(item.id); }}
+        className="absolute bottom-6 left-0 right-0 py-0.5 bg-black/60 text-[8px] text-white text-center hover:bg-black/80"
+      >
+        대표로
+      </button>
+      <button
+        type="button"
+        onClick={(e) => { e.preventDefault(); e.stopPropagation(); onCrop(item); }}
+        className="absolute left-0.5 top-0.5 px-1.5 py-0.5 bg-black/60 text-[8px] text-white hover:bg-black/80"
+      >
+        편집
+      </button>
+      <div
+        {...attributes}
+        {...listeners}
+        className="absolute top-0.5 left-0.5 w-5 h-5 rounded bg-white/80 flex items-center justify-center cursor-grab active:cursor-grabbing text-[10px]"
+        aria-label="드래그하여 순서 변경"
+      >
+        ⋮⋮
+      </div>
+    </div>
+  );
+}
+
 const AdminUploadPage = () => {
   const navigate = useNavigate();
   const { isLoggedIn, loading: authLoading } = useAuth();
@@ -46,11 +167,20 @@ const AdminUploadPage = () => {
     descSizeFit: '',
     gender: 'men',
     category: 'outerwear',
-    imageFile: null,
-    imagePreview: null,
+    imageList: [],
     stockQuantity: 0,
     isManualSoldout: false,
   });
+
+  const [cropState, setCropState] = useState({
+    open: false,
+    index: -1,
+    url: '',
+    itemId: null,
+  });
+  const [crop, setCrop] = useState({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(1);
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
 
   useEffect(() => {
     if (!authLoading && !isLoggedIn) {
@@ -61,10 +191,10 @@ const AdminUploadPage = () => {
   const fetchProducts = async () => {
     try {
       setLoading(true);
-      const { data, error } = await publicTable('products')
+      const { data, err } = await publicTable('products')
         .select('*')
         .order('created_at', { ascending: false });
-      if (error) throw error;
+      if (err) throw err;
       setProducts(data ?? []);
     } catch (err) {
       setError(err.message);
@@ -77,26 +207,134 @@ const AdminUploadPage = () => {
     if (isLoggedIn) fetchProducts();
   }, [isLoggedIn]);
 
-  const uploadImage = async (file) => {
-    if (!file || !(file instanceof File)) {
-      throw new Error('유효한 파일을 선택해주세요.');
-    }
+  const uploadImageToStorage = useCallback(async (file, onProgress) => {
+    if (!file || !(file instanceof File)) throw new Error('유효한 파일을 선택해주세요.');
     if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
-      throw new Error(`허용된 이미지 형식만 업로드 가능합니다. (JPEG, PNG, WebP, GIF)`);
+      throw new Error('허용된 이미지 형식만 업로드 가능합니다. (JPEG, PNG, WebP, GIF)');
     }
-    if (file.size > MAX_IMAGE_BYTES) {
-      throw new Error(`이미지 크기는 ${MAX_IMAGE_SIZE_MB}MB 이하여야 합니다.`);
-    }
-    const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg';
+    onProgress?.(10);
+    const optimized = await resizeAndCompressImage(file);
+    onProgress?.(50);
+    const ext = optimized.name.split('.').pop()?.toLowerCase() || 'jpg';
     const safeExt = ['jpeg', 'jpg', 'png', 'webp', 'gif'].includes(ext) ? ext : 'jpg';
     const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${safeExt}`;
-    const { data, error } = await supabase.storage
+    const { data, err } = await supabase.storage
       .from(STORAGE_BUCKET)
-      .upload(fileName, file, { upsert: false });
-    if (error) throw error;
+      .upload(fileName, optimized, { upsert: false });
+    onProgress?.(100);
+    if (err) throw err;
     const { data: urlData } = supabase.storage.from(STORAGE_BUCKET).getPublicUrl(data.path);
     return urlData.publicUrl;
-  };
+  }, []);
+
+  const onDrop = useCallback((acceptedFiles) => {
+    setError('');
+    const newItems = acceptedFiles.map((file, i) => {
+      const id = createImageId();
+      const url = URL.createObjectURL(file);
+      const list = form.imageList;
+      const isFirst = list.length === 0 && i === 0;
+      return {
+        id,
+        url,
+        file,
+        progress: undefined,
+        isMain: isFirst,
+        priority: list.length + i,
+      };
+    });
+    setForm((prev) => {
+      const list = [...prev.imageList];
+      if (list.length === 0 && newItems.length > 0) newItems[0].isMain = true;
+      const merged = [...list, ...newItems].map((item, idx) => ({ ...item, priority: idx }));
+      return { ...prev, imageList: merged };
+    });
+  }, [form.imageList]);
+
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    onDrop,
+    accept: { 'image/*': ['.jpeg', '.jpg', '.png', '.webp', '.gif'] },
+    maxSize: MAX_IMAGE_BYTES,
+    multiple: true,
+    disabled: submitting,
+  });
+
+  const handleDeleteImage = useCallback((id) => {
+    setForm((prev) => {
+      const list = prev.imageList.filter((item) => item.id !== id);
+      const deleted = prev.imageList.find((item) => item.id === id);
+      if (deleted?.isMain && list.length > 0) list[0].isMain = true;
+      return { ...prev, imageList: list.map((item, i) => ({ ...item, priority: i })) };
+    });
+  }, []);
+
+  const handleSetMain = useCallback((id) => {
+    setForm((prev) => ({
+      ...prev,
+      imageList: prev.imageList.map((item) => ({
+        ...item,
+        isMain: item.id === id,
+        priority: item.priority,
+      })),
+    }));
+  }, []);
+
+  const handleCropOpen = useCallback((item) => {
+    setCropState({ open: true, index: form.imageList.findIndex((i) => i.id === item.id), url: item.url, itemId: item.id });
+    setCrop({ x: 0, y: 0 });
+    setZoom(1);
+    setCroppedAreaPixels(null);
+  }, [form.imageList]);
+
+  const onCropComplete = useCallback((_, croppedAreaPx) => {
+    setCroppedAreaPixels(croppedAreaPx);
+  }, []);
+
+  const handleCropSave = useCallback(async () => {
+    if (!cropState.url || !croppedAreaPixels) {
+      setCropState((s) => ({ ...s, open: false }));
+      return;
+    }
+    try {
+      const blob = await getCroppedImg(cropState.url, croppedAreaPixels);
+      const file = new File([blob], 'cropped.jpg', { type: 'image/jpeg' });
+      const newUrl = URL.createObjectURL(blob);
+      setForm((prev) => ({
+        ...prev,
+        imageList: prev.imageList.map((item) =>
+          item.id === cropState.itemId
+            ? { ...item, url: newUrl, file, progress: undefined }
+            : item
+        ),
+      }));
+    } catch (e) {
+      setError(e?.message || '크롭 저장 실패');
+    }
+    setCropState({ open: false, index: -1, url: '', itemId: null });
+  }, [cropState.url, cropState.itemId, croppedAreaPixels]);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  );
+
+  const handleDragEnd = useCallback((event) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    setForm((prev) => {
+      const list = [...prev.imageList];
+      const oldIndex = list.findIndex((i) => i.id === active.id);
+      const newIndex = list.findIndex((i) => i.id === over.id);
+      if (oldIndex === -1 || newIndex === -1) return prev;
+      const reordered = arrayMove(list, oldIndex, newIndex).map((item, i) => ({ ...item, priority: i }));
+      return { ...prev, imageList: reordered };
+    });
+  }, []);
+
+  const getMainImageUrl = useCallback(() => {
+    const main = form.imageList.find((i) => i.isMain);
+    return main?.url ?? form.imageList[0]?.url ?? null;
+  }, [form.imageList]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -108,20 +346,43 @@ const AdminUploadPage = () => {
       setError('상품명과 가격(숫자)을 입력해주세요.');
       return;
     }
+    if (form.imageList.length === 0) {
+      setError('이미지를 1장 이상 추가해주세요.');
+      return;
+    }
 
     setSubmitting(true);
     try {
-      let imageUrl = form.imagePreview;
-      if (form.imageFile) {
-        imageUrl = await uploadImage(form.imageFile);
-      }
-      if (!imageUrl) {
-        setError('이미지를 선택해주세요.');
-        setSubmitting(false);
-        return;
+      const list = [...form.imageList];
+      for (let i = 0; i < list.length; i++) {
+        const item = list[i];
+        if (item.file) {
+          const onProgress = (p) => {
+            setForm((prev) => ({
+              ...prev,
+              imageList: prev.imageList.map((x) =>
+                x.id === item.id ? { ...x, progress: p } : x
+              ),
+            }));
+          };
+          const url = await uploadImageToStorage(item.file, onProgress);
+          list[i] = { ...item, url, file: null, progress: 100 };
+          setForm((prev) => ({
+            ...prev,
+            imageList: prev.imageList.map((x) =>
+              x.id === item.id ? { ...x, url, file: null, progress: 100 } : x
+            ),
+          }));
+        }
       }
 
-      // 재고 수량 파싱 (숫자만 허용, 음수 방지)
+      const mainItem = list.find((i) => i.isMain);
+      const mainUrl = mainItem?.url ?? list[0]?.url;
+      const finalList = list.map((item, idx) => ({
+        url: item.url,
+        priority: idx,
+        isMain: item.isMain,
+      }));
       const stockQty = Math.max(0, parseInt(String(form.stockQuantity || 0).replace(/\D/g, ''), 10) || 0);
 
       const row = {
@@ -130,18 +391,19 @@ const AdminUploadPage = () => {
         description: serializeDescription(form.descFreeShipping, form.descDetails, form.descSizeFit),
         gender: form.gender,
         category: form.category,
-        image: imageUrl,
+        image: mainUrl ?? finalList[0]?.url,
+        images: finalList,
         stock_quantity: stockQty,
         is_manual_soldout: form.isManualSoldout,
       };
 
       if (editingId) {
-        const { error } = await publicTable('products').update(row).eq('id', editingId);
-        if (error) throw error;
+        const { error: err } = await publicTable('products').update(row).eq('id', editingId);
+        if (err) throw err;
         setSuccess('상품이 수정되었습니다.');
       } else {
-        const { error } = await publicTable('products').insert(row);
-        if (error) throw error;
+        const { error: err } = await publicTable('products').insert(row);
+        if (err) throw err;
         setSuccess('상품이 등록되었습니다.');
       }
       resetForm();
@@ -155,6 +417,9 @@ const AdminUploadPage = () => {
 
   const handleEdit = (p) => {
     const { freeShipping, details, sizeFit } = parseDescription(p.description);
+    const images = Array.isArray(p.images) && p.images.length > 0
+      ? p.images
+      : p.image ? [{ url: p.image, priority: 0, isMain: true }] : [];
     setEditingId(p.id);
     setForm({
       name: p.name,
@@ -164,8 +429,14 @@ const AdminUploadPage = () => {
       descSizeFit: sizeFit,
       gender: p.gender || 'men',
       category: p.category || 'outerwear',
-      imageFile: null,
-      imagePreview: p.image,
+      imageList: images.map((img, i) => ({
+        id: createImageId(),
+        url: typeof img === 'string' ? img : img.url,
+        file: null,
+        progress: 100,
+        isMain: img.isMain === true || (i === 0 && !images.some((x) => x.isMain)),
+        priority: typeof img.priority === 'number' ? img.priority : i,
+      })),
       stockQuantity: p.stock_quantity ?? 0,
       isManualSoldout: p.is_manual_soldout === true,
     });
@@ -177,8 +448,8 @@ const AdminUploadPage = () => {
   const handleDelete = async (id) => {
     if (!confirm('이 상품을 삭제할까요?')) return;
     try {
-      const { error } = await publicTable('products').delete().eq('id', id);
-      if (error) throw error;
+      const { error: err } = await publicTable('products').delete().eq('id', id);
+      if (err) throw err;
       setSuccess('상품이 삭제되었습니다.');
       fetchProducts();
     } catch (err) {
@@ -196,225 +467,220 @@ const AdminUploadPage = () => {
       descSizeFit: '',
       gender: 'men',
       category: 'outerwear',
-      imageFile: null,
-      imagePreview: null,
+      imageList: [],
       stockQuantity: 0,
       isManualSoldout: false,
     });
   };
 
-  const onFileChange = (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
-      setError('허용된 이미지 형식만 업로드 가능합니다. (JPEG, PNG, WebP, GIF)');
-      e.target.value = '';
-      return;
-    }
-    if (file.size > MAX_IMAGE_BYTES) {
-      setError(`이미지 크기는 ${MAX_IMAGE_SIZE_MB}MB 이하여야 합니다.`);
-      e.target.value = '';
-      return;
-    }
-    setError('');
-    setForm((prev) => ({
-      ...prev,
-      imageFile: file,
-      imagePreview: URL.createObjectURL(file),
-    }));
-  };
-
   if (authLoading || !isLoggedIn) return null;
 
+  const inputClass = 'w-full bg-white px-4 py-3.5 text-sm text-[#000000] placeholder-[#999] outline-none focus:ring-2 focus:ring-[#000000]/20 border border-[#E0E0E0]';
+
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-[#FDFDFB] pt-24 pb-24 px-8 md:px-12 lg:px-16">
+    <div className="min-h-screen pt-24 pb-24 px-8 md:px-12 lg:px-16 bg-[#F5F5F5] text-[#000000]">
       <div className="max-w-4xl mx-auto">
-        <div className="pb-8 mb-12 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 border-b border-white/10">
+        <div className="pb-8 mb-12 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 border-b border-[#E0E0E0]">
           <div>
-            <h1 className="text-2xl md:text-3xl font-light uppercase tracking-tight text-[#FDFDFB]">관리자 · 상품 등록</h1>
-            <p className="text-[11px] text-white/50 tracking-[0.1em] uppercase mt-2">상품을 등록·수정·삭제합니다</p>
+            <h1 className="text-2xl md:text-3xl font-light uppercase tracking-tight text-[#000000]">
+              관리자 · 상품 등록
+            </h1>
+            <p className="text-[11px] tracking-[0.1em] uppercase mt-2 text-[#666666]">
+              상품을 등록·수정·삭제합니다
+            </p>
           </div>
           <div className="flex flex-wrap gap-6">
-            <Link to="/admin/orders" className="text-[10px] font-medium tracking-[0.12em] uppercase text-white/60 hover:text-[#FDFDFB] transition-colors">
+            <Link to="/admin/orders" className="text-[10px] font-medium tracking-[0.12em] uppercase text-[#666666] hover:text-[#000000] transition-colors">
               주문 관리 →
             </Link>
-            <Link to="/admin/users" className="text-[10px] font-medium tracking-[0.12em] uppercase text-white/60 hover:text-[#FDFDFB] transition-colors">
+            <Link to="/admin/users" className="text-[10px] font-medium tracking-[0.12em] uppercase text-[#666666] hover:text-[#000000] transition-colors">
               회원 관리
             </Link>
           </div>
         </div>
 
-        {/* 등록 폼 */}
         <motion.form
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           onSubmit={handleSubmit}
-          className="bg-[#000000]/40 shadow-[0_1px_0_0_rgba(255,255,255,0.06)] p-8 md:p-10 mb-14"
+          className="bg-white border border-[#E0E0E0] p-8 md:p-10 mb-14 shadow-sm"
         >
-          <h2 className="text-[11px] font-medium tracking-[0.15em] uppercase text-white/70 mb-8">
+          <h2 className="text-[11px] font-medium tracking-[0.15em] uppercase text-[#333333] mb-8">
             {editingId ? '상품 수정' : '새 상품 등록'}
           </h2>
 
           <div className="space-y-6">
             <div>
-              <label className="block text-[10px] font-medium tracking-[0.12em] uppercase text-white/50 mb-2">상품명 *</label>
+              <label className="block text-[10px] font-medium tracking-[0.12em] uppercase text-[#666666] mb-2">상품명 *</label>
               <input
                 type="text"
                 value={form.name}
                 onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
                 placeholder="상품명 입력"
-                className="w-full bg-white/[0.06] px-4 py-3.5 text-sm text-[#FDFDFB] placeholder-white/30 outline-none focus:bg-white/[0.08] transition-colors shadow-[0_1px_0_0_rgba(255,255,255,0.06)]"
+                className={inputClass}
                 required
               />
             </div>
 
             <div>
-              <label className="block text-[10px] font-medium tracking-[0.12em] uppercase text-white/50 mb-2">가격 (원) *</label>
+              <label className="block text-[10px] font-medium tracking-[0.12em] uppercase text-[#666666] mb-2">가격 (원) *</label>
               <input
                 type="text"
                 value={form.price}
                 onChange={(e) => setForm((f) => ({ ...f, price: e.target.value }))}
                 placeholder="예: 890000"
-                className="w-full bg-white/[0.06] px-4 py-3.5 text-sm text-[#FDFDFB] placeholder-white/30 outline-none focus:bg-white/[0.08] transition-colors shadow-[0_1px_0_0_rgba(255,255,255,0.06)]"
+                className={inputClass}
                 required
               />
             </div>
 
             <div className="space-y-4">
-              <p className="text-[10px] font-medium tracking-widest uppercase text-white/50">상세 설명 </p>
+              <p className="text-[10px] font-medium tracking-widest uppercase text-[#666666]">상세 설명</p>
               <div>
-                <label className="block text-[10px] font-medium tracking-widest uppercase text-white/40 mb-1.5">무료 배송 & 반품</label>
+                <label className="block text-[10px] font-medium tracking-widest uppercase text-[#555555] mb-1.5">무료 배송 & 반품</label>
                 <textarea
                   value={form.descFreeShipping}
                   onChange={(e) => setForm((f) => ({ ...f, descFreeShipping: e.target.value }))}
-                  placeholder="예: 영업일 기준 1~3일 내 배송, 배송비 무료, 무료 반품"
+                  placeholder="예: 영업일 기준 1~3일 내 배송"
                   rows={2}
-                  className="w-full bg-white/[0.06] px-4 py-3.5 text-sm text-[#FDFDFB] placeholder-white/20 outline-none focus:bg-white/[0.08] resize-none transition-colors shadow-[0_1px_0_0_rgba(255,255,255,0.06)]"
+                  className={`${inputClass} resize-none`}
                 />
               </div>
               <div>
-                <label className="block text-[10px] font-medium tracking-widest uppercase text-white/40 mb-1.5">세부 정보</label>
+                <label className="block text-[10px] font-medium tracking-widest uppercase text-[#555555] mb-1.5">세부 정보</label>
                 <textarea
                   value={form.descDetails}
                   onChange={(e) => setForm((f) => ({ ...f, descDetails: e.target.value }))}
-                  placeholder="예: OUTSHELL: POLYESTER 100%, MADE IN KOREA, DRY CLEAN ONLY"
+                  placeholder="예: OUTSHELL: POLYESTER 100%"
                   rows={3}
-                  className="w-full bg-white/[0.06] px-4 py-3.5 text-sm text-[#FDFDFB] placeholder-white/20 outline-none focus:bg-white/[0.08] resize-none transition-colors shadow-[0_1px_0_0_rgba(255,255,255,0.06)]"
+                  className={`${inputClass} resize-none`}
                 />
               </div>
               <div>
-                <label className="block text-[10px] font-medium tracking-widest uppercase text-white/40 mb-1.5">사이즈 및 핏</label>
+                <label className="block text-[10px] font-medium tracking-widest uppercase text-[#555555] mb-1.5">사이즈 및 핏</label>
                 <textarea
                   value={form.descSizeFit}
                   onChange={(e) => setForm((f) => ({ ...f, descSizeFit: e.target.value }))}
-                  placeholder="예: Model is 185cm tall and wearing size 48. Sleeve measured by center back."
+                  placeholder="예: Model is 185cm, size 48"
                   rows={2}
-                  className="w-full bg-white/[0.06] px-4 py-3.5 text-sm text-[#FDFDFB] placeholder-white/20 outline-none focus:bg-white/[0.08] resize-none transition-colors shadow-[0_1px_0_0_rgba(255,255,255,0.06)]"
+                  className={`${inputClass} resize-none`}
                 />
               </div>
-              <p className="text-[9px] text-white/30">비워두면 상세 페이지에서 해당 메뉴가 표시되지 않습니다</p>
+              <p className="text-[9px] text-[#999999]">비워두면 해당 메뉴가 표시되지 않습니다</p>
             </div>
 
-            {/* [재고 및 품절] 재고 개수 입력 + 수동 품절 토글 스위치 */}
-            <div className="space-y-4 pt-6 mt-6 border-t border-white/[0.06]">
-              <p className="text-[10px] font-medium tracking-widest uppercase text-white/50">재고 및 품절</p>
+            <div className="space-y-4 pt-6 mt-6 border-t border-[#E8E8E8]">
+              <p className="text-[10px] font-medium tracking-widest uppercase text-[#666666]">재고 및 품절</p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-[10px] font-medium tracking-widest uppercase text-white/40 mb-2">재고 개수</label>
+                  <label className="block text-[10px] font-medium tracking-widest uppercase text-[#555555] mb-2">재고 개수</label>
                   <input
                     type="text"
                     inputMode="numeric"
                     value={form.stockQuantity}
                     onChange={(e) => setForm((f) => ({ ...f, stockQuantity: e.target.value }))}
                     placeholder="0"
-                    className="w-full bg-white/[0.06] px-4 py-3.5 text-sm text-[#FDFDFB] placeholder-white/30 outline-none focus:bg-white/[0.08] transition-colors shadow-[0_1px_0_0_rgba(255,255,255,0.06)]"
+                    className={inputClass}
                   />
-                  <p className="text-[9px] text-white/30 mt-1">0이면 자동 품절로 표시됩니다</p>
+                  <p className="text-[9px] text-[#999999] mt-1">0이면 자동 품절로 표시됩니다</p>
                 </div>
                 <div>
-                  {/* 관리자용: 재고와 무관하게 상품을 내리고 싶을 때 사용하는 스위치 */}
-                  <label className="block text-[10px] font-medium tracking-widest uppercase text-white/40 mb-2">판매 중단 (수동 품절)</label>
+                  <label className="block text-[10px] font-medium tracking-widest uppercase text-[#555555] mb-2">판매 중단 (수동 품절)</label>
                   <label className="flex items-center gap-3 cursor-pointer">
-                    <div
-                      role="switch"
-                      aria-checked={form.isManualSoldout}
-                      className={`relative w-12 h-6 rounded-full transition-colors ${
-                        form.isManualSoldout ? 'bg-white/90' : 'bg-white/10'
-                      }`}
-                    >
-                      <div
-                        className={`absolute top-1 w-4 h-4 rounded-full bg-black transition-transform ${
-                          form.isManualSoldout ? 'left-7' : 'left-1'
-                        }`}
-                      />
-                    </div>
                     <input
                       type="checkbox"
                       checked={form.isManualSoldout}
                       onChange={(e) => setForm((f) => ({ ...f, isManualSoldout: e.target.checked }))}
-                      className="sr-only"
+                      className="w-4 h-4 rounded border-[#CCC] text-[#000000]"
                     />
-                    <span className="text-[11px] text-white/70">
+                    <span className="text-[11px] text-[#000000]">
                       {form.isManualSoldout ? '품절 (판매 중단)' : '판매 중'}
                     </span>
                   </label>
-                  <p className="text-[9px] text-white/30 mt-1">켜면 재고와 무관하게 품절로 표시됩니다</p>
+                  <p className="text-[9px] text-[#999999] mt-1">켜면 재고와 무관하게 품절로 표시됩니다</p>
                 </div>
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-[10px] font-medium tracking-widest uppercase text-white/50 mb-2">성별</label>
+                <label className="block text-[10px] font-medium tracking-[0.12em] uppercase text-[#666666] mb-2">성별</label>
                 <select
                   value={form.gender}
                   onChange={(e) => setForm((f) => ({ ...f, gender: e.target.value }))}
-                  className="w-full bg-white/[0.06] px-4 py-3.5 text-sm text-[#FDFDFB] outline-none focus:bg-white/[0.08] transition-colors shadow-[0_1px_0_0_rgba(255,255,255,0.06)]"
+                  className={inputClass}
                 >
                   {GENDERS.map((g) => (
-                    <option key={g.value} value={g.value} className="bg-zinc-900 text-white">{g.label}</option>
+                    <option key={g.value} value={g.value} className="bg-white text-[#000000]">{g.label}</option>
                   ))}
                 </select>
               </div>
               <div>
-                <label className="block text-[10px] font-medium tracking-widest uppercase text-white/50 mb-2">카테고리 (상품 종류)</label>
+                <label className="block text-[10px] font-medium tracking-[0.12em] uppercase text-[#666666] mb-2">카테고리</label>
                 <select
                   value={form.category}
                   onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))}
-                  className="w-full bg-white/[0.06] px-4 py-3.5 text-sm text-[#FDFDFB] outline-none focus:bg-white/[0.08] transition-colors shadow-[0_1px_0_0_rgba(255,255,255,0.06)]"
+                  className={inputClass}
                 >
                   {CATEGORIES.map((c) => (
-                    <option key={c.value} value={c.value} className="bg-zinc-900 text-white">{c.label}</option>
+                    <option key={c.value} value={c.value} className="bg-white text-[#000000]">{c.label}</option>
                   ))}
                 </select>
               </div>
             </div>
 
+            {/* 이미지: 드롭존 + 썸네일 리스트 + DnD + 대표 + 편집 */}
             <div>
-              <label className="block text-[10px] font-medium tracking-widest uppercase text-white/50 mb-2">이미지 *</label>
-              <div className="flex flex-col sm:flex-row gap-4 items-start">
-                <label className="flex-shrink-0 px-6 py-3.5 bg-[#FDFDFB] text-[#000000] text-[11px] font-medium tracking-[0.12em] uppercase cursor-pointer hover:bg-white transition-colors">
-                  파일 선택
-                  <input type="file" accept=".jpg,.jpeg,.png,.webp,.gif,image/jpeg,image/png,image/webp,image/gif" onChange={onFileChange} className="hidden" />
-                </label>
-                {form.imagePreview && (
-                  <div className="w-24 h-32 bg-white/[0.06] overflow-hidden shadow-[0_1px_0_0_rgba(255,255,255,0.06)]">
-                    <img src={form.imagePreview} alt="미리보기" className="w-full h-full object-cover" />
-                  </div>
-                )}
+              <label className="block text-[10px] font-medium tracking-[0.12em] uppercase text-[#666666] mb-2">이미지 * (멀티 업로드)</label>
+              <div
+                {...getRootProps()}
+                className={`border-2 border-dashed rounded p-8 text-center cursor-pointer transition-colors ${
+                  isDragActive ? 'border-[#000000] bg-[#F0F0F0]' : 'border-[#DDDDDD] bg-[#FAFAFA] hover:border-[#999999]'
+                }`}
+              >
+                <input {...getInputProps()} />
+                <p className="text-[11px] text-[#666666]">
+                  {isDragActive ? '여기에 놓으세요' : '파일을 드래그하거나 클릭하여 여러 장 선택'}
+                </p>
+                <p className="text-[9px] text-[#999999] mt-1">
+                  JPEG, PNG, WebP, GIF · 최대 {MAX_IMAGE_SIZE_MB}MB · 업로드 전 1200px 리사이즈·압축
+                </p>
               </div>
-              <p className="text-[10px] text-white/40 mt-2">JPEG, PNG, WebP, GIF 최대 {MAX_IMAGE_SIZE_MB}MB · Supabase Storage에 업로드</p>
+
+              {form.imageList.length > 0 && (
+                <div className="mt-4">
+                  <p className="text-[9px] uppercase tracking-widest text-[#666666] mb-2">
+                    썸네일 순서 변경(드래그) · 클릭 시 대표 이미지 · 편집으로 자르기
+                  </p>
+                  <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                    <SortableContext items={form.imageList.map((i) => i.id)}>
+                      <div className="flex flex-wrap gap-3">
+                        {form.imageList.map((item) => (
+                          <SortableThumb
+                            key={item.id}
+                            item={item}
+                            onDelete={handleDeleteImage}
+                            onSetMain={handleSetMain}
+                            onCrop={handleCropOpen}
+                            isMain={item.isMain}
+                          />
+                        ))}
+                      </div>
+                    </SortableContext>
+                  </DndContext>
+                </div>
+              )}
             </div>
           </div>
 
-          {error && <p className="mt-4 text-red-400 text-[11px]">{error}</p>}
-          {success && <p className="mt-4 text-[#FDFDFB]/80 text-[11px]">{success}</p>}
+          {error && <p className="mt-4 text-red-600 text-[11px]">{error}</p>}
+          {success && <p className="mt-4 text-[#000000] text-[11px]">{success}</p>}
 
           <div className="mt-10 flex gap-4">
             <button
               type="submit"
               disabled={submitting}
-              className="px-8 py-3.5 bg-[#FDFDFB] text-[#000000] text-[11px] font-medium tracking-[0.12em] uppercase hover:bg-white disabled:opacity-50 transition-colors"
+              className="px-8 py-3.5 bg-[#000000] text-white text-[11px] font-medium tracking-[0.12em] uppercase hover:bg-[#333333] disabled:opacity-50 transition-colors"
             >
               {submitting ? '처리 중...' : editingId ? '수정' : '등록'}
             </button>
@@ -422,7 +688,7 @@ const AdminUploadPage = () => {
               <button
                 type="button"
                 onClick={resetForm}
-                className="px-6 py-3.5 text-[11px] font-medium tracking-[0.12em] uppercase text-white/70 hover:text-[#FDFDFB] transition-colors shadow-[0_1px_0_0_rgba(255,255,255,0.1)]"
+                className="px-6 py-3.5 text-[11px] font-medium tracking-[0.12em] uppercase text-[#666666] hover:text-[#000000] transition-colors border border-[#DDDDDD]"
               >
                 취소
               </button>
@@ -432,33 +698,33 @@ const AdminUploadPage = () => {
 
         {/* 상품 목록 */}
         <section className="pt-4">
-          <h2 className="text-[11px] font-medium tracking-[0.15em] uppercase text-white/70 mb-8">등록된 상품 목록</h2>
+          <h2 className="text-[11px] font-medium tracking-[0.15em] uppercase text-[#333333] mb-8">등록된 상품 목록</h2>
           {loading ? (
-            <p className="text-white/40 text-sm">로딩 중...</p>
+            <p className="text-[#666666] text-sm">로딩 중...</p>
           ) : products.length === 0 ? (
-            <p className="text-white/40 text-sm">등록된 상품이 없습니다</p>
+            <p className="text-[#666666] text-sm">등록된 상품이 없습니다</p>
           ) : (
-            <ul className="space-y-0">
+            <ul className="space-y-0 bg-white border border-[#E0E0E0] divide-y divide-[#E8E8E8]">
               {products.map((p) => (
                 <motion.li
                   key={p.id}
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  className="flex items-center gap-6 py-5 border-b border-white/[0.06] last:border-0"
+                  className="flex items-center gap-6 py-5 px-6"
                 >
-                  <div className="w-14 h-18 bg-white/[0.06] overflow-hidden flex-shrink-0 shadow-[0_1px_0_0_rgba(255,255,255,0.06)]">
-                    {p.image && <img src={p.image} alt="" className="w-full h-full object-cover" />}
+                  <div className="w-14 h-18 bg-[#F0F0F0] overflow-hidden flex-shrink-0 border border-[#E0E0E0]">
+                    {p.image && <img src={p.image} alt="" className="w-full h-full object-cover" loading="lazy" decoding="async" />}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <p className="text-sm font-medium truncate text-[#FDFDFB]">{p.name}</p>
+                      <p className="text-sm font-medium truncate text-[#000000]">{p.name}</p>
                       {isSoldOut(p) && (
-                        <span className="flex-shrink-0 px-2 py-0.5 text-[9px] font-medium tracking-[0.12em] uppercase bg-white/10 text-white/70">
+                        <span className="flex-shrink-0 px-2 py-0.5 text-[9px] font-medium tracking-[0.12em] uppercase bg-[#E8E8E8] text-[#666666]">
                           품절
                         </span>
                       )}
                     </div>
-                    <p className="text-[11px] text-white/50">
+                    <p className="text-[11px] text-[#666666]">
                       ₩{Number(p.price).toLocaleString()} · {p.gender === 'men' ? 'men' : p.gender === 'women' ? 'women' : '—'} · {getCategoryLabel(p.category)}
                       {p.stock_quantity != null && ` · 재고 ${p.stock_quantity}개`}
                     </p>
@@ -467,14 +733,14 @@ const AdminUploadPage = () => {
                     <button
                       type="button"
                       onClick={() => handleEdit(p)}
-                      className="px-4 py-2.5 text-[10px] font-medium tracking-[0.12em] uppercase text-white/80 hover:text-[#FDFDFB] transition-colors shadow-[0_1px_0_0_rgba(255,255,255,0.1)]"
+                      className="px-4 py-2.5 text-[10px] font-medium tracking-[0.12em] uppercase text-[#666666] hover:text-[#000000] transition-colors border border-[#DDDDDD]"
                     >
                       수정
                     </button>
                     <button
                       type="button"
                       onClick={() => handleDelete(p.id)}
-                      className="px-4 py-2.5 text-[10px] font-medium tracking-[0.12em] uppercase text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors"
+                      className="px-4 py-2.5 text-[10px] font-medium tracking-[0.12em] uppercase text-red-600 hover:bg-red-50 transition-colors border border-red-200"
                     >
                       삭제
                     </button>
@@ -485,6 +751,39 @@ const AdminUploadPage = () => {
           )}
         </section>
       </div>
+
+      {/* 크롭 모달 */}
+      {cropState.open && cropState.url && (
+        <div className="fixed inset-0 z-[200] bg-black/80 flex flex-col items-center justify-center p-4">
+          <div className="w-full max-w-lg h-[70vh] bg-[#1a1a1a] rounded overflow-hidden relative">
+            <Cropper
+              image={cropState.url}
+              crop={crop}
+              zoom={zoom}
+              aspect={3 / 4}
+              onCropChange={setCrop}
+              onZoomChange={setZoom}
+              onCropComplete={onCropComplete}
+            />
+          </div>
+          <div className="flex gap-4 mt-4">
+            <button
+              type="button"
+              onClick={() => setCropState({ open: false, index: -1, url: '', itemId: null })}
+              className="px-6 py-2.5 text-[11px] font-medium uppercase text-white border border-white/40 hover:bg-white/10"
+            >
+              취소
+            </button>
+            <button
+              type="button"
+              onClick={handleCropSave}
+              className="px-6 py-2.5 text-[11px] font-medium uppercase bg-white text-black hover:bg-gray-200"
+            >
+              적용
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

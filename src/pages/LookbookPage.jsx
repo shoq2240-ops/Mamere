@@ -58,6 +58,8 @@ const LookbookPage = () => {
               <img 
                 src={item.image} 
                 alt={item.title} 
+                loading="lazy"
+                decoding="async"
                 className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-1000 scale-110 hover:scale-100"
               />
               <div className="absolute inset-0 bg-black/5 mix-blend-overlay"></div>

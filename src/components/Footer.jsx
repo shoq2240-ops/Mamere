@@ -65,7 +65,7 @@ const Footer = () => {
         {/* 기업 정보 */}
         <div className="space-y-2">
           <div className="flex flex-wrap gap-x-4 gap-y-1 text-[10px] font-light tracking-[0.12em] leading-relaxed text-[#000000]">
-            <span>COMPANY : jvng. STUDIO</span>
+            <span>COMPANY : Double Negative STUDIO</span>
             <span className="text-[#CCCCCC]">|</span>
             <span>CEO : 박재중</span>
             <span className="text-[#CCCCCC]">|</span>

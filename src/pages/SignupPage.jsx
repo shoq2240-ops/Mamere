@@ -110,7 +110,7 @@ const SignupPage = () => {
                 className="mt-1 w-4 h-4 rounded border-[#CCCCCC] bg-white text-[#000000] focus:ring-[#000000] focus:ring-offset-0"
               />
               <span className="text-[10px] text-[#333333] group-hover:text-[#000000] transition-colors">
-                <Link to="/terms" target="_blank" className="underline underline-offset-2">이용약관</Link> 전체 내용을 확인했으며 이에 동의합니다. (필수)
+                <Link to="/terms" target="_blank" rel="noopener noreferrer" className="underline underline-offset-2">이용약관</Link> 전체 내용을 확인했으며 이에 동의합니다. (필수)
               </span>
             </label>
             <label className="flex items-start gap-3 cursor-pointer group">
@@ -121,7 +121,7 @@ const SignupPage = () => {
                 className="mt-1 w-4 h-4 rounded border-[#CCCCCC] bg-white text-[#000000] focus:ring-[#000000] focus:ring-offset-0"
               />
               <span className="text-[10px] text-[#333333] group-hover:text-[#000000] transition-colors">
-                <Link to="/privacy" target="_blank" className="underline underline-offset-2">개인정보 처리방침</Link> 전체 내용을 확인했으며 이에 동의합니다. (필수)
+                <Link to="/privacy" target="_blank" rel="noopener noreferrer" className="underline underline-offset-2">개인정보 처리방침</Link> 전체 내용을 확인했으며 이에 동의합니다. (필수)
               </span>
             </label>
             <label className="flex items-start gap-3 cursor-pointer group">

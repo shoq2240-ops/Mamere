@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { publicTable, supabase } from '../lib/supabase';
 import { useAuth } from '../store/AuthContext';
+import { CARRIERS } from '../lib/trackingApi';
 
 /** 주문 상태별 라벨 및 색상 (jvng. 블랙/화이트·레드 포인트) */
 const STATUS_OPTIONS = [
@@ -60,6 +61,7 @@ const AdminOrdersPage = () => {
   const [trackingInput, setTrackingInput] = useState({});
   const [trackingModalOrder, setTrackingModalOrder] = useState(null);
   const [trackingModalValue, setTrackingModalValue] = useState('');
+  const [trackingModalCarrier, setTrackingModalCarrier] = useState('04');
   const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
@@ -143,17 +145,19 @@ const AdminOrdersPage = () => {
     };
   }, [orders]);
 
-  const handleStatusChange = async (orderId, newStatus, tracking = '') => {
+  const handleStatusChange = async (orderId, newStatus, tracking = '', carrierId = '') => {
     try {
       const payload = { status: newStatus };
-      if (newStatus === '배송중' && tracking.trim()) {
-        payload.tracking_number = tracking.trim();
+      if (newStatus === '배송중') {
+        if (tracking.trim()) payload.tracking_number = tracking.trim();
+        if (carrierId.trim()) payload.carrier_id = carrierId.trim();
       }
       const { error: err } = await publicTable('orders').update(payload).eq('id', orderId);
       if (err) throw err;
       setTrackingInput((prev) => ({ ...prev, [orderId]: '' }));
       setTrackingModalOrder(null);
       setTrackingModalValue('');
+      setTrackingModalCarrier('04');
       fetchOrders();
       setSelectedOrder((prev) => (prev?.id === orderId ? { ...prev, ...payload } : prev));
     } catch (err) {
@@ -161,10 +165,11 @@ const AdminOrdersPage = () => {
     }
   };
 
-  /** 배송중 선택 시 송장 번호 입력창 표시 */
+  /** 배송중 선택 시 송장·택배사 입력창 표시 */
   const openTrackingModal = (order) => {
     setTrackingModalOrder(order);
     setTrackingModalValue(order.tracking_number || '');
+    setTrackingModalCarrier(order.carrier_id || '04');
   };
 
   const handleExportCSV = () => {
@@ -417,25 +422,40 @@ const AdminOrdersPage = () => {
               className="w-full max-w-md bg-[#0a0a0a] p-8 shadow-[0_1px_0_0_rgba(255,255,255,0.08)]"
             >
               <h3 className="text-[11px] font-medium tracking-[0.15em] uppercase text-white/70 mb-4">
-                송장 번호 입력 (선택)
+                배송 시작 · 택배사 및 송장 입력
               </h3>
               <p className="text-[10px] text-white/50 mb-3">
                 주문번호 {trackingModalOrder.id?.slice(0, 8)}... · {trackingModalOrder.shipping_name || trackingModalOrder.customer_name}
               </p>
-              <input
-                type="text"
-                value={trackingModalValue}
-                onChange={(e) => setTrackingModalValue(e.target.value)}
-                placeholder="송장 번호를 입력하세요"
-                className="w-full bg-white/[0.06] px-4 py-3.5 text-sm text-[#FDFDFB] placeholder-white/30 outline-none focus:bg-white/[0.08] mb-4 transition-colors shadow-[0_1px_0_0_rgba(255,255,255,0.06)]"
-                autoFocus
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    handleStatusChange(trackingModalOrder.id, '배송중', trackingModalValue);
-                  }
-                  if (e.key === 'Escape') setTrackingModalOrder(null);
-                }}
-              />
+              <div className="mb-4">
+                <label className="block text-[10px] font-medium tracking-widest uppercase text-white/50 mb-2">택배사</label>
+                <select
+                  value={trackingModalCarrier}
+                  onChange={(e) => setTrackingModalCarrier(e.target.value)}
+                  className="w-full bg-white/[0.06] px-4 py-3.5 text-sm text-[#FDFDFB] outline-none focus:bg-white/[0.08] transition-colors shadow-[0_1px_0_0_rgba(255,255,255,0.06)]"
+                >
+                  {CARRIERS.map((c) => (
+                    <option key={c.id} value={c.id} className="bg-zinc-900 text-white">{c.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="mb-4">
+                <label className="block text-[10px] font-medium tracking-widest uppercase text-white/50 mb-2">운송장 번호</label>
+                <input
+                  type="text"
+                  value={trackingModalValue}
+                  onChange={(e) => setTrackingModalValue(e.target.value)}
+                  placeholder="운송장 번호를 입력하세요"
+                  className="w-full bg-white/[0.06] px-4 py-3.5 text-sm text-[#FDFDFB] placeholder-white/30 outline-none focus:bg-white/[0.08] transition-colors shadow-[0_1px_0_0_rgba(255,255,255,0.06)]"
+                  autoFocus
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      handleStatusChange(trackingModalOrder.id, '배송중', trackingModalValue, trackingModalCarrier);
+                    }
+                    if (e.key === 'Escape') setTrackingModalOrder(null);
+                  }}
+                />
+              </div>
               <div className="flex gap-2 justify-end">
                 <button
                   type="button"
@@ -446,10 +466,10 @@ const AdminOrdersPage = () => {
                 </button>
                 <button
                   type="button"
-                  onClick={() => handleStatusChange(trackingModalOrder.id, '배송중', trackingModalValue)}
+                  onClick={() => handleStatusChange(trackingModalOrder.id, '배송중', trackingModalValue, trackingModalCarrier)}
                   className="px-6 py-2.5 bg-[#FDFDFB] text-[#000000] text-[10px] font-medium tracking-[0.12em] uppercase hover:bg-white transition-colors"
                 >
-                  확인
+                  배송 시작
                 </button>
               </div>
             </motion.div>
@@ -526,6 +546,8 @@ const AdminOrdersPage = () => {
                               src={item.image}
                               alt={item.name}
                               className="w-full h-full object-cover"
+                              loading="lazy"
+                              decoding="async"
                             />
                           </div>
                         )}
@@ -584,7 +606,7 @@ const AdminOrdersPage = () => {
                         onBlur={() => {
                           const v = (trackingInput[selectedOrder.id] ?? '').trim();
                           if (v && v !== (selectedOrder.tracking_number || '')) {
-                            handleStatusChange(selectedOrder.id, '배송중', v);
+                            handleStatusChange(selectedOrder.id, '배송중', v, selectedOrder.carrier_id || '04');
                           }
                         }}
                         placeholder="송장 번호 입력 후 포커스 아웃 시 저장"

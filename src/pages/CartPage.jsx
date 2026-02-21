@@ -1,8 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useCart } from '../store/CartContext';
-import { useAuth } from '../store/AuthContext';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import LoginRequiredModal from '../components/LoginRequiredModal';
 
 const parsePrice = (price) => {
   if (typeof price === 'number') return price;
@@ -17,9 +15,7 @@ const CartPage = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [showOrderSuccess, setShowOrderSuccess] = useState(false);
-  const [showLoginModal, setShowLoginModal] = useState(false);
   const { cart, removeFromCart, updateQuantity, cartCount } = useCart();
-  const { isLoggedIn } = useAuth();
   const totalPrice = cart.reduce((sum, item) => sum + parsePrice(item.price) * item.quantity, 0);
 
   useEffect(() => {
@@ -33,7 +29,7 @@ const CartPage = () => {
     <div className="pt-32 pb-20 px-6 min-h-screen bg-[#FFFFFF] text-[#000000] antialiased">
       <div className="max-w-3xl mx-auto">
         <h1 className="text-4xl font-display tracking-tighter uppercase mb-12 text-[#000000]">
-          Your Archive [{cartCount}]
+          Archive
         </h1>
 
         {showOrderSuccess && (
@@ -57,7 +53,7 @@ const CartPage = () => {
             {cart.map((item) => (
               <div key={item.id} className="flex gap-6 border-b border-[#F0F0F0] pb-10">
                 <div className="w-24 h-32 bg-[#F5F5F5] overflow-hidden">
-                  {item.image && <img src={item.image} alt={item.name} className="w-full h-full object-cover opacity-80" />}
+                  {item.image && <img src={item.image} alt={item.name} className="w-full h-full object-cover opacity-80" loading="lazy" decoding="async" />}
                 </div>
                 <div className="flex-1 flex flex-col justify-between">
                   <div>
@@ -82,13 +78,7 @@ const CartPage = () => {
               </div>
               <button
                 type="button"
-                onClick={() => {
-                  if (!isLoggedIn) {
-                    setShowLoginModal(true);
-                    return;
-                  }
-                  navigate('/checkout');
-                }}
+                onClick={() => navigate('/checkout')}
                 className="block w-full bg-[#000000] text-[#FFFFFF] py-4 font-heading uppercase tracking-widest hover:opacity-90 transition-colors text-center"
               >
                 Proceed to Checkout
@@ -97,7 +87,6 @@ const CartPage = () => {
           </div>
         )}
       </div>
-      <LoginRequiredModal show={showLoginModal} onClose={() => setShowLoginModal(false)} />
     </div>
   );
 };

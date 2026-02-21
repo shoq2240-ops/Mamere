@@ -80,6 +80,7 @@ const LookbookSlide = ({ item, index }) => {
           alt={item.caption}
           className="w-full h-full object-cover object-center"
           loading="lazy"
+          decoding="async"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent pointer-events-none" />
         <p className="absolute bottom-6 left-6 md:bottom-8 md:left-8 text-[9px] md:text-[10px] font-light tracking-[0.25em] uppercase text-[#666666]">
