@@ -281,7 +281,7 @@ const AdminUploadPage = () => {
             </div>
 
             <div className="space-y-4">
-              <p className="text-[10px] font-medium tracking-widest uppercase text-white/50">상세 설명 (우영미 스타일)</p>
+              <p className="text-[10px] font-medium tracking-widest uppercase text-white/50">상세 설명 </p>
               <div>
                 <label className="block text-[10px] font-medium tracking-widest uppercase text-white/40 mb-1.5">무료 배송 & 반품</label>
                 <textarea

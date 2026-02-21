@@ -33,8 +33,9 @@ const AdminUsersPage = () => {
   const fetchProfiles = async () => {
     try {
       setLoading(true);
+      // select('*')로 실제 존재하는 컬럼만 반환 (name/full_name 없어도 에러 없음)
       const { data, error: err } = await publicTable('profiles')
-        .select('id, name, full_name, address, phone, is_admin, is_withdrawn, privacy_policy_agreed, agreed_at, updated_at')
+        .select('*')
         .order('updated_at', { ascending: false });
       if (err) throw err;
       setProfiles(data ?? []);
@@ -49,11 +50,14 @@ const AdminUsersPage = () => {
     if (isLoggedIn) fetchProfiles();
   }, [isLoggedIn]);
 
+  const displayName = (p) =>
+    (p.name && p.name.trim()) || (p.full_name && p.full_name.trim()) || (p.id ? `${String(p.id).slice(0, 8)}…` : '—');
+
   const filteredProfiles = profiles.filter((p) => {
     const matchWithdrawn = !showWithdrawnOnly || p.is_withdrawn === true;
     const name = (p.name || p.full_name || '').toLowerCase();
     const q = searchQuery.trim().toLowerCase();
-    const matchSearch = !q || name.includes(q) || (p.phone || '').includes(q);
+    const matchSearch = !q || name.includes(q) || (p.phone || '').includes(q) || (p.id || '').toLowerCase().includes(q);
     return matchWithdrawn && matchSearch;
   });
 
@@ -131,24 +135,22 @@ const AdminUsersPage = () => {
                   >
                     <td className="px-5 py-4 text-[11px]">
                       <span className={p.is_withdrawn ? 'text-white/40 line-through' : 'text-[#FDFDFB]'}>
-                        {p.name || p.full_name || '-'}
+                        {displayName(p)}
                       </span>
-                      {p.is_admin && (
+                      {Boolean(p.is_admin) && (
                         <span className="ml-2 text-[9px] font-bold uppercase text-white/50">관리자</span>
                       )}
                     </td>
-                    <td className="px-5 py-4 text-[11px] text-white/60">{p.phone || '-'}</td>
+                    <td className="px-5 py-4 text-[11px] text-white/60">{p.phone ?? '-'}</td>
                     <td className="px-5 py-4">
                       {p.is_withdrawn ? (
-                        <span className="text-[9px] font-bold uppercase text-white/40">
-                          탈퇴
-                        </span>
+                        <span className="text-[9px] font-bold uppercase text-white/40">탈퇴</span>
                       ) : (
                         <span className="text-[9px] font-medium uppercase text-[#FDFDFB]">정상</span>
                       )}
                     </td>
                     <td className="px-5 py-4 text-[11px] text-white/60">
-                      {p.agreed_at ? formatDate(p.agreed_at) : '-'}
+                      {p.agreed_at != null ? formatDate(p.agreed_at) : '-'}
                     </td>
                   </tr>
                 ))}

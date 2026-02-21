@@ -9,6 +9,7 @@ import { useProducts } from '../hooks/useProducts';
 import { ProductCarouselSkeleton, LoadingMessage } from '../components/ProductSkeleton';
 import ProductCard from '../components/ProductCard';
 import LookbookSection from '../components/LookbookSection';
+import flower3 from '../asset/flower3.png';
 
 const LandingPage = () => {
   const { addToCart } = useCart();
@@ -50,7 +51,7 @@ const LandingPage = () => {
     <div className="bg-[#FFFFFF] text-[#000000] antialiased overflow-x-hidden relative">
       <LoginRequiredModal show={showLoginModal} onClose={() => setShowLoginModal(false)} />
 
-      {/* 1. 메인 히어로: 풀스크린 캔버스, 모바일 여백 축소 + 부드러운 그라데이션 배경 */}
+      {/* 1. 메인 히어로: asset flower3.png, 테두리 없음 */}
       <section className="relative w-[100vw] h-[100vh] min-h-[100dvh] p-2 md:p-6 m-0 overflow-hidden bg-[#000000]">
         <motion.div
           initial={{ opacity: 0 }}
@@ -58,16 +59,13 @@ const LandingPage = () => {
           transition={{ duration: 0.8, ease: 'easeOut' }}
           className="absolute inset-2 md:inset-6 flex justify-center items-center bg-gradient-to-b from-[#0a0a0a] via-[#000000] to-[#0a0a0a]"
         >
-          <picture className="absolute inset-0 w-full h-full z-0">
-            <source media="(min-width: 1024px)" srcSet="/desktop-hero.png" />
-            <img
-              src="/mobile-hero.png"
-              alt=""
-              className="absolute inset-0 w-full h-full object-cover object-center"
-              decoding="async"
-              fetchPriority="high"
-            />
-          </picture>
+          <img
+            src={flower3}
+            alt=""
+            className="absolute inset-0 w-full h-full object-cover object-center z-0"
+            decoding="async"
+            fetchPriority="high"
+          />
         </motion.div>
       </section>
 

@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase, getAuthRedirectUrl } from '../lib/supabase';
-import brandLogo from '../asset/brand.logo.png';
 
 const SAVED_EMAIL_KEY = 'dn_saved_email';
 
@@ -91,7 +90,6 @@ const LoginPage = () => {
         className="max-w-sm w-full space-y-8"
       >
         <div className="flex flex-col items-center gap-10">
-          <img src={brandLogo} alt="jvng." className="h-20 md:h-24 w-auto object-contain" />
           <div className="text-center space-y-2">
             <h1 className="text-2xl font-bold uppercase tracking-[0.2em] text-[#000000]">Login</h1>
             <p className="text-[9pt] text-[#999999] tracking-[0.15em] uppercase">계정에 로그인하세요</p>
