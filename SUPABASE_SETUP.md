@@ -76,6 +76,26 @@ INSERT INTO products (name, price, image, category) VALUES
   ('VOID OVERSIZED HOODIE', 380000, 'https://images.unsplash.com/photo-1509631179647-0177331693ae?q=80&w=800', 'women');
 ```
 
+## 2-1. products 컬럼 동기화 (필수)
+
+관리자 상품 등록/수정 시 `Could not find the 'xxx' column of 'products' in the schema cache` 오류를 방지하려면, **SQL Editor에서 아래 파일 내용을 한 번 실행**하세요.
+
+- **파일**: 프로젝트 루트의 `supabase-products-columns-sync.sql`
+- **내용**: `images`, `stock_quantity`, `is_manual_soldout`, `volume`, `skin_type`, `skin_concern`, `key_ingredients` 등 앱에서 사용하는 컬럼을 `ADD COLUMN IF NOT EXISTS`로 추가합니다. 여러 번 실행해도 안전합니다.
+
+## 2-2. 관리자 설정 (RLS "new row violates row-level security policy" 해결)
+
+상품 등록 시 **"new row violates row-level security policy for table 'products'"** 또는 **"상품 등록 권한이 없습니다"** 가 나오면, 상품 쓰기는 **관리자(profiles.is_admin = true)** 만 허용되기 때문입니다.
+
+**해결 순서:**
+
+1. **UUID 확인**: Supabase Dashboard > **Authentication** > **Users** 에서 상품 등록에 쓸 계정의 **User UID** 복사
+2. **SQL 실행**: SQL Editor에서 `supabase-set-admin.sql` 내용을 열고, `'여기에-본인-auth-user-uuid-붙여넣기'` 를 방금 복사한 UUID로 바꾼 뒤 **전체** 실행
+3. **재로그인**: 브라우저에서 **로그아웃** 후 같은 계정으로 **다시 로그인** 하고, 상품 등록 페이지를 **새로고침** 한 뒤 다시 시도
+4. **확인**: 그래도 안 되면 SQL Editor에서 `SELECT id, full_name, is_admin FROM profiles WHERE id = '본인-UUID'::uuid;` 로 해당 행에 `is_admin = true` 인지 확인
+
+**여전히 안 될 때 (선택):** `supabase-products-allow-authenticated.sql` 을 실행하면 **로그인한 모든 사용자**가 상품 등록/수정/삭제를 할 수 있게 됩니다. 보안이 약해지므로, 테스트용으로만 쓰는 것을 권장합니다.
+
 ## 3. Realtime 기능 활성화
 
 Supabase Dashboard에서:

@@ -18,15 +18,21 @@ const RequireAdmin = ({ children }) => {
     if (authLoading) return;
     if (!isLoggedIn) {
       navigate('/login', { replace: true });
+      setAdminChecked(true);
+      return;
+    }
+    if (!user?.id) {
+      setAdminChecked(true);
+      setIsAdmin(false);
       return;
     }
     const checkAdmin = async () => {
-      if (!user?.id) return;
       try {
-        const { data } = await publicTable('profiles')
+        const { data, error } = await publicTable('profiles')
           .select('is_admin')
           .eq('id', user.id)
           .maybeSingle();
+        if (error) throw error;
         setIsAdmin(data?.is_admin === true);
       } catch {
         setIsAdmin(false);
@@ -43,14 +49,14 @@ const RequireAdmin = ({ children }) => {
     }
   }, [authLoading, isLoggedIn, adminChecked, isAdmin, navigate]);
 
-  if (authLoading || !adminChecked || !isLoggedIn) {
+  if (!authLoading && !isLoggedIn) return null;
+  if (authLoading || !adminChecked) {
     return (
-      <div className="min-h-[70vh] flex items-center justify-center bg-black">
+      <div className="min-h-[70vh] flex items-center justify-center bg-[#1a1a1a]">
         <p className="text-[10px] tracking-[0.2em] uppercase text-white/40">Loading...</p>
       </div>
     );
   }
-
   if (!isAdmin) return null;
 
   return children;

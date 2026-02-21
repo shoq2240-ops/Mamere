@@ -38,6 +38,30 @@ export default {
         'ultra-wide': '0.3em',
         'mega-wide': '0.5em',
       },
+      keyframes: {
+        'leaf-float': {
+          '0%, 100%': { transform: 'translateY(0) translateX(0) rotate(0deg)' },
+          '50%': { transform: 'translateY(-6px) translateX(3px) rotate(3deg)' },
+        },
+        'leaf-float-slow': {
+          '0%, 100%': { transform: 'translateY(0) translateX(0) rotate(0deg)' },
+          '50%': { transform: 'translateY(-4px) translateX(-2px) rotate(-2deg)' },
+        },
+        'leaf-sway': {
+          '0%, 100%': { transform: 'rotate(-5deg)' },
+          '50%': { transform: 'rotate(5deg)' },
+        },
+        'leaf-sway-slow': {
+          '0%, 100%': { transform: 'rotate(3deg)' },
+          '50%': { transform: 'rotate(-3deg)' },
+        },
+      },
+      animation: {
+        'leaf-float': 'leaf-float 4s ease-in-out infinite',
+        'leaf-float-slow': 'leaf-float-slow 6s ease-in-out infinite',
+        'leaf-sway': 'leaf-sway 3.5s ease-in-out infinite',
+        'leaf-sway-slow': 'leaf-sway-slow 5s ease-in-out infinite',
+      },
     },
   },
   plugins: [],

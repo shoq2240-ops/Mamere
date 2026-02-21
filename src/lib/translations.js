@@ -1,5 +1,5 @@
 /**
- * jvng. 다국어 번역
+ * Dr.care 다국어 번역
  * locale: 'ko' | 'en'
  */
 export const translations = {

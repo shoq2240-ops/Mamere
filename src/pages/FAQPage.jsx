@@ -10,7 +10,7 @@ const FAQPage = () => {
           to="/"
           className="inline-block text-[10px] font-light tracking-[0.15em] uppercase text-[#666666] hover:text-[#000000] mb-10 transition-colors"
         >
-          ← jvng.
+          ← Dr.care
         </Link>
       </div>
       <FAQ title="FAQ" showTitle={true} className="pt-0 pb-4" />

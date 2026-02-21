@@ -1,13 +1,36 @@
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import brandLogo from '../asset/brand.logo.png';
+// [이미지 교체] 브랜드 로고: public 폴더의 brand.logo.png 사용. 교체 시 아래 상수만 변경 (예: '/mamere-logo.svg')
+const brandLogo = '/brand.logo.png';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCart } from '../store/CartContext';
 import { useWishlist } from '../store/WishlistContext';
 import { useAuth } from '../store/AuthContext';
 import { useLanguage } from '../store/LanguageContext';
 import { supabase } from '../lib/supabase';
+
+/** 티트리 잎사귀 SVG (placeholder). [이미지 교체] 나중에 <img src="/tealeaf-1.svg" /> 등 실제 잎 이미지로 교체 가능 */
+const LeafIcon1 = ({ className = 'w-4 h-4' }) => (
+  <svg viewBox="0 0 24 40" className={className} fill="currentColor" aria-hidden>
+    <path d="M12 2C8 8 4 18 4 28c0 6 3.5 10 8 10s8-4 8-10c0-10-4-20-8-26z" opacity="0.9" />
+  </svg>
+);
+const LeafIcon2 = ({ className = 'w-3 h-5' }) => (
+  <svg viewBox="0 0 20 32" className={className} fill="currentColor" aria-hidden>
+    <path d="M10 1c-3 5-6 14-6 22 0 5 2.5 8 6 8s6-3 6-8c0-8-3-17-6-22z" opacity="0.9" />
+  </svg>
+);
+const LeafIcon3 = ({ className = 'w-3.5 h-5' }) => (
+  <svg viewBox="0 0 28 36" className={className} fill="currentColor" aria-hidden>
+    <path d="M14 2c-4 6-8 14-8 24 0 5 3 8 8 8s8-3 8-8c0-10-4-18-8-24z" opacity="0.9" />
+  </svg>
+);
+const LeafIcon4 = ({ className = 'w-2.5 h-4' }) => (
+  <svg viewBox="0 0 16 28" className={className} fill="currentColor" aria-hidden>
+    <path d="M8 1C5 6 3 13 3 20c0 4 2 7 5 7s5-3 5-7c0-7-2-14-5-19z" opacity="0.9" />
+  </svg>
+);
 
 const Navbar = ({ isScrolled = false, isMobileMenuOpen = false, onMobileMenuChange }) => {
   const [internalMenuOpen, setInternalMenuOpen] = useState(false);
@@ -28,8 +51,7 @@ const Navbar = ({ isScrolled = false, isMobileMenuOpen = false, onMobileMenuChan
     handleMenuToggle(nextOpen);
   };
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [isWomenOpen, setIsWomenOpen] = useState(false);
-  const [isMenOpen, setIsMenOpen] = useState(false);
+  const [isCategoryOpen, setIsCategoryOpen] = useState(null);
   const [hoveredMenu, setHoveredMenu] = useState(null);
   const [accountOpen, setAccountOpen] = useState(false);
   const [searchInput, setSearchInput] = useState("");
@@ -58,8 +80,7 @@ const Navbar = ({ isScrolled = false, isMobileMenuOpen = false, onMobileMenuChan
 
   const handleMenuClick = (path) => {
     handleMenuToggle(false);
-    setIsWomenOpen(false);
-    setIsMenOpen(false);
+    setIsCategoryOpen(null);
     setHoveredMenu(null);
     navigate(path);
   };
@@ -73,17 +94,18 @@ const Navbar = ({ isScrolled = false, isMobileMenuOpen = false, onMobileMenuChan
     }
   };
 
-  // 메뉴 데이터 구조: women, men (아웃웨어/상의/하의), 컬렉션, 스토리
+  // GNB: Best, Skincare, Makeup, Body & Hair, Brand Story (Mamère 화장품)
   const isAdmin = pathname.startsWith('/admin');
 
-  /** 관리자 페이지 전용 헤더: jvng. 로고 + 다크 테마 */
+  /** 관리자 페이지 전용 헤더: Mamère 로고 + 다크 테마 */
   if (isAdmin) {
     return (
       <div className="antialiased">
         <nav className="relative w-full z-[150] bg-[#000000] text-[#FDFDFB] border-b border-white/10 transition-all duration-300">
           <div className="max-w-[1800px] mx-auto h-14 flex items-center justify-between px-6 md:px-10">
+            {/* [이미지 교체] 관리자용 로고: 상단 import brandLogo 경로를 실제 로고 파일로 변경 */}
             <Link to="/" className="flex items-center opacity-90 hover:opacity-100 transition-opacity" style={{ height: '38px' }}>
-              <img src={brandLogo} alt="jvng." className="h-full w-auto object-contain invert" decoding="async" />
+              <img src={brandLogo} alt="Mamère" className="h-full w-auto object-contain invert" decoding="async" />
             </Link>
             <div className="flex items-center gap-6 md:gap-8 text-[10px] font-light tracking-[0.12em] uppercase">
               <Link to="/admin/orders" className="text-white/70 hover:text-white transition-colors">주문 관리</Link>
@@ -99,102 +121,69 @@ const Navbar = ({ isScrolled = false, isMobileMenuOpen = false, onMobileMenuChan
   }
 
   const navLinks = [
-    { 
-      name: 'women', 
-      path: '/shop/women',
-      sub: [
-        { name: t('nav.outerwear'), path: '/shop/women?sub=outerwear' },
-        { name: t('nav.top'), path: '/shop/women?sub=top' },
-        { name: t('nav.bottom'), path: '/shop/women?sub=bottom' },
-      ]
-    },
-    { 
-      name: 'men', 
-      path: '/shop/men',
-      sub: [
-        { name: t('nav.outerwear'), path: '/shop/men?sub=outerwear' },
-        { name: t('nav.top'), path: '/shop/men?sub=top' },
-        { name: t('nav.bottom'), path: '/shop/men?sub=bottom' },
-      ]
-    },
-    { name: 'COLLECTION', path: '/collection', mobileLabel: 'Collection' },
-    { name: 'ABOUT', path: '/philosophy', mobileLabel: 'ABOUT' },
+    { name: 'Best', path: '/shop/best', mobileLabel: 'Best' },
+    { name: 'Skincare', path: '/shop/skincare', mobileLabel: 'Skincare' },
+    { name: 'Makeup', path: '/shop/makeup', mobileLabel: 'Makeup' },
+    { name: 'Body & Hair', path: '/shop/body-hair', mobileLabel: 'Body & Hair' },
+    { name: 'Brand Story', path: '/brand-story', mobileLabel: 'Brand Story' },
   ];
 
   return (
     <div className="antialiased" onMouseLeave={() => setHoveredMenu(null)}>
-      <nav className="relative w-full z-[150] bg-transparent text-[#000000] transition-all duration-300">
-        <div className="max-w-[1800px] mx-auto h-14 flex items-center justify-between px-6 relative">
-          
-          {/* 왼쪽: 메뉴 (오른쪽으로 3cm 이동) */}
-          <div className="hidden md:flex items-center gap-8 text-[9pt] font-medium tracking-widest uppercase h-14 flex-1 ml-[3cm]">
-            {navLinks.map((link) => (
-                <div 
-                  key={link.name}
-                  className="relative h-full flex items-center"
-                  onMouseEnter={() => setHoveredMenu(link.name)}
-                >
-                  <Link to={link.path} className="hover:opacity-70 transition-all">{link.name}</Link>
-                  
-                  {/* 데스크톱 하위 메뉴 드롭다운 (Dark Aesthetic) */}
-                  <AnimatePresence>
-                    {hoveredMenu === link.name && link.sub && (
-                      <motion.div 
-                        initial={{ opacity: 0, y: 8 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: 8 }}
-                        transition={{ duration: 0.2, ease: 'easeOut' }}
-                        className="absolute top-full left-0 mt-1 py-5 px-6 flex flex-col gap-0 min-w-[160px]"
-                        style={{ 
-                          background: '#FFFFFF',
-                          border: '1px solid #F0F0F0',
-                        }}
-                      >
-                        {link.sub.map((sub) => (
-                          <Link 
-                            key={sub.name} 
-                            to={sub.path} 
-                            className="relative py-3 text-[11px] font-medium uppercase transition-all duration-200 text-[#333333] hover:text-[#000000] group/row"
-                            style={{ letterSpacing: '0.1em' }}
-                          >
-                            {sub.name}
-                            <span className="absolute bottom-1 left-0 w-0 h-px bg-[#000000] transition-all duration-200 group-hover/row:w-full" />
-                          </Link>
-                        ))}
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
-              ))}
+      <nav className="relative w-full z-[150] bg-transparent text-[#2C2C2C] transition-all duration-300 overflow-hidden">
+        <div className="max-w-[1800px] mx-auto h-20 md:h-28 flex items-center justify-between px-4 md:px-6 relative">
+
+          {/* ========== [이미지 교체] 티트리 잎사귀 애니메이션 ========== */}
+          {/* 나중에 실제 잎 이미지로 바꿀 때: 아래 각 LeafIcon 대신 <img src="/assets/tealeaf-1.png" alt="" /> 등으로 교체하고, className으로 크기 조절 */}
+          <div className="absolute inset-0 pointer-events-none z-0" aria-hidden>
+            <div className="absolute left-[8%] top-1/2 -translate-y-1/2 text-[#2d5016]/20 animate-leaf-float">
+              <LeafIcon1 className="w-5 h-8 md:w-4 md:h-7" />
+            </div>
+            <div className="absolute left-[15%] top-2/3 text-[#3d6b20]/15 animate-leaf-sway-slow" style={{ animationDelay: '0.8s' }}>
+              <LeafIcon2 className="w-3 h-5 md:w-2.5 md:h-4" />
+            </div>
+            <div className="absolute right-[12%] top-1/3 text-[#2d5016]/20 animate-leaf-float-slow" style={{ animationDelay: '1.2s' }}>
+              <LeafIcon3 className="w-4 h-6 md:w-3.5 md:h-5" />
+            </div>
+            <div className="absolute right-[6%] top-1/2 -translate-y-1/2 text-[#3d6b20]/15 animate-leaf-sway" style={{ animationDelay: '0.3s' }}>
+              <LeafIcon4 className="w-3 h-5 md:w-2.5 md:h-4" />
+            </div>
           </div>
 
-          {/* 가운데: 공식 브랜드 로고 */}
+          {/* 좌측: 메뉴(데스크톱) / 햄버거(모바일) — flex-1로 우측과 밸런스 */}
+          <div className="flex-1 flex items-center justify-start min-w-0 z-10">
+            <div className="hidden md:flex items-center gap-6 lg:gap-8 text-sm font-medium tracking-[0.12em] uppercase h-full">
+              {navLinks.map((link) => (
+                <Link key={link.name} to={link.path} className="hover:opacity-70 transition-all text-[#2C2C2C] whitespace-nowrap">
+                  {link.name}
+                </Link>
+              ))}
+            </div>
+            <button type="button" onClick={toggleMenu} className="md:hidden w-9 h-9 flex flex-col justify-center items-center gap-[5px] shrink-0" aria-label={activeMenuOpen ? '메뉴 닫기' : '메뉴 열기'}>
+              <motion.span animate={activeMenuOpen ? { rotate: 45, y: 5.5, backgroundColor: '#2C2C2C' } : { rotate: 0, y: 0, backgroundColor: '#2C2C2C' }} className="w-4 h-[1px] block" />
+              <motion.span animate={activeMenuOpen ? { opacity: 0 } : { opacity: 1 }} className="w-4 h-[1px] bg-[#2C2C2C] block" />
+              <motion.span animate={activeMenuOpen ? { rotate: -45, y: -5.5, backgroundColor: '#2C2C2C' } : { rotate: 0, y: 0, backgroundColor: '#2C2C2C' }} className="w-4 h-[1px] block" />
+            </button>
+          </div>
+
+          {/* 중앙: 브랜드 로고 (화면 정확히 가운데 고정) */}
+          {/* [이미지 교체] 로고 파일 변경 시 상단 import brandLogo 경로 수정 + 아래 img src는 {brandLogo} 유지 */}
           <Link
             to="/"
             onClick={handleLogoClick}
-            className="hidden md:flex absolute left-1/2 -translate-x-1/2 w-auto cursor-pointer opacity-90 hover:opacity-100 transition-opacity"
-            style={{ height: '46px' }}
+            className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-auto cursor-pointer opacity-90 hover:opacity-100 transition-opacity z-20 flex items-center justify-center bg-transparent border-0 outline-none shadow-none ring-0 focus:ring-0 focus:outline-none [&:focus]:ring-0 [&:focus]:outline-none"
+            style={{ height: '72px' }}
           >
-            <img src={brandLogo} alt="jvng." className="h-full w-auto object-contain" decoding="async" />
+            <img src={brandLogo} alt="Mamère" className="h-full w-auto object-contain max-h-[72px] md:max-h-[100px] block bg-transparent" decoding="async" />
           </Link>
 
-          {/* 모바일: 햄버거 메뉴 (작은 크기) */}
-          <button type="button" onClick={toggleMenu} className="md:hidden w-8 h-8 -ml-1 flex flex-col justify-center items-center gap-[4px] z-[400] relative" aria-label={activeMenuOpen ? '메뉴 닫기' : '메뉴 열기'}>
-            <motion.span animate={activeMenuOpen ? { rotate: 45, y: 5, backgroundColor: "#000000" } : { rotate: 0, y: 0, backgroundColor: "#000000" }} className="w-4 h-[1px] block" />
-            <motion.span animate={activeMenuOpen ? { opacity: 0 } : { opacity: 1 }} className="w-4 h-[1px] bg-[#000000] block" />
-            <motion.span animate={activeMenuOpen ? { rotate: -45, y: -5, backgroundColor: "#000000" } : { rotate: 0, y: 0, backgroundColor: "#000000" }} className="w-4 h-[1px] block" />
-          </button>
-
-          <Link to="/" onClick={handleLogoClick} className="md:hidden absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-auto z-[210] opacity-90 hover:opacity-100 transition-opacity" style={{ height: '38px' }}>
-            <img src={brandLogo} alt="jvng." className="h-full w-auto object-contain" decoding="async" />
-          </Link>
-
-          <div className="ml-auto flex items-center gap-2 md:gap-2 z-[210] pr-1 md:pr-0">
+          {/* 우측: 검색/위시리스트/장바구니/마이페이지 — flex-1로 좌측과 밸런스 */}
+          <div className="flex-1 flex items-center justify-end gap-1 md:gap-2 min-w-0 z-10">
             {/* 언어 전환: EN / KO */}
             <button
               type="button"
               onClick={toggleLocale}
-              className="hidden md:flex items-center gap-1 text-[9px] font-light tracking-[0.15em] uppercase hover:opacity-70 transition-all text-[#000000]"
+              className="hidden md:flex items-center gap-1 text-[9px] font-light tracking-[0.15em] uppercase hover:opacity-70 transition-all text-[#2C2C2C]"
               aria-label={locale === 'ko' ? 'Switch to English' : '한국어로 전환'}
             >
               <span className={locale === 'ko' ? 'opacity-40' : 'font-medium'}>EN</span>
@@ -231,7 +220,7 @@ const Navbar = ({ isScrolled = false, isMobileMenuOpen = false, onMobileMenuChan
                   </AnimatePresence>
                 </>
               ) : (
-                <Link to="/login" className="flex items-center justify-center w-10 h-10 hover:opacity-70 transition-colors text-[#000000]">
+                <Link to="/login" className="flex items-center justify-center w-10 h-10 hover:opacity-70 transition-colors text-[#2C2C2C]">
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="1.2" viewBox="0 0 24 24">
                     <circle cx="12" cy="8" r="3.5" stroke="currentColor" />
                     <path d="M6 21c0-4 2.5-7 6-7s6 3 6 7" stroke="currentColor" strokeLinecap="round" />
@@ -239,10 +228,10 @@ const Navbar = ({ isScrolled = false, isMobileMenuOpen = false, onMobileMenuChan
                 </Link>
               )}
             </div>
-            <button onClick={() => { setIsSearchOpen(true); handleMenuToggle(false); }} className="w-9 h-9 md:w-10 md:h-10 flex items-center justify-center hover:opacity-70 transition-colors text-[#000000]">
+            <button onClick={() => { setIsSearchOpen(true); handleMenuToggle(false); }} className="w-9 h-9 md:w-10 md:h-10 flex items-center justify-center hover:opacity-70 transition-colors text-[#2C2C2C]">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" /></svg>
             </button>
-            <Link to="/wishlist" className="w-9 h-9 md:w-10 md:h-10 flex items-center justify-center relative hover:opacity-70 transition-colors text-[#000000]" aria-label="위시리스트">
+            <Link to="/wishlist" className="w-9 h-9 md:w-10 md:h-10 flex items-center justify-center relative hover:opacity-70 transition-colors text-[#2C2C2C]" aria-label="위시리스트">
               <svg className="w-5 h-5" fill={wishlistCount > 0 ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
               </svg>
@@ -252,7 +241,7 @@ const Navbar = ({ isScrolled = false, isMobileMenuOpen = false, onMobileMenuChan
                 </span>
               )}
             </Link>
-            <Link to="/cart" className="w-9 h-9 md:w-10 md:h-10 flex items-center justify-center relative hover:opacity-70 transition-colors text-[#000000]">
+            <Link to="/cart" className="w-9 h-9 md:w-10 md:h-10 flex items-center justify-center relative hover:opacity-70 transition-colors text-[#2C2C2C]">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" /><path d="M3 6h18" /><path d="M16 10a4 4 0 0 1-8 0" /></svg>
               <AnimatePresence mode="popLayout">
                 {cartCount > 0 && (
@@ -293,33 +282,16 @@ const Navbar = ({ isScrolled = false, isMobileMenuOpen = false, onMobileMenuChan
                 style={{ zIndex: 9999, backgroundColor: '#FFFFFF' }}
               >
                 <div className="mb-8 text-left">
-                  <button onClick={() => (isWomenOpen || isMenOpen) ? (setIsWomenOpen(false), setIsMenOpen(false)) : handleMenuToggle(false)} className="flex items-center gap-2 text-[12px] font-light tracking-ultra-wide uppercase text-[#666666]">
-                    <span className="text-xl">←</span> {(isWomenOpen || isMenOpen) ? t('common.backToMenu') : t('common.back')}
+                  <button onClick={() => handleMenuToggle(false)} className="flex items-center gap-2 text-[12px] font-light tracking-[0.15em] uppercase text-[#666666]">
+                    <span className="text-xl">←</span> {t('common.back')}
                   </button>
                 </div>
                 <div className="flex-1 flex flex-col justify-between min-h-0">
                   <div className="flex flex-col space-y-2 overflow-y-auto">
                     {navLinks.map((item) => (
-                      <div key={item.name}>
-                        {item.sub ? (
-                          <>
-                            <button onClick={() => { setIsWomenOpen(item.name === 'women' ? !isWomenOpen : false); setIsMenOpen(item.name === 'men' ? !isMenOpen : false); }} className="text-xl font-medium tracking-tighter uppercase text-left flex items-center justify-between w-full hover:opacity-70 py-2">
-                              {item.name} <span className="text-lg font-light opacity-20">{(item.name === 'women' ? isWomenOpen : isMenOpen) ? '−' : '+'}</span>
-                            </button>
-                            <AnimatePresence>
-                              {(item.name === 'women' ? isWomenOpen : isMenOpen) && (
-                                <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="flex flex-col space-y-4 mt-4 ml-4 border-l border-[#E5E5E5] pl-5 text-left text-sm font-medium uppercase text-[#333333]">
-                                  {item.sub.map((sub) => (
-                                    <button key={sub.name} onClick={() => handleMenuClick(sub.path)}>{sub.name}</button>
-                                  ))}
-                                </motion.div>
-                              )}
-                            </AnimatePresence>
-                          </>
-                        ) : (
-                          <button onClick={() => handleMenuClick(item.path)} className="text-xl font-medium tracking-tighter uppercase text-left hover:opacity-70 py-2">{item.mobileLabel || item.name}</button>
-                        )}
-                      </div>
+                      <button key={item.name} onClick={() => handleMenuClick(item.path)} className="text-xl font-medium tracking-tight text-left hover:opacity-70 py-2">
+                        {item.mobileLabel || item.name}
+                      </button>
                     ))}
                   </div>
                   <div className="flex-shrink-0 pt-8 mt-6 border-t border-[#F0F0F0] flex flex-col space-y-4 text-[12px]">

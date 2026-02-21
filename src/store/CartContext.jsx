@@ -18,9 +18,8 @@ const sanitizeProduct = (product) => {
     name: typeof product.name === 'string' ? product.name.slice(0, 200) : String(product.name ?? '').slice(0, 200),
     price: product.price,
     image: typeof product.image === 'string' ? product.image.slice(0, 2048) : null,
-    gender: typeof product.gender === 'string' ? product.gender.slice(0, 20) : null,
     category: typeof product.category === 'string' ? product.category.slice(0, 50) : null,
-    selectedSize: typeof product.selectedSize === 'string' ? product.selectedSize.slice(0, 20) : null,
+    volume: typeof product.volume === 'string' ? product.volume.slice(0, 30) : null,
   };
 };
 

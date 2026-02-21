@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { t as translate } from '../lib/translations';
 
-const STORAGE_KEY = 'jvng-locale';
+const STORAGE_KEY = 'drcare-locale';
 
 const LanguageContext = createContext(null);
 

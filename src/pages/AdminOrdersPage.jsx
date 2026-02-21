@@ -5,7 +5,7 @@ import { publicTable, supabase } from '../lib/supabase';
 import { useAuth } from '../store/AuthContext';
 import { CARRIERS } from '../lib/trackingApi';
 
-/** 주문 상태별 라벨 및 색상 (jvng. 블랙/화이트·레드 포인트) */
+/** 주문 상태별 라벨 및 색상 (Dr.care 블랙/화이트·레드 포인트) */
 const STATUS_OPTIONS = [
   { value: '결제완료', label: '결제완료', color: 'text-white/80' },
   { value: '배송준비중', label: '배송 준비 중', color: 'text-amber-400/90' },

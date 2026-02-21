@@ -24,24 +24,37 @@ import { parseDescription, serializeDescription } from '../lib/descriptionSectio
 import { isSoldOut } from '../lib/productStock';
 import { resizeAndCompressImage } from '../lib/imageOptimize';
 
+// Supabase Storage 버킷 이름 (Dashboard > Storage에서 해당 이름으로 버킷 생성 필요)
+// 버킷이 없으면 업로드 시 data가 null로 반환되어 "Cannot read properties of null (reading 'path')" 발생
 const STORAGE_BUCKET = 'product-images';
 const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'];
 const MAX_IMAGE_SIZE_MB = 5;
 const MAX_IMAGE_BYTES = MAX_IMAGE_SIZE_MB * 1024 * 1024;
 
-const GENDERS = [
-  { value: 'men', label: 'men' },
-  { value: 'women', label: 'women' },
-];
+/** products 관련 Supabase 에러 → 사용자 안내 메시지 */
+const productErrorMessage = (err) => {
+  const msg = err?.message || '';
+  if (/could not find the .* column|schema cache/i.test(msg)) {
+    return 'products 테이블에 필요한 컬럼이 없습니다. Supabase Dashboard > SQL Editor에서 프로젝트 루트의 supabase-products-columns-sync.sql 파일 내용을 실행해 주세요. (한 번만 실행하면 됩니다.)';
+  }
+  if (/row-level security policy|violates row-level security/i.test(msg)) {
+    return '상품 등록 권한이 없습니다. (1) Supabase SQL Editor에서 supabase-set-admin.sql 을 열고, 내용 중 UUID를 Authentication > Users 의 본인 User UID로 바꾼 뒤 전체 실행하세요. (2) 브라우저에서 로그아웃 후 다시 로그인하고, 이 페이지를 새로고침한 뒤 다시 시도하세요. (3) 그래도 안 되면 SQL에서 확인: SELECT id, full_name, is_admin FROM profiles WHERE id = \'본인-UUID\'; 로 is_admin = true 인지 보세요.';
+  }
+  return msg || '요청에 실패했습니다.';
+};
 
 const CATEGORIES = [
-  { value: 'outerwear', label: '아웃웨어' },
-  { value: 'top', label: '상의' },
-  { value: 'bottom', label: '하의' },
+  { value: 'best', label: 'Best' },
+  { value: 'skincare', label: 'Skincare' },
+  { value: 'makeup', label: 'Makeup' },
+  { value: 'body_hair', label: 'Body & Hair' },
 ];
 
+const SKIN_TYPES = ['건성', '지성', '복합성', '민감성'];
+const SKIN_CONCERNS = ['보습', '진정', '트러블', '미백', '탄력'];
+
 const getCategoryLabel = (val) => {
-  if (!val || val.trim() === '') return 'unclassified';
+  if (!val || val.trim() === '') return '—';
   const found = CATEGORIES.find((c) => c.value === val);
   return found ? found.label : val;
 };
@@ -162,11 +175,13 @@ const AdminUploadPage = () => {
   const [form, setForm] = useState({
     name: '',
     price: '',
-    descFreeShipping: '',
     descDetails: '',
-    descSizeFit: '',
-    gender: 'men',
-    category: 'outerwear',
+    descHowToUse: '',
+    category: 'best',
+    volume: '',
+    skinType: [],
+    skinConcern: [],
+    keyIngredients: '',
     imageList: [],
     stockQuantity: 0,
     isManualSoldout: false,
@@ -197,7 +212,7 @@ const AdminUploadPage = () => {
       if (err) throw err;
       setProducts(data ?? []);
     } catch (err) {
-      setError(err.message);
+      setError(productErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -208,23 +223,63 @@ const AdminUploadPage = () => {
   }, [isLoggedIn]);
 
   const uploadImageToStorage = useCallback(async (file, onProgress) => {
-    if (!file || !(file instanceof File)) throw new Error('유효한 파일을 선택해주세요.');
+    if (!file || !(file instanceof File)) {
+      console.error('[AdminUpload] uploadImageToStorage: file 없음 또는 File 객체 아님', { file });
+      throw new Error('유효한 파일을 선택해주세요.');
+    }
+    if (file.size <= 0) {
+      console.error('[AdminUpload] uploadImageToStorage: 파일 크기 0', { name: file.name, size: file.size });
+      throw new Error('빈 파일은 업로드할 수 없습니다.');
+    }
     if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
       throw new Error('허용된 이미지 형식만 업로드 가능합니다. (JPEG, PNG, WebP, GIF)');
     }
+
     onProgress?.(10);
     const optimized = await resizeAndCompressImage(file);
     onProgress?.(50);
     const ext = optimized.name.split('.').pop()?.toLowerCase() || 'jpg';
     const safeExt = ['jpeg', 'jpg', 'png', 'webp', 'gif'].includes(ext) ? ext : 'jpg';
     const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${safeExt}`;
-    const { data, err } = await supabase.storage
+
+    console.log('[AdminUpload] 업로드 시도 직전', {
+      bucket: STORAGE_BUCKET,
+      fileName,
+      fileSize: optimized?.size,
+      fileType: optimized?.type,
+    });
+
+    const { data, error: uploadError } = await supabase.storage
       .from(STORAGE_BUCKET)
       .upload(fileName, optimized, { upsert: false });
+
+    console.log('[AdminUpload] 업로드 시도 직후', {
+      data,
+      error: uploadError,
+      hasDataPath: !!data?.path,
+    });
+
     onProgress?.(100);
-    if (err) throw err;
+
+    if (uploadError) {
+      const msg = uploadError.message || '';
+      const isBucketMissing = /bucket|not found|does not exist/i.test(msg) || uploadError.name === 'StorageApiError';
+      throw new Error(
+        isBucketMissing
+          ? `Storage 버킷 "${STORAGE_BUCKET}"을(를) 찾을 수 없습니다. Supabase Dashboard > Storage에서 "${STORAGE_BUCKET}" 버킷을 생성한 뒤 다시 시도해 주세요.`
+          : `업로드 실패: ${msg}`
+      );
+    }
+
+    if (!data || typeof data.path !== 'string') {
+      console.error('[AdminUpload] 업로드 응답 data.path 없음', { data, uploadError });
+      throw new Error(
+        `Storage 버킷 "${STORAGE_BUCKET}"이 없거나 응답이 비어 있습니다. Supabase Dashboard > Storage에서 "${STORAGE_BUCKET}" 버킷을 생성해 주세요.`
+      );
+    }
+
     const { data: urlData } = supabase.storage.from(STORAGE_BUCKET).getPublicUrl(data.path);
-    return urlData.publicUrl;
+    return urlData?.publicUrl ?? data.path;
   }, []);
 
   const onDrop = useCallback((acceptedFiles) => {
@@ -351,12 +406,21 @@ const AdminUploadPage = () => {
       return;
     }
 
+    const hasValidFileToUpload = form.imageList.some(
+      (item) => item?.file && item.file instanceof File && item.file.size > 0
+    );
+    const hasAnyUrl = form.imageList.some((item) => item?.url);
+    if (!hasAnyUrl) {
+      setError('이미지 URL이 없습니다. 새 이미지를 선택하거나 기존 이미지를 유지해 주세요.');
+      return;
+    }
+
     setSubmitting(true);
     try {
       const list = [...form.imageList];
       for (let i = 0; i < list.length; i++) {
         const item = list[i];
-        if (item.file) {
+        if (item?.file && item.file instanceof File && item.file.size > 0) {
           const onProgress = (p) => {
             setForm((prev) => ({
               ...prev,
@@ -388,9 +452,12 @@ const AdminUploadPage = () => {
       const row = {
         name,
         price,
-        description: serializeDescription(form.descFreeShipping, form.descDetails, form.descSizeFit),
-        gender: form.gender,
+        description: serializeDescription(form.descDetails, form.descHowToUse),
         category: form.category,
+        volume: (form.volume || '').trim() || null,
+        skin_type: Array.isArray(form.skinType) ? form.skinType : [],
+        skin_concern: Array.isArray(form.skinConcern) ? form.skinConcern : [],
+        key_ingredients: (form.keyIngredients || '').split(/[,，]/).map((s) => s.trim()).filter(Boolean),
         image: mainUrl ?? finalList[0]?.url,
         images: finalList,
         stock_quantity: stockQty,
@@ -409,14 +476,15 @@ const AdminUploadPage = () => {
       resetForm();
       fetchProducts();
     } catch (err) {
-      setError(err.message || '등록에 실패했습니다.');
+      setError(productErrorMessage(err) || '등록에 실패했습니다.');
     } finally {
       setSubmitting(false);
     }
   };
 
+  const toArr = (v) => (Array.isArray(v) ? v : typeof v === 'string' ? (v ? [v] : []) : []);
   const handleEdit = (p) => {
-    const { freeShipping, details, sizeFit } = parseDescription(p.description);
+    const { details, howToUse } = parseDescription(p.description);
     const images = Array.isArray(p.images) && p.images.length > 0
       ? p.images
       : p.image ? [{ url: p.image, priority: 0, isMain: true }] : [];
@@ -424,11 +492,13 @@ const AdminUploadPage = () => {
     setForm({
       name: p.name,
       price: p.price,
-      descFreeShipping: freeShipping,
       descDetails: details,
-      descSizeFit: sizeFit,
-      gender: p.gender || 'men',
-      category: p.category || 'outerwear',
+      descHowToUse: howToUse,
+      category: p.category || 'best',
+      volume: p.volume || '',
+      skinType: toArr(p.skin_type || p.skinType),
+      skinConcern: toArr(p.skin_concern || p.skinConcern),
+      keyIngredients: Array.isArray(p.key_ingredients) ? p.key_ingredients.join(', ') : (p.key_ingredients || ''),
       imageList: images.map((img, i) => ({
         id: createImageId(),
         url: typeof img === 'string' ? img : img.url,
@@ -453,7 +523,7 @@ const AdminUploadPage = () => {
       setSuccess('상품이 삭제되었습니다.');
       fetchProducts();
     } catch (err) {
-      setError(err.message);
+      setError(productErrorMessage(err));
     }
   };
 
@@ -462,15 +532,30 @@ const AdminUploadPage = () => {
     setForm({
       name: '',
       price: '',
-      descFreeShipping: '',
       descDetails: '',
-      descSizeFit: '',
-      gender: 'men',
-      category: 'outerwear',
+      descHowToUse: '',
+      category: 'best',
+      volume: '',
+      skinType: [],
+      skinConcern: [],
+      keyIngredients: '',
       imageList: [],
       stockQuantity: 0,
       isManualSoldout: false,
     });
+  };
+
+  const toggleSkinType = (t) => {
+    setForm((f) => ({
+      ...f,
+      skinType: f.skinType.includes(t) ? f.skinType.filter((x) => x !== t) : [...f.skinType, t],
+    }));
+  };
+  const toggleSkinConcern = (c) => {
+    setForm((f) => ({
+      ...f,
+      skinConcern: f.skinConcern.includes(c) ? f.skinConcern.filter((x) => x !== c) : [...f.skinConcern, c],
+    }));
   };
 
   if (authLoading || !isLoggedIn) return null;
@@ -537,36 +622,97 @@ const AdminUploadPage = () => {
             <div className="space-y-4">
               <p className="text-[10px] font-medium tracking-widest uppercase text-[#666666]">상세 설명</p>
               <div>
-                <label className="block text-[10px] font-medium tracking-widest uppercase text-[#555555] mb-1.5">무료 배송 & 반품</label>
-                <textarea
-                  value={form.descFreeShipping}
-                  onChange={(e) => setForm((f) => ({ ...f, descFreeShipping: e.target.value }))}
-                  placeholder="예: 영업일 기준 1~3일 내 배송"
-                  rows={2}
-                  className={`${inputClass} resize-none`}
-                />
-              </div>
-              <div>
-                <label className="block text-[10px] font-medium tracking-widest uppercase text-[#555555] mb-1.5">세부 정보</label>
+                <label className="block text-[10px] font-medium tracking-widest uppercase text-[#555555] mb-1.5">제품 설명 (Details)</label>
                 <textarea
                   value={form.descDetails}
                   onChange={(e) => setForm((f) => ({ ...f, descDetails: e.target.value }))}
-                  placeholder="예: OUTSHELL: POLYESTER 100%"
+                  placeholder="제품 소개, 텍스처, 사용감 등"
                   rows={3}
                   className={`${inputClass} resize-none`}
                 />
               </div>
               <div>
-                <label className="block text-[10px] font-medium tracking-widest uppercase text-[#555555] mb-1.5">사이즈 및 핏</label>
+                <label className="block text-[10px] font-medium tracking-widest uppercase text-[#555555] mb-1.5">사용 방법 (How to Use)</label>
                 <textarea
-                  value={form.descSizeFit}
-                  onChange={(e) => setForm((f) => ({ ...f, descSizeFit: e.target.value }))}
-                  placeholder="예: Model is 185cm, size 48"
+                  value={form.descHowToUse}
+                  onChange={(e) => setForm((f) => ({ ...f, descHowToUse: e.target.value }))}
+                  placeholder="예: 적당량을 덜어 얼굴에 부드럽게 펴 바릅니다."
                   rows={2}
                   className={`${inputClass} resize-none`}
                 />
               </div>
-              <p className="text-[9px] text-[#999999]">비워두면 해당 메뉴가 표시되지 않습니다</p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6 border-t border-[#E8E8E8]">
+              <div>
+                <label className="block text-[10px] font-medium tracking-[0.12em] uppercase text-[#666666] mb-2">카테고리</label>
+                <select
+                  value={form.category}
+                  onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))}
+                  className={inputClass}
+                >
+                  {CATEGORIES.map((c) => (
+                    <option key={c.value} value={c.value} className="bg-white text-[#000000]">{c.label}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-[10px] font-medium tracking-[0.12em] uppercase text-[#666666] mb-2">용량 (volume)</label>
+                <input
+                  type="text"
+                  value={form.volume}
+                  onChange={(e) => setForm((f) => ({ ...f, volume: e.target.value }))}
+                  placeholder="예: 50ml, 30g"
+                  className={inputClass}
+                />
+              </div>
+            </div>
+
+            <div className="pt-6 border-t border-[#E8E8E8]">
+              <label className="block text-[10px] font-medium tracking-[0.12em] uppercase text-[#666666] mb-2">피부 타입 (복수 선택)</label>
+              <div className="flex flex-wrap gap-2">
+                {SKIN_TYPES.map((t) => (
+                  <button
+                    key={t}
+                    type="button"
+                    onClick={() => toggleSkinType(t)}
+                    className={`px-3 py-1.5 text-[10px] uppercase transition-colors ${
+                      form.skinType.includes(t) ? 'bg-[#000000] text-white' : 'bg-[#F0F0F0] text-[#666666] hover:bg-[#E0E0E0]'
+                    }`}
+                  >
+                    {t}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="pt-4">
+              <label className="block text-[10px] font-medium tracking-[0.12em] uppercase text-[#666666] mb-2">피부 고민 (복수 선택)</label>
+              <div className="flex flex-wrap gap-2">
+                {SKIN_CONCERNS.map((c) => (
+                  <button
+                    key={c}
+                    type="button"
+                    onClick={() => toggleSkinConcern(c)}
+                    className={`px-3 py-1.5 text-[10px] uppercase transition-colors ${
+                      form.skinConcern.includes(c) ? 'bg-[#000000] text-white' : 'bg-[#F0F0F0] text-[#666666] hover:bg-[#E0E0E0]'
+                    }`}
+                  >
+                    {c}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="pt-4">
+              <label className="block text-[10px] font-medium tracking-[0.12em] uppercase text-[#666666] mb-2">주요 성분 (쉼표 구분)</label>
+              <input
+                type="text"
+                value={form.keyIngredients}
+                onChange={(e) => setForm((f) => ({ ...f, keyIngredients: e.target.value }))}
+                placeholder="예: 시카, 히알루론산, 나이아신아마이드"
+                className={inputClass}
+              />
             </div>
 
             <div className="space-y-4 pt-6 mt-6 border-t border-[#E8E8E8]">
@@ -599,33 +745,6 @@ const AdminUploadPage = () => {
                   </label>
                   <p className="text-[9px] text-[#999999] mt-1">켜면 재고와 무관하게 품절로 표시됩니다</p>
                 </div>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-[10px] font-medium tracking-[0.12em] uppercase text-[#666666] mb-2">성별</label>
-                <select
-                  value={form.gender}
-                  onChange={(e) => setForm((f) => ({ ...f, gender: e.target.value }))}
-                  className={inputClass}
-                >
-                  {GENDERS.map((g) => (
-                    <option key={g.value} value={g.value} className="bg-white text-[#000000]">{g.label}</option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-[10px] font-medium tracking-[0.12em] uppercase text-[#666666] mb-2">카테고리</label>
-                <select
-                  value={form.category}
-                  onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))}
-                  className={inputClass}
-                >
-                  {CATEGORIES.map((c) => (
-                    <option key={c.value} value={c.value} className="bg-white text-[#000000]">{c.label}</option>
-                  ))}
-                </select>
               </div>
             </div>
 
@@ -725,7 +844,8 @@ const AdminUploadPage = () => {
                       )}
                     </div>
                     <p className="text-[11px] text-[#666666]">
-                      ₩{Number(p.price).toLocaleString()} · {p.gender === 'men' ? 'men' : p.gender === 'women' ? 'women' : '—'} · {getCategoryLabel(p.category)}
+                      ₩{Number(p.price).toLocaleString()} · {getCategoryLabel(p.category)}
+                      {p.volume && ` · ${p.volume}`}
                       {p.stock_quantity != null && ` · 재고 ${p.stock_quantity}개`}
                     </p>
                   </div>

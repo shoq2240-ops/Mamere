@@ -64,10 +64,10 @@ const Footer = () => {
 
         {/* 기업 정보 */}
         <div className="space-y-2">
-          <div className="flex flex-wrap gap-x-4 gap-y-1 text-[10px] font-light tracking-[0.12em] leading-relaxed text-[#000000]">
-            <span>COMPANY : Double Negative STUDIO</span>
+          <div className="flex flex-wrap gap-x-4 gap-y-1 text-[10px] font-light tracking-[0.12em] leading-relaxed text-[#2C2C2C]">
+            <span>COMPANY : Mamère</span>
             <span className="text-[#CCCCCC]">|</span>
-            <span>CEO : 박재중</span>
+            <span>CEO : 신천영</span>
             <span className="text-[#CCCCCC]">|</span>
             <span>ADDRESS : SEOUL, KOREA</span>
           </div>
@@ -87,8 +87,8 @@ const Footer = () => {
 
         {/* 카피라이트 */}
         <div className="mt-12 pt-8 border-t border-[#E8E8E8] flex flex-col sm:flex-row justify-between items-center gap-4">
-          <p className="text-[10px] font-light tracking-[0.15em] uppercase text-[#666666]">
-            © jvng. All rights reserved.
+          <p className="text-[10px] font-light tracking-[0.15em] uppercase text-[#8B8B8B]">
+            © Mamère. All rights reserved.
           </p>
           <div className="flex items-center opacity-70">
             <span className="text-[9px] font-light tracking-[0.1em] border border-[#DDDDDD] px-2 py-1 text-[#666666]">ESCROW SAFE</span>

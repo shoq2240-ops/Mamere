@@ -4,12 +4,14 @@
 -- Supabase Dashboard > SQL Editor에서 실행하세요.
 
 -- 1. profiles 테이블 (auth.users.id와 1:1)
+-- full_name: handle_new_user 트리거에서 사용. 없으면 회원가입 시 "Database error saving new user" 발생
 CREATE TABLE IF NOT EXISTS profiles (
   id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   name TEXT,
   address TEXT,
   phone TEXT,
-  updated_at TIMESTAMPTZ DEFAULT NOW()
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  full_name TEXT
 );
 
 -- 2. RLS 활성화

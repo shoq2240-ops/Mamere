@@ -6,12 +6,12 @@ const PrivacyPage = () => {
     <div className="min-h-screen bg-[#FFFFFF] text-[#000000] pt-32 pb-24 px-6 antialiased">
       <div className="max-w-2xl mx-auto">
         <Link to="/" className="inline-block text-[10px] tracking-[0.15em] uppercase text-[#666666] hover:text-[#000000] mb-12">
-          ← jvng.
+          ← Dr.care
         </Link>
         <h1 className="text-2xl font-bold tracking-tight uppercase mb-12">개인정보 처리방침</h1>
         <div className="text-[11px] text-[#333333] leading-relaxed space-y-6 whitespace-pre-line">
           {`제1조 (개인정보의 수집 및 이용 목적)
-jvng.(이하 "회사")은 다음의 목적을 위해 개인정보를 수집 및 이용합니다.
+Dr.care(이하 "회사")은 다음의 목적을 위해 개인정보를 수집 및 이용합니다.
 - 서비스 제공 및 계약 이행
 - 회원 관리 및 본인 확인
 - 주문 및 배송 처리

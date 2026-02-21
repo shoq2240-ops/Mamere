@@ -5,16 +5,29 @@
 -- Supabase Dashboard > SQL Editor에서 실행하세요.
 -- ============================================
 
+-- 표시 이름: metadata.full_name > metadata.name > email > ''
+-- profiles 테이블에 full_name 컬럼이 있어야 함. 없으면 supabase-profiles-add-full-name.sql 실행
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
+DECLARE
+  display_name TEXT := COALESCE(
+    NULLIF(TRIM(NEW.raw_user_meta_data->>'full_name'), ''),
+    NULLIF(TRIM(NEW.raw_user_meta_data->>'name'), ''),
+    NEW.email,
+    ''
+  );
 BEGIN
-  INSERT INTO public.profiles (id, full_name)
-  VALUES (
-    NEW.id,
-    COALESCE(NEW.raw_user_meta_data->>'full_name', NEW.raw_user_meta_data->>'name', NEW.email, '')
-  )
+  INSERT INTO public.profiles (id, full_name, name)
+  VALUES (NEW.id, display_name, display_name)
   ON CONFLICT (id) DO NOTHING;
   RETURN NEW;
+EXCEPTION
+  WHEN undefined_column THEN
+    -- full_name 컬럼이 없으면 id, name만 삽입 (구 스키마 호환)
+    INSERT INTO public.profiles (id, name)
+    VALUES (NEW.id, display_name)
+    ON CONFLICT (id) DO NOTHING;
+    RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 

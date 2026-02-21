@@ -17,7 +17,7 @@ const STEPS = [
 ];
 
 /**
- * 주문 추적 5단계 스테퍼 (jvng. 미니멀 블랙&화이트)
+ * 주문 추적 5단계 스테퍼 (Dr.care 미니멀 블랙&화이트)
  * @param {string} status - 주문 상태 (결제완료 | 배송준비중 | 배송중 | 배송완료)
  * @param {number} [transitStep] - 배송중일 때 2(배송 시작) vs 3(배송 중) 구분. API 있으면 3
  * @param {string} [className]

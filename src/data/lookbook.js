@@ -23,7 +23,7 @@ export const LOOKBOOK_ITEMS = [
   {
     id: 4,
     image: 'https://images.unsplash.com/photo-1558171813-1e8e0dfd1550?w=1200&q=85',
-    caption: 'jvng.',
+    caption: 'Dr.care',
   },
   {
     id: 5,

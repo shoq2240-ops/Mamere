@@ -35,7 +35,17 @@ const SignupPage = () => {
     }
     setLoading(true);
 
-    const { data, error } = await supabase.auth.signUp({ email, password });
+    // options.data는 handle_new_user 트리거에서 profiles.full_name으로 사용됨 (full_name, name, 없으면 email)
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          full_name: email.split('@')[0] || '',
+          name: email.split('@')[0] || '',
+        },
+      },
+    });
 
     if (error) {
       setLoading(false);

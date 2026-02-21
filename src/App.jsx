@@ -16,12 +16,10 @@ import CookieBanner from './components/CookieBanner';
 
 // 라우트별 코드 스플리팅 (Lazy Loading) — 초기 번들 축소
 const LandingPage = lazy(() => import('./pages/LandingPage'));
-const PhilosophyPage = lazy(() => import('./pages/PhilosophyPage'));
+const BrandStoryPage = lazy(() => import('./pages/BrandStoryPage'));
 const ShopPage = lazy(() => import('./pages/ShopPage'));
-const LookbookPage = lazy(() => import('./pages/LookbookPage'));
 const ProductDetailPage = lazy(() => import('./pages/ProductDetailPage'));
 const WishlistPage = lazy(() => import('./pages/WishlistPage'));
-const CollectionPage = lazy(() => import('./pages/CollectionPage'));
 const LoginPage = lazy(() => import('./pages/LoginPage'));
 const SignupPage = lazy(() => import('./pages/SignupPage'));
 const ProfilePage = lazy(() => import('./pages/ProfilePage'));
@@ -39,8 +37,8 @@ const ShippingPage = lazy(() => import('./pages/ShippingPage'));
 const ReturnsPage = lazy(() => import('./pages/ReturnsPage'));
 
 const PageLoadFallback = () => (
-  <div className="min-h-[60vh] flex items-center justify-center" aria-hidden="true">
-    <div className="w-8 h-8 border-2 border-[#000000] border-t-transparent rounded-full animate-spin" />
+  <div className="min-h-[60vh] flex items-center justify-center bg-[#FAFAF9]" aria-hidden="true">
+    <div className="w-8 h-8 border-2 border-[#E8E4DF] border-t-[#1a1a1a] rounded-full animate-spin" />
   </div>
 );
 
@@ -66,12 +64,10 @@ const AnimatedRoutes = () => {
         {/* LandingPage에 Context의 addToCart 함수를 전달합니다. */}
         <Route path="/" element={<PageWrapper><LandingPage addToCart={addToCart} /></PageWrapper>} />
         
-        <Route path="/philosophy" element={<PageWrapper><PhilosophyPage /></PageWrapper>} />
+        <Route path="/brand-story" element={<PageWrapper><BrandStoryPage /></PageWrapper>} />
         <Route path="/shop" element={<PageWrapper><ShopPage /></PageWrapper>} />
-        <Route path="/lookbook" element={<PageWrapper><LookbookPage /></PageWrapper>} />
         <Route path="/product/:id" element={<PageWrapper><ProductDetailPage /></PageWrapper>} />
         <Route path="/wishlist" element={<PageWrapper><WishlistPage /></PageWrapper>} />
-        <Route path="/collection" element={<PageWrapper><CollectionPage /></PageWrapper>} />
         <Route path="/login" element={<PageWrapper><LoginPage /></PageWrapper>} />
         <Route path="/signup" element={<PageWrapper><SignupPage /></PageWrapper>} />
         <Route path="/profile" element={<PageWrapper><ProfilePage /></PageWrapper>} />
@@ -79,6 +75,7 @@ const AnimatedRoutes = () => {
         <Route path="/checkout" element={<PageWrapper><CheckoutPage /></PageWrapper>} />
         <Route path="/orders" element={<PageWrapper><OrdersPage /></PageWrapper>} />
         <Route path="/order-lookup" element={<PageWrapper><OrderLookupPage /></PageWrapper>} />
+        {/* 관리자 전용: RequireAdmin이 로그인 + profiles.is_admin 확인 후 허용, 미충족 시 /login 또는 / 리다이렉트. 데이터는 .env의 Supabase(products/orders) 및 Storage(product-images) 사용 */}
         <Route path="/admin/upload" element={<PageWrapper><RequireAdmin><AdminUploadPage /></RequireAdmin></PageWrapper>} />
         <Route path="/admin/orders" element={<PageWrapper><RequireAdmin><AdminOrdersPage /></RequireAdmin></PageWrapper>} />
         <Route path="/admin/users" element={<PageWrapper><RequireAdmin><AdminUsersPage /></RequireAdmin></PageWrapper>} />
@@ -88,9 +85,11 @@ const AnimatedRoutes = () => {
         <Route path="/shipping" element={<PageWrapper><ShippingPage /></PageWrapper>} />
         <Route path="/returns" element={<PageWrapper><ReturnsPage /></PageWrapper>} />
         
-        {/* 카테고리별 쇼핑 페이지 */}
-        <Route path="/shop/men" element={<PageWrapper><ShopPage category="men" /></PageWrapper>} />
-        <Route path="/shop/women" element={<PageWrapper><ShopPage category="women" /></PageWrapper>} />
+        {/* 카테고리별 쇼핑 페이지 (화장품: Best, Skincare, Makeup, Body & Hair) */}
+        <Route path="/shop/best" element={<PageWrapper><ShopPage category="best" /></PageWrapper>} />
+        <Route path="/shop/skincare" element={<PageWrapper><ShopPage category="skincare" /></PageWrapper>} />
+        <Route path="/shop/makeup" element={<PageWrapper><ShopPage category="makeup" /></PageWrapper>} />
+        <Route path="/shop/body-hair" element={<PageWrapper><ShopPage category="body_hair" /></PageWrapper>} />
         </Routes>
       </AnimatePresence>
     </Suspense>
@@ -140,9 +139,9 @@ function AppContent() {
   const headerBgClass = isAdmin
     ? 'bg-[#000000] border-b border-white/10'
     : isMobileMenuOpen
-      ? 'bg-[#FFFFFF] border-b border-black/[0.06]'
+      ? 'bg-[#FFFFFF] border-b border-[#E8E4DF]'
       : isScrolled
-        ? 'bg-white/80 backdrop-blur-[10px] border-b border-black/[0.06]'
+        ? 'bg-[#FAFAF9]/90 backdrop-blur-[10px] border-b border-[#E8E4DF]'
         : 'bg-transparent';
 
   return (
@@ -176,18 +175,18 @@ function App() {
         <Router>
           <WithdrawnToast />
           <ScrollToTop />
-          <div className="flex flex-col h-screen max-h-[100dvh] bg-[#FFFFFF] text-[#000000] antialiased overflow-hidden flex">
+          <div className="flex flex-col h-screen max-h-[100dvh] bg-[#FAFAF9] text-[#2C2C2C] antialiased overflow-hidden flex">
             <Toaster
               position="top-center"
               toastOptions={{
                 duration: 2500,
                 style: {
                   background: '#FFFFFF',
-                  color: '#000000',
-                  border: '1px solid #F0F0F0',
+                  color: '#1a1a1a',
+                  border: '1px solid #E8E4DF',
                   borderRadius: 0,
                 },
-                success: { iconTheme: { primary: '#000000' } },
+                success: { iconTheme: { primary: '#1a1a1a' } },
               }}
             />
             <AppContent />

@@ -18,9 +18,9 @@ const DEFAULT_ITEMS = [
     answer: '신용카드, 체크카드, 계좌이체, 간편결제(카카오페이, 네이버페이 등)를 이용하실 수 있습니다. 모든 결제는 토스페이먼츠를 통해 안전하게 처리됩니다.',
   },
   {
-    id: 'size',
-    question: '사이즈 가이드는 어디서 확인하나요?',
-    answer: '각 상품 상세 페이지의 「세부 정보」 또는 「사이즈 및 핏」 섹션에서 모델 정보 및 치수 가이드를 확인하실 수 있습니다. 문의가 있으시면 문의 양식을 통해 연락 주시면 안내해 드립니다.',
+    id: 'usage',
+    question: '제품 사용법은 어디서 확인하나요?',
+    answer: '각 상품 상세 페이지의 「사용 방법 (How to Use)」 및 「주요 성분」 섹션에서 확인하실 수 있습니다. 문의가 있으시면 문의 양식을 통해 연락 주시면 안내해 드립니다.',
   },
   {
     id: 'contact',
@@ -65,7 +65,7 @@ const FAQItem = ({ item, isOpen, onToggle }) => (
 );
 
 /**
- * jvng. 미니멀 블랙&화이트 FAQ 컴포넌트
+ * Dr.care 미니멀 블랙&화이트 FAQ 컴포넌트
  * @param {Object} props
  * @param {Array<{ id: string, question: string, answer: string }>} [props.items] - FAQ 항목 (없으면 기본 목록 사용)
  * @param {string} [props.title] - 섹션 제목 (없으면 "FAQ" 또는 비표시)

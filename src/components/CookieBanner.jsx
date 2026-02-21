@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../store/AuthContext';
 import { publicTable, supabase } from '../lib/supabase';
 
-const COOKIE_CONSENT_KEY = 'jvng_cookie_consent';
+const COOKIE_CONSENT_KEY = 'drcare_cookie_consent';
 
 const CookieBanner = () => {
   const [visible, setVisible] = useState(false);
@@ -55,7 +55,7 @@ const CookieBanner = () => {
       >
         <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <p className="text-[11px] text-[#333333] leading-relaxed flex-1">
-            jvng.은 서비스 이용을 위해 쿠키를 사용하며, 수집된 정보는{' '}
+            Dr.care은 서비스 이용을 위해 쿠키를 사용하며, 수집된 정보는{' '}
             <a href="/privacy" className="underline underline-offset-2 hover:text-[#000000]">개인정보 처리방침</a>에 따라 처리됩니다.
           </p>
           <button

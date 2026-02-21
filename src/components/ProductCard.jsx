@@ -90,7 +90,7 @@ const ProductCard = ({ product, onAddToCart, variant = 'grid', grayscale = false
           </div>
         )}
       </div>
-      {/* 텍스트: 이미지 바로 아래, mt-3 미니멀 여백 (jvng. 무드: 작고 미니멀) */}
+      {/* 텍스트: 이미지 바로 아래, mt-3 미니멀 여백 (Dr.care 무드: 작고 미니멀) */}
       <div className="mt-3 flex flex-col gap-0.5 min-w-0">
         <h3
           className={`font-bold tracking-widest uppercase text-[#000000] group-hover:opacity-80 transition-colors leading-tight ${
