@@ -4,28 +4,32 @@
 
 @layer base {
   /* ========================================
-     Dr.care 미니멀 오프화이트 테마
+     천연 원료 컨셉 (티트리, 시나몬) 색감
      ========================================
-     - 배경: #FFFFFF, 보조: #F5F5F5 / #F9F9F9
-     - 강조: 딥 블랙 #000000
-     - 폰트: Helvetica Neue 계열, 위계별 weight
+     - 배경: 따뜻한 아이보리 #F9F7F2
+     - 헤더/푸터: 포레스트 그린 #2D3A2D, 텍스트 #F9F7F2
+     - 포인트: 세이지 그린 #A8B894
+     - 메인 텍스트: 깊은 나무색 #3E2F28
+     - 폰트: 산세리프 통일, 위계별 weight
   */
   :root {
-    --font-sans: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-    --color-bg: #FFFFFF;
-    --color-bg-subtle: #F9F9F9;
-    --color-bg-muted: #F5F5F5;
-    --color-text: #000000;
-    --color-text-muted: #333333;
-    --color-text-subtle: #666666;
+    --font-sans: system-ui, -apple-system, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+    --color-bg: #F9F7F2;
+    --color-bg-subtle: #F5F3EE;
+    --color-bg-muted: #EDEAE4;
+    --color-text: #3E2F28;
+    --color-text-muted: #5C4A42;
+    --color-text-subtle: #7A6B63;
+    --color-forest: #2D3A2D;
+    --color-sage: #A8B894;
+    --color-cream: #F9F7F2;
     --letter-spacing-wide: 0.08em;
     --letter-spacing-extra: 0.15em;
-    /* 폰트 위계 */
     --font-weight-body: 300;
     --font-weight-emphasis: 500;
     --font-weight-heading: 600;
     --font-weight-display: 700;
-    --font-weight-hero: 900;
+    --font-weight-hero: 700;
   }
 
   * {
@@ -38,7 +42,7 @@
     color: var(--color-text);
     font-family: var(--font-sans);
     font-weight: var(--font-weight-body);
-    letter-spacing: 0.05em;
+    letter-spacing: 0.03em;
     overflow-x: hidden;
     height: 100%;
   }
@@ -53,27 +57,25 @@
     margin: 0;
   }
 
-  /* 위계 유틸리티 */
   .font-display { font-weight: var(--font-weight-display); }
   .font-heading { font-weight: var(--font-weight-heading); }
   .font-emphasis { font-weight: var(--font-weight-emphasis); }
   .font-hero { font-weight: var(--font-weight-hero); }
 
-  /* 제목 위계 (h1~h6) */
-  h1 { font-weight: var(--font-weight-hero); }
-  h2 { font-weight: var(--font-weight-display); }
-  h3 { font-weight: var(--font-weight-heading); }
+  h1 { font-weight: var(--font-weight-hero); letter-spacing: 0.02em; }
+  h2 { font-weight: var(--font-weight-display); letter-spacing: 0.04em; }
+  h3 { font-weight: var(--font-weight-heading); letter-spacing: 0.05em; }
   h4, h5, h6 { font-weight: var(--font-weight-emphasis); }
 
   #root {
     min-height: 100%;
     overflow-x: hidden;
+    background-color: var(--color-bg);
   }
 
-  /* 선택 영역 */
   ::selection {
-    background-color: rgba(0, 0, 0, 0.1);
-    color: #000000;
+    background-color: rgba(168, 184, 148, 0.35);
+    color: #3E2F28;
   }
 
   /* 스크롤바 숨기기 */

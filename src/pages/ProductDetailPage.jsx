@@ -71,11 +71,11 @@ const ProductDetailPage = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#FAFAF9] pt-20 md:pt-24 pb-16 antialiased">
+      <div className="min-h-screen bg-[#F9F7F2] pt-20 md:pt-24 pb-16 antialiased">
         <div className="max-w-5xl mx-auto px-6 md:px-12">
-          <div className="aspect-[4/5] w-full max-w-md mx-auto bg-[#E8E4DF] animate-pulse" />
-          <div className="mt-6 h-6 w-3/4 bg-[#E8E4DF] animate-pulse" />
-          <div className="mt-3 h-5 w-1/4 bg-[#E8E4DF] animate-pulse" />
+          <div className="aspect-[4/5] w-full max-w-md mx-auto bg-[#EDEAE4] animate-pulse" />
+          <div className="mt-6 h-6 w-3/4 bg-[#EDEAE4] animate-pulse" />
+          <div className="mt-3 h-5 w-1/4 bg-[#EDEAE4] animate-pulse" />
         </div>
       </div>
     );
@@ -83,9 +83,9 @@ const ProductDetailPage = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-[#FAFAF9] pt-20 md:pt-24 pb-16 antialiased flex flex-col items-center justify-center px-6">
-        <p className="text-[#8B8B8B] text-[10px] tracking-widest uppercase">DB 연결 실패</p>
-        <Link to="/shop" className="mt-4 text-[10px] tracking-widest uppercase text-[#1a1a1a] border-b border-[#1a1a1a]">
+      <div className="min-h-screen bg-[#F9F7F2] pt-20 md:pt-24 pb-16 antialiased flex flex-col items-center justify-center px-6">
+        <p className="text-[#7A6B63] text-[10px] tracking-widest uppercase">DB 연결 실패</p>
+        <Link to="/shop" className="mt-4 text-[10px] tracking-widest uppercase text-[#3E2F28] border-b border-[#A8B894]">
           쇼핑으로 돌아가기
         </Link>
       </div>
@@ -94,9 +94,9 @@ const ProductDetailPage = () => {
 
   if (!product) {
     return (
-      <div className="min-h-screen bg-[#FAFAF9] pt-20 md:pt-24 pb-16 antialiased flex flex-col items-center justify-center px-6">
-        <p className="text-[#8B8B8B] text-[10px] tracking-widest uppercase">상품을 찾을 수 없습니다.</p>
-        <Link to="/shop" className="mt-4 text-[10px] tracking-widest uppercase text-[#1a1a1a] border-b border-[#1a1a1a]">
+      <div className="min-h-screen bg-[#F9F7F2] pt-20 md:pt-24 pb-16 antialiased flex flex-col items-center justify-center px-6">
+        <p className="text-[#7A6B63] text-[10px] tracking-widest uppercase">상품을 찾을 수 없습니다.</p>
+        <Link to="/shop" className="mt-4 text-[10px] tracking-widest uppercase text-[#3E2F28] border-b border-[#A8B894]">
           쇼핑으로 돌아가기
         </Link>
       </div>
@@ -104,15 +104,14 @@ const ProductDetailPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#FAFAF9] pt-20 md:pt-24 pb-16 antialiased text-[#2C2C2C]">
+    <div className="min-h-screen bg-[#F9F7F2] pt-20 md:pt-24 pb-16 antialiased text-[#3E2F28]">
       <div className="max-w-5xl mx-auto px-6 md:px-12">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-14 items-start">
-          {/* 이미지 갤러리: 4:5 비율, 썸네일 */}
           <div className="flex flex-col gap-4">
-            <div className="relative w-full aspect-[4/5] overflow-hidden bg-[#F5F3F0]">
+            <div className="relative w-full aspect-[4/5] overflow-hidden bg-[#EDEAE4]">
               {showPlaceholder ? (
-                <div className="absolute inset-0 flex items-center justify-center p-6 bg-[#F5F3F0]">
-                  <span className="text-[10px] font-medium tracking-[0.1em] text-[#8B8B8B] text-center line-clamp-4">
+                <div className="absolute inset-0 flex items-center justify-center p-6 bg-[#EDEAE4]">
+                  <span className="text-[10px] font-medium tracking-[0.1em] text-[#7A6B63] text-center line-clamp-4">
                     {product.name || 'No Image'}
                   </span>
                 </div>
@@ -129,7 +128,7 @@ const ProductDetailPage = () => {
               <button
                 type="button"
                 onClick={handleWishlistClick}
-                className="absolute right-3 top-3 z-10 p-2 text-[#8B8B8B] hover:text-[#1a1a1a] transition-colors bg-white/90 hover:bg-white rounded-full backdrop-blur-sm"
+                className="absolute right-3 top-3 z-10 p-2 text-[#7A6B63] hover:text-[#3E2F28] transition-colors bg-[#F9F7F2]/90 hover:bg-[#F9F7F2] rounded-full backdrop-blur-sm"
                 aria-label={isInWishlist(product.id) ? '위시리스트에서 제거' : '위시리스트에 추가'}
               >
                 <svg className="w-5 h-5" fill={isInWishlist(product.id) ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
@@ -157,23 +156,23 @@ const ProductDetailPage = () => {
 
           {/* 상품명 · 가격 · 용량 · 담기 */}
           <div className="flex flex-col mt-3 lg:mt-0">
-            <h1 className="text-[11px] md:text-xs font-medium tracking-[0.1em] uppercase text-[#1a1a1a] leading-tight">
+            <h1 className="text-[11px] md:text-xs font-medium tracking-[0.1em] uppercase text-[#3E2F28] leading-tight">
               {product.name}
             </h1>
             {volume && (
-              <p className="mt-1 text-[10px] font-light tracking-[0.08em] text-[#5C5C5C]">{volume}</p>
+              <p className="mt-1 text-[10px] font-light tracking-[0.08em] text-[#5C4A42]">{volume}</p>
             )}
-            <p className="mt-2 text-[10px] md:text-xs font-light tracking-[0.08em] text-[#2C2C2C]">
+            <p className="mt-2 text-[10px] md:text-xs font-light tracking-[0.08em] text-[#3E2F28]">
               {formatPrice(product.price)}
             </p>
             {!soldOut && maxQty > 0 && (
               <div className="mt-4 flex items-center gap-3">
-                <span className="text-[10px] font-medium tracking-widest uppercase text-[#666666]">수량</span>
+                <span className="text-[10px] font-medium tracking-widest uppercase text-[#5C4A42]">수량</span>
                 <div className="flex items-center border border-[#E8E4DF]">
                   <button
                     type="button"
                     onClick={() => setAddQty((q) => Math.max(1, q - 1))}
-                    className="w-9 h-9 flex items-center justify-center text-[#666666] hover:text-[#1a1a1a]"
+                    className="w-9 h-9 flex items-center justify-center text-[#5C4A42] hover:text-[#3E2F28]"
                     aria-label="수량 줄이기"
                   >
                     −
@@ -192,14 +191,14 @@ const ProductDetailPage = () => {
                   <button
                     type="button"
                     onClick={() => setAddQty((q) => Math.min(maxQty, q + 1))}
-                    className="w-9 h-9 flex items-center justify-center text-[#666666] hover:text-[#1a1a1a]"
+                    className="w-9 h-9 flex items-center justify-center text-[#5C4A42] hover:text-[#3E2F28]"
                     aria-label="수량 늘리기"
                   >
                     +
                   </button>
                 </div>
                 {maxQty < 99 && (
-                  <span className="text-[10px] text-[#8B8B8B]">(재고 {maxQty}개)</span>
+                  <span className="text-[10px] text-[#7A6B63]">(재고 {maxQty}개)</span>
                 )}
               </div>
             )}
@@ -210,14 +209,14 @@ const ProductDetailPage = () => {
                 disabled={soldOut}
                 className={`w-full py-4 text-[10px] font-medium tracking-[0.12em] uppercase transition-colors ${
                   soldOut
-                    ? 'bg-[#E8E4DF] text-[#8B8B8B] cursor-not-allowed border border-[#E8E4DF]'
-                    : 'bg-[#1a1a1a] text-[#FFFFFF] hover:bg-[#2C2C2C] border border-[#1a1a1a]'
+                    ? 'bg-[#EDEAE4] text-[#7A6B63] cursor-not-allowed border border-[#A8B894]/40'
+                    : 'bg-[#A8B894] text-[#2D3A2D] hover:opacity-90 border border-[#A8B894]'
                 }`}
               >
                 {soldOut ? 'SOLD OUT' : '장바구니에 담기'}
               </button>
             </div>
-            <Link to="/shop" className="mt-4 text-[10px] tracking-[0.1em] uppercase text-[#5C5C5C] hover:text-[#1a1a1a] transition-colors">
+            <Link to="/shop" className="mt-4 text-[10px] tracking-[0.1em] uppercase text-[#5C4A42] hover:text-[#3E2F28] transition-colors">
               ← 쇼핑으로 돌아가기
             </Link>
           </div>
@@ -225,9 +224,9 @@ const ProductDetailPage = () => {
 
         {/* 상품 설명 */}
         {details && (
-          <section className="mt-14 md:mt-20 pt-10 border-t border-[#E8E4DF]">
-            <h2 className="text-[10px] font-medium tracking-[0.15em] uppercase text-[#8B8B8B] mb-4">Description</h2>
-            <div className="text-[11px] md:text-sm font-light leading-relaxed text-[#2C2C2C] whitespace-pre-wrap">
+          <section className="mt-14 md:mt-20 pt-10 border-t border-[#A8B894]/30">
+            <h2 className="text-[10px] font-medium tracking-[0.15em] uppercase text-[#7A6B63] mb-4">Description</h2>
+            <div className="text-[11px] md:text-sm font-light leading-relaxed text-[#3E2F28] whitespace-pre-wrap">
               {details}
             </div>
           </section>
@@ -235,14 +234,14 @@ const ProductDetailPage = () => {
 
         {/* 주요 성분 (Key Ingredients) */}
         {keyIngredients.length > 0 && (
-          <section className="mt-10 md:mt-14 pt-10 border-t border-[#E8E4DF]">
-            <h2 className="text-[10px] font-medium tracking-[0.15em] uppercase text-[#8B8B8B] mb-4 flex items-center gap-2">
-              <svg className="w-4 h-4 text-[#8B8B8B]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" /></svg>
+          <section className="mt-10 md:mt-14 pt-10 border-t border-[#A8B894]/30">
+            <h2 className="text-[10px] font-medium tracking-[0.15em] uppercase text-[#7A6B63] mb-4 flex items-center gap-2">
+              <svg className="w-4 h-4 text-[#7A6B63]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" /></svg>
               주요 성분 (Key Ingredients)
             </h2>
             <ul className="flex flex-wrap gap-2">
               {keyIngredients.map((ing, i) => (
-                <li key={i} className="px-3 py-1.5 bg-[#F5F3F0] text-[11px] font-light text-[#2C2C2C]">
+                <li key={i} className="px-3 py-1.5 bg-[#EDEAE4] text-[11px] font-light text-[#3E2F28]">
                   {typeof ing === 'string' ? ing : ing?.name || ing?.label || String(ing)}
                 </li>
               ))}
@@ -252,12 +251,12 @@ const ProductDetailPage = () => {
 
         {/* 사용 방법 (How to Use) */}
         {howToUse && (
-          <section className="mt-10 md:mt-14 pt-10 border-t border-[#E8E4DF]">
-            <h2 className="text-[10px] font-medium tracking-[0.15em] uppercase text-[#8B8B8B] mb-4 flex items-center gap-2">
-              <svg className="w-4 h-4 text-[#8B8B8B]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2a7.5 7.5 0 0015 0v-5a1.5 1.5 0 00-3 0m-6-3V11m0-5.5v-1a7.5 7.5 0 0115 0v1m-15 0a1.5 1.5 0 013 0m0 0a1.5 1.5 0 013 0M3 20.25v-1.5a7.5 7.5 0 0115 0v1.5m-15 0h15" /></svg>
+          <section className="mt-10 md:mt-14 pt-10 border-t border-[#A8B894]/30">
+            <h2 className="text-[10px] font-medium tracking-[0.15em] uppercase text-[#7A6B63] mb-4 flex items-center gap-2">
+              <svg className="w-4 h-4 text-[#7A6B63]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2a7.5 7.5 0 0015 0v-5a1.5 1.5 0 00-3 0m-6-3V11m0-5.5v-1a7.5 7.5 0 0115 0v1m-15 0a1.5 1.5 0 013 0m0 0a1.5 1.5 0 013 0M3 20.25v-1.5a7.5 7.5 0 0115 0v1.5m-15 0h15" /></svg>
               사용 방법 (How to Use)
             </h2>
-            <div className="text-[11px] md:text-sm font-light leading-relaxed text-[#2C2C2C] whitespace-pre-wrap">
+            <div className="text-[11px] md:text-sm font-light leading-relaxed text-[#3E2F28] whitespace-pre-wrap">
               {howToUse}
             </div>
           </section>

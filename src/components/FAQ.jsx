@@ -30,17 +30,17 @@ const DEFAULT_ITEMS = [
 ];
 
 const FAQItem = ({ item, isOpen, onToggle }) => (
-  <div className="border-b border-[#E8E8E8] last:border-b-0">
+  <div className="border-b border-[#A8B894]/30 last:border-b-0">
     <button
       type="button"
       onClick={() => onToggle(item.id)}
       className="w-full py-5 md:py-6 flex items-center justify-between text-left gap-4 group"
       aria-expanded={isOpen}
     >
-      <span className="text-[11px] md:text-[12px] font-light tracking-[0.08em] text-[#000000] group-hover:text-[#333333] transition-colors pr-4">
+      <span className="text-[11px] md:text-[12px] font-light tracking-[0.08em] text-[#3E2F28] group-hover:text-[#5C4A42] transition-colors pr-4">
         {item.question}
       </span>
-      <span className="flex-shrink-0 w-4 h-4 flex items-center justify-center text-[#999999] transition-transform duration-200" style={{ transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}>
+      <span className="flex-shrink-0 w-4 h-4 flex items-center justify-center text-[#A8B894] transition-transform duration-200" style={{ transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}>
         <svg width="10" height="6" viewBox="0 0 10 6" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
           <path d="M1 1L5 5L9 1" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
@@ -55,7 +55,7 @@ const FAQItem = ({ item, isOpen, onToggle }) => (
           transition={{ duration: 0.25, ease: 'easeOut' }}
           className="overflow-hidden"
         >
-          <p className="text-[11px] font-light tracking-[0.06em] text-[#666666] leading-relaxed pb-5 md:pb-6 pl-0 pr-8">
+          <p className="text-[11px] font-light tracking-[0.06em] text-[#5C4A42] leading-relaxed pb-5 md:pb-6 pl-0 pr-8">
             {item.answer}
           </p>
         </motion.div>

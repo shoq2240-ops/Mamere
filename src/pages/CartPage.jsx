@@ -26,25 +26,25 @@ const CartPage = () => {
   }, [searchParams, setSearchParams]);
 
   return (
-    <div className="pt-32 pb-20 px-6 min-h-screen bg-[#FFFFFF] text-[#000000] antialiased">
+    <div className="pt-32 pb-20 px-6 min-h-screen bg-[#F9F7F2] text-[#3E2F28] antialiased">
       <div className="max-w-3xl mx-auto">
-        <h1 className="text-4xl font-display tracking-tighter uppercase mb-12 text-[#000000]">
-          Archive
+        <h1 className="text-4xl font-display tracking-tighter uppercase mb-12 text-[#3E2F28]">
+          장바구니
         </h1>
 
         {showOrderSuccess && (
-          <div className="mb-8 p-4 border border-[#E5E5E5] bg-[#F9F9F9] text-center">
-            <p className="text-[#666666] text-sm font-medium">결제가 완료되었습니다.</p>
-            <Link to="/orders" className="mt-2 inline-block text-[10px] font-medium tracking-widest uppercase text-[#000000] hover:opacity-80">
+          <div className="mb-8 p-4 border border-[#A8B894]/40 bg-[#F5F3EE] text-center">
+            <p className="text-[#5C4A42] text-sm font-medium">결제가 완료되었습니다.</p>
+            <Link to="/orders" className="mt-2 inline-block text-[10px] font-medium tracking-widest uppercase text-[#3E2F28] hover:opacity-80">
               주문 내역 확인 →
             </Link>
           </div>
         )}
 
         {cart.length === 0 ? (
-          <div className="py-20 text-center border-t border-[#F0F0F0]">
-            <p className="text-[#999999] uppercase tracking-widest mb-8 text-sm font-light">Your cart is empty.</p>
-            <Link to="/shop" className="inline-block border border-[#000000] px-8 py-3 text-[10px] font-light uppercase tracking-widest hover:bg-white hover:text-black transition-all">
+          <div className="py-20 text-center border-t border-[#A8B894]/30">
+            <p className="text-[#7A6B63] uppercase tracking-widest mb-8 text-sm font-light">Your cart is empty.</p>
+            <Link to="/shop" className="inline-block border border-[#A8B894] px-8 py-3 text-[10px] font-light uppercase tracking-widest text-[#3E2F28] hover:bg-[#A8B894] hover:text-[#2D3A2D] transition-all">
               Return to Shop
             </Link>
           </div>
@@ -52,34 +52,34 @@ const CartPage = () => {
           <div className="space-y-10">
             {cart.map((item) => (
               <div key={item.id} className="flex gap-6 border-b border-[#F0F0F0] pb-10">
-                <div className="w-24 h-32 bg-[#F5F5F5] overflow-hidden">
+                <div className="w-24 h-32 bg-[#EDEAE4] overflow-hidden">
                   {item.image && <img src={item.image} alt={item.name} className="w-full h-full object-cover opacity-80" loading="lazy" decoding="async" />}
                 </div>
                 <div className="flex-1 flex flex-col justify-between">
                   <div>
                     <div className="flex justify-between items-start">
                       <h3 className="text-lg font-heading tracking-tight uppercase">{item.name}</h3>
-                      <button onClick={() => removeFromCart(item.id)} className="text-[10px] font-light uppercase text-[#999999] hover:text-[#000000]">Remove</button>
+                      <button onClick={() => removeFromCart(item.id)} className="text-[10px] font-light uppercase text-[#7A6B63] hover:text-[#3E2F28]">Remove</button>
                     </div>
-                    <p className="text-[#000000] text-sm mt-1">₩{parsePrice(item.price).toLocaleString()}</p>
+                    <p className="text-[#3E2F28] text-sm mt-1">₩{parsePrice(item.price).toLocaleString()}</p>
                   </div>
                   <div className="flex items-center gap-4 mt-4">
-                    <button onClick={() => updateQuantity(item.id, -1)} className="w-6 h-6 border border-[#E5E5E5] flex items-center justify-center text-xs">-</button>
+                    <button onClick={() => updateQuantity(item.id, -1)} className="w-6 h-6 border border-[#A8B894]/50 flex items-center justify-center text-xs text-[#3E2F28]">-</button>
                     <span className="text-sm font-light">{item.quantity}</span>
-                    <button onClick={() => updateQuantity(item.id, 1)} className="w-6 h-6 border border-[#E5E5E5] flex items-center justify-center text-xs">+</button>
+                    <button onClick={() => updateQuantity(item.id, 1)} className="w-6 h-6 border border-[#A8B894]/50 flex items-center justify-center text-xs text-[#3E2F28]">+</button>
                   </div>
                 </div>
               </div>
             ))}
             <div className="pt-10 space-y-6 text-right">
-              <div className="flex justify-between items-end border-t border-[#E5E5E5] pt-6">
-                <span className="text-[10px] font-light uppercase tracking-widest text-[#999999]">Total Amount</span>
-                <span className="text-2xl font-display text-[#000000]">₩{totalPrice.toLocaleString()}</span>
+              <div className="flex justify-between items-end border-t border-[#A8B894]/40 pt-6">
+                <span className="text-[10px] font-light uppercase tracking-widest text-[#7A6B63]">Total Amount</span>
+                <span className="text-2xl font-display text-[#3E2F28]">₩{totalPrice.toLocaleString()}</span>
               </div>
               <button
                 type="button"
                 onClick={() => navigate('/checkout')}
-                className="block w-full bg-[#000000] text-[#FFFFFF] py-4 font-heading uppercase tracking-widest hover:opacity-90 transition-colors text-center"
+                className="block w-full bg-[#A8B894] text-[#2D3A2D] py-4 font-heading uppercase tracking-widest hover:opacity-90 transition-colors text-center"
               >
                 Proceed to Checkout
               </button>

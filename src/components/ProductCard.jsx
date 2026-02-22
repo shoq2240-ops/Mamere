@@ -26,10 +26,10 @@ const ProductCard = ({ product, onAddToCart, variant = 'grid', grayscale = false
   const cardContent = (
     <div className="flex flex-col w-full">
       {/* 이미지: 카드 너비 꽉 채움, 3:4 비율 고정. 로드 실패 시 placeholder */}
-      <div className="relative w-full aspect-[3/4] overflow-hidden bg-[#F0F0F0] flex-shrink-0">
+      <div className="relative w-full aspect-[3/4] overflow-hidden bg-[#EDEAE4] flex-shrink-0">
         {showPlaceholder ? (
-          <div className="absolute inset-0 flex items-center justify-center p-3 bg-[#F0F0F0]">
-            <span className="text-[10px] font-medium tracking-widest uppercase text-[#999999] text-center line-clamp-3">
+          <div className="absolute inset-0 flex items-center justify-center p-3 bg-[#EDEAE4]">
+            <span className="text-[10px] font-medium tracking-widest uppercase text-[#7A6B63] text-center line-clamp-3">
               {product.name || 'No Image'}
             </span>
           </div>
@@ -46,13 +46,13 @@ const ProductCard = ({ product, onAddToCart, variant = 'grid', grayscale = false
           />
         )}
         {!showPlaceholder && (
-          <div className="absolute inset-0 bg-black/[0.02] opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+          <div className="absolute inset-0 bg-[#2D3A2D]/[0.04] opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
         )}
         {/* 위시리스트: 이미지 우측 상단 절대 위치 */}
         <button
           type="button"
           onClick={handleWishlistClick}
-          className="absolute right-2 top-2 z-20 p-1.5 text-[#999999] hover:text-[#000000] transition-colors bg-white/80 hover:bg-white rounded-full backdrop-blur-sm"
+          className="absolute right-2 top-2 z-20 p-1.5 text-[#7A6B63] hover:text-[#3E2F28] transition-colors bg-[#F9F7F2]/90 hover:bg-[#F9F7F2] rounded-full backdrop-blur-sm"
           aria-label={isInWishlist(product.id) ? '위시리스트에서 제거' : '위시리스트에 추가'}
         >
           <svg
@@ -80,10 +80,10 @@ const ProductCard = ({ product, onAddToCart, variant = 'grid', grayscale = false
             }}
             className={`absolute bottom-0 left-0 right-0 text-center font-black tracking-widest transition-all duration-400 z-30 hidden md:block ${
               soldOut
-                ? 'bg-[#F5F5F5] text-[#999999] cursor-not-allowed py-2.5 text-[9pt] opacity-80'
+                ? 'bg-[#EDEAE4] text-[#7A6B63] cursor-not-allowed py-2.5 text-[9pt] opacity-80'
                 : variant === 'carousel'
-                  ? 'bg-white py-2.5 text-[9pt] translate-y-full group-hover:translate-y-0 cursor-pointer [color:#000000]'
-                  : 'bg-white py-4 text-[9px] opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 cursor-pointer [color:#000000]'
+                  ? 'bg-[#A8B894] text-[#2D3A2D] py-2.5 text-[9pt] translate-y-full group-hover:translate-y-0 cursor-pointer'
+                  : 'bg-[#A8B894] text-[#2D3A2D] py-4 text-[9px] opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 cursor-pointer'
             }`}
           >
             {soldOut ? 'SOLD OUT' : 'ADD TO CART +'}
@@ -93,13 +93,13 @@ const ProductCard = ({ product, onAddToCart, variant = 'grid', grayscale = false
       {/* 텍스트: 이미지 바로 아래, mt-3 미니멀 여백 (Dr.care 무드: 작고 미니멀) */}
       <div className="mt-3 flex flex-col gap-0.5 min-w-0">
         <h3
-          className={`font-bold tracking-widest uppercase text-[#000000] group-hover:opacity-80 transition-colors leading-tight ${
+          className={`font-bold tracking-widest uppercase text-[#3E2F28] group-hover:opacity-80 transition-colors leading-tight ${
             variant === 'carousel' ? 'text-[10px] line-clamp-2' : 'text-[10px]'
           }`}
         >
           {product.name}
         </h3>
-        <p className={`font-light tracking-widest text-[#333333] ${variant === 'carousel' ? 'text-[10px] font-medium' : 'text-[10px] md:text-xs'}`}>
+        <p className={`font-light tracking-widest text-[#5C4A42] ${variant === 'carousel' ? 'text-[10px] font-medium' : 'text-[10px] md:text-xs'}`}>
           {formatPrice(product.price)}
         </p>
         {/* Add to Archive (grid 전용) */}
@@ -116,8 +116,8 @@ const ProductCard = ({ product, onAddToCart, variant = 'grid', grayscale = false
               disabled={soldOut}
               className={`w-full border py-4 text-[9px] font-bold tracking-ultra-wide uppercase transition-all duration-300 ${
                 soldOut
-                  ? 'border-[#E5E5E5] text-[#999999] bg-[#F9F9F9] cursor-not-allowed'
-                  : 'border-[#E5E5E5] text-[#666666] hover:bg-[#000000] hover:text-[#FFFFFF] hover:border-[#000000]'
+                  ? 'border-[#A8B894]/40 text-[#7A6B63] bg-[#EDEAE4] cursor-not-allowed'
+                  : 'border-[#A8B894] text-[#3E2F28] hover:bg-[#A8B894] hover:text-[#2D3A2D] hover:border-[#A8B894]'
               }`}
             >
               {soldOut ? 'SOLD OUT' : 'Add to Archive'}
@@ -130,7 +130,7 @@ const ProductCard = ({ product, onAddToCart, variant = 'grid', grayscale = false
 
   const baseClass =
     variant === 'grid'
-      ? 'group relative flex flex-col transition-colors duration-700 hover:bg-[#F9F9F9] block'
+      ? 'group relative flex flex-col transition-colors duration-700 hover:bg-[#F5F3EE] block'
       : 'group relative flex flex-col flex-shrink-0 block';
 
   return (

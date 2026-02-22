@@ -97,7 +97,7 @@ const ShopPage = ({ category }) => {
           : 'All';
 
   return (
-    <div className="bg-[#FAFAF9] min-h-screen pt-20 md:pt-24 pb-16 md:pb-20 antialiased relative text-[#2C2C2C]">
+    <div className="bg-[#F9F7F2] min-h-screen pt-20 md:pt-24 pb-16 md:pb-20 antialiased relative text-[#3E2F28]">
       <div className="max-w-[1800px] mx-auto px-6 md:px-8">
         {/* 검색 바 */}
         <div className="mb-8 md:mb-10">
@@ -110,20 +110,20 @@ const ShopPage = ({ category }) => {
               setSearchTerm(val);
               setSearchParams(val ? { ...Object.fromEntries(searchParams), search: val } : {});
             }}
-            className="w-full bg-[#FFFFFF] border border-[#E8E4DF] py-3 md:py-4 px-4 text-[11px] md:text-[12px] font-light tracking-[0.08em] outline-none focus:border-[#1a1a1a] transition-colors placeholder:text-[#8B8B8B] text-[#1a1a1a]"
+            className="w-full bg-[#F9F7F2] border border-[#A8B894]/40 py-3 md:py-4 px-4 text-[11px] md:text-[12px] font-light tracking-[0.08em] outline-none focus:border-[#A8B894] transition-colors placeholder:text-[#7A6B63] text-[#3E2F28]"
           />
         </div>
 
         {/* 필터: 피부 타입, 피부 고민 */}
         <div className="mb-10 md:mb-12 flex flex-col gap-6">
           <div>
-            <p className="text-[9px] md:text-[10px] tracking-[0.15em] uppercase text-[#8B8B8B] mb-2">피부 타입</p>
+            <p className="text-[9px] md:text-[10px] tracking-[0.15em] uppercase text-[#7A6B63] mb-2">피부 타입</p>
             <div className="flex flex-wrap gap-2">
               <button
                 type="button"
                 onClick={() => updateFilter('skinType', '')}
                 className={`px-4 py-2 text-[10px] font-light tracking-[0.08em] uppercase transition-colors ${
-                  !skinType ? 'bg-[#1a1a1a] text-[#FFFFFF]' : 'bg-[#FFFFFF] border border-[#E8E4DF] text-[#2C2C2C] hover:border-[#1a1a1a]'
+                  !skinType ? 'bg-[#A8B894] text-[#2D3A2D]' : 'bg-[#F9F7F2] border border-[#A8B894]/50 text-[#3E2F28] hover:border-[#A8B894]'
                 }`}
               >
                 전체
@@ -134,7 +134,7 @@ const ShopPage = ({ category }) => {
                   type="button"
                   onClick={() => updateFilter('skinType', skinType === t ? '' : t)}
                   className={`px-4 py-2 text-[10px] font-light tracking-[0.08em] uppercase transition-colors ${
-                    skinType === t ? 'bg-[#1a1a1a] text-[#FFFFFF]' : 'bg-[#FFFFFF] border border-[#E8E4DF] text-[#2C2C2C] hover:border-[#1a1a1a]'
+                    skinType === t ? 'bg-[#A8B894] text-[#2D3A2D]' : 'bg-[#F9F7F2] border border-[#A8B894]/50 text-[#3E2F28] hover:border-[#A8B894]'
                   }`}
                 >
                   {t}
@@ -143,13 +143,13 @@ const ShopPage = ({ category }) => {
             </div>
           </div>
           <div>
-            <p className="text-[9px] md:text-[10px] tracking-[0.15em] uppercase text-[#8B8B8B] mb-2">피부 고민</p>
+            <p className="text-[9px] md:text-[10px] tracking-[0.15em] uppercase text-[#7A6B63] mb-2">피부 고민</p>
             <div className="flex flex-wrap gap-2">
               <button
                 type="button"
                 onClick={() => updateFilter('skinConcern', '')}
                 className={`px-4 py-2 text-[10px] font-light tracking-[0.08em] uppercase transition-colors ${
-                  !skinConcern ? 'bg-[#1a1a1a] text-[#FFFFFF]' : 'bg-[#FFFFFF] border border-[#E8E4DF] text-[#2C2C2C] hover:border-[#1a1a1a]'
+                  !skinConcern ? 'bg-[#A8B894] text-[#2D3A2D]' : 'bg-[#F9F7F2] border border-[#A8B894]/50 text-[#3E2F28] hover:border-[#A8B894]'
                 }`}
               >
                 전체
@@ -160,7 +160,7 @@ const ShopPage = ({ category }) => {
                   type="button"
                   onClick={() => updateFilter('skinConcern', skinConcern === c ? '' : c)}
                   className={`px-4 py-2 text-[10px] font-light tracking-[0.08em] uppercase transition-colors ${
-                    skinConcern === c ? 'bg-[#1a1a1a] text-[#FFFFFF]' : 'bg-[#FFFFFF] border border-[#E8E4DF] text-[#2C2C2C] hover:border-[#1a1a1a]'
+                    skinConcern === c ? 'bg-[#A8B894] text-[#2D3A2D]' : 'bg-[#F9F7F2] border border-[#A8B894]/50 text-[#3E2F28] hover:border-[#A8B894]'
                   }`}
                 >
                   {c}
@@ -173,10 +173,10 @@ const ShopPage = ({ category }) => {
         {/* 헤더 */}
         <div className="mb-12 md:mb-16 flex justify-between items-end">
           <div>
-            <h1 className="text-[9px] md:text-[10px] tracking-[0.2em] uppercase text-[#8B8B8B] font-medium mb-2 md:mb-3">Shop</h1>
-            <h2 className="text-lg md:text-2xl font-light tracking-tight leading-none text-[#1a1a1a]">{categoryLabel}</h2>
+            <h1 className="text-[9px] md:text-[10px] tracking-[0.2em] uppercase text-[#7A6B63] font-medium mb-2 md:mb-3">Shop</h1>
+            <h2 className="text-lg md:text-2xl font-semibold tracking-tight leading-none text-[#3E2F28]">{categoryLabel}</h2>
           </div>
-          <span className="text-[9px] md:text-[10px] font-light text-[#8B8B8B] tracking-[0.15em] uppercase mb-2">
+          <span className="text-[9px] md:text-[10px] font-light text-[#7A6B63] tracking-[0.15em] uppercase mb-2">
             {loading ? '...' : `${filteredProducts.length}개 상품`}
           </span>
         </div>
@@ -205,8 +205,8 @@ const ShopPage = ({ category }) => {
               ))
             ) : (
               <div className="col-span-full py-40 text-center space-y-4 px-6">
-                <p className="text-[12px] font-medium tracking-[0.15em] text-[#5C5C5C] uppercase">등록된 제품이 없습니다</p>
-                <p className="text-[11px] font-light tracking-[0.08em] text-[#8B8B8B]">
+                <p className="text-[12px] font-medium tracking-[0.15em] text-[#5C4A42] uppercase">등록된 제품이 없습니다</p>
+                <p className="text-[11px] font-light tracking-[0.08em] text-[#7A6B63]">
                   {searchTerm || skinType || skinConcern
                     ? '필터를 바꿔 보시거나 검색어를 수정해 보세요.'
                     : '해당 카테고리에 등록된 제품이 없습니다.'}
@@ -219,7 +219,7 @@ const ShopPage = ({ category }) => {
                     setSkinConcern('');
                     setSearchParams({});
                   }}
-                  className="mt-6 text-[10px] border-b border-[#E8E4DF] pb-1 text-[#5C5C5C] hover:text-[#1a1a1a] transition-colors uppercase tracking-widest"
+                  className="mt-6 text-[10px] border-b border-[#A8B894] pb-1 text-[#5C4A42] hover:text-[#3E2F28] transition-colors uppercase tracking-widest"
                 >
                   전체 보기
                 </button>

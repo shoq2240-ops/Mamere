@@ -37,8 +37,8 @@ const ShippingPage = lazy(() => import('./pages/ShippingPage'));
 const ReturnsPage = lazy(() => import('./pages/ReturnsPage'));
 
 const PageLoadFallback = () => (
-  <div className="min-h-[60vh] flex items-center justify-center bg-[#FAFAF9]" aria-hidden="true">
-    <div className="w-8 h-8 border-2 border-[#E8E4DF] border-t-[#1a1a1a] rounded-full animate-spin" />
+  <div className="min-h-[60vh] flex items-center justify-center bg-[#F9F7F2]" aria-hidden="true">
+    <div className="w-8 h-8 border-2 border-[#A8B894]/40 border-t-[#3E2F28] rounded-full animate-spin" />
   </div>
 );
 
@@ -138,11 +138,7 @@ function AppContent() {
   // 관리자 페이지: 헤더 항상 다크
   const headerBgClass = isAdmin
     ? 'bg-[#000000] border-b border-white/10'
-    : isMobileMenuOpen
-      ? 'bg-[#FFFFFF] border-b border-[#E8E4DF]'
-      : isScrolled
-        ? 'bg-[#FAFAF9]/90 backdrop-blur-[10px] border-b border-[#E8E4DF]'
-        : 'bg-transparent';
+    : 'bg-[#2D3A2D] border-b border-[#F9F7F2]/10';
 
   return (
     <>
@@ -175,18 +171,18 @@ function App() {
         <Router>
           <WithdrawnToast />
           <ScrollToTop />
-          <div className="flex flex-col h-screen max-h-[100dvh] bg-[#FAFAF9] text-[#2C2C2C] antialiased overflow-hidden flex">
+          <div className="flex flex-col h-screen max-h-[100dvh] bg-[#F9F7F2] text-[#3E2F28] antialiased overflow-hidden flex font-sans">
             <Toaster
               position="top-center"
               toastOptions={{
                 duration: 2500,
                 style: {
-                  background: '#FFFFFF',
-                  color: '#1a1a1a',
-                  border: '1px solid #E8E4DF',
+                  background: '#F9F7F2',
+                  color: '#3E2F28',
+                  border: '1px solid #A8B894',
                   borderRadius: 0,
                 },
-                success: { iconTheme: { primary: '#1a1a1a' } },
+                success: { iconTheme: { primary: '#A8B894' } },
               }}
             />
             <AppContent />
