@@ -105,3 +105,25 @@
 .animate-marquee {
   animation: marquee-scroll linear infinite;
 }
+
+/* 상품 상세 이미지 영역: 이미지 사이 빈틈 제거 (inline-block 기본 갭 제거) */
+.image-section {
+  line-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.image-section img {
+  display: block;
+}
+
+/* 상품 상세 이미지: 고화질 유지, 비율 유지, 선명 렌더링 */
+.product-detail-image {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-width: 100%;
+  object-fit: contain;
+  object-position: center;
+  -webkit-image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+}

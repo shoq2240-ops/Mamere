@@ -30,7 +30,7 @@ const BrandStoryPage = () => {
               당신의 피부에 진심을 더합니다.
               <br className="hidden md:block" />
               <span className="font-medium text-[#1a1a1a]">
-                Mamère는 믿을 수 있는 성분과 투명한 제조로, 건강한 아름다움을 제안합니다.
+                믿을 수 있는 성분과 투명한 제조로, 건강한 아름다움을 제안합니다.
               </span>
             </p>
           </div>
@@ -42,7 +42,7 @@ const BrandStoryPage = () => {
               불필요한 첨가를 줄이고, 피부가 숨 쉬는 케어를 지향합니다.
             </p>
             <p className="text-sm md:text-base font-light leading-7 text-[#5C5C5C] break-keep">
-              Mamère의 모든 제품은 민감한 피부도 고려한 포뮬레이션으로,
+              우리의 모든 제품은 민감한 피부도 고려한 포뮬레이션으로,
               일상에서 꾸준히 쓰일 수 있는 신뢰감 있는 뷰티를 목표로 합니다.
             </p>
           </div>

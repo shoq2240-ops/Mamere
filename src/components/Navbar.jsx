@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 // [이미지 교체] 브랜드 로고: public 폴더의 brand.logo2.png 사용
@@ -54,6 +54,8 @@ const Navbar = ({ isScrolled = false, isMobileMenuOpen = false, onMobileMenuChan
   const [isCategoryOpen, setIsCategoryOpen] = useState(null);
   const [hoveredMenu, setHoveredMenu] = useState(null);
   const [accountOpen, setAccountOpen] = useState(false);
+  const [accountDropdownRect, setAccountDropdownRect] = useState(null);
+  const accountButtonRef = useRef(null);
   const [searchInput, setSearchInput] = useState("");
   const { cartCount } = useCart();
   const { wishlist } = useWishlist();
@@ -94,6 +96,26 @@ const Navbar = ({ isScrolled = false, isMobileMenuOpen = false, onMobileMenuChan
     }
   };
 
+  // 마이페이지 드롭다운 위치 (포털용) — 열릴 때 버튼 기준으로 계산, 스크롤/리사이즈 시 갱신
+  const updateAccountDropdownRect = () => {
+    if (accountButtonRef.current) {
+      setAccountDropdownRect(accountButtonRef.current.getBoundingClientRect());
+    }
+  };
+  useEffect(() => {
+    if (!accountOpen) {
+      setAccountDropdownRect(null);
+      return;
+    }
+    updateAccountDropdownRect();
+    window.addEventListener('scroll', updateAccountDropdownRect, true);
+    window.addEventListener('resize', updateAccountDropdownRect);
+    return () => {
+      window.removeEventListener('scroll', updateAccountDropdownRect, true);
+      window.removeEventListener('resize', updateAccountDropdownRect);
+    };
+  }, [accountOpen]);
+
   // GNB: Best, Skincare, Makeup, Body & Hair, Brand Story (Mamère 화장품)
   const isAdmin = pathname.startsWith('/admin');
 
@@ -130,7 +152,7 @@ const Navbar = ({ isScrolled = false, isMobileMenuOpen = false, onMobileMenuChan
 
   return (
     <div className="antialiased" onMouseLeave={() => setHoveredMenu(null)}>
-      <nav className="relative w-full z-[150] bg-[#2D3A2D] text-[#F9F7F2] transition-all duration-300 overflow-hidden">
+      <nav className="relative w-full z-[150] bg-[#2D3A2D] text-[#F9F7F2] transition-all duration-300 overflow-x-hidden">
         <div className="max-w-[1800px] mx-auto h-20 md:h-28 flex items-center justify-between px-4 md:px-6 relative">
 
           <div className="absolute inset-0 pointer-events-none z-0" aria-hidden>
@@ -192,29 +214,34 @@ const Navbar = ({ isScrolled = false, isMobileMenuOpen = false, onMobileMenuChan
               {isLoggedIn ? (
                 <>
                   <button
+                    ref={accountButtonRef}
+                    type="button"
                     onClick={() => setAccountOpen(!accountOpen)}
                     className="text-[10px] font-light tracking-[0.15em] uppercase hover:opacity-80 transition-all text-[#F9F7F2]"
                   >
                     {t('nav.myPage')}
                   </button>
-                  <AnimatePresence>
-                    {accountOpen && (
-                      <>
-                        <div className="fixed inset-0 z-[105]" onClick={() => setAccountOpen(false)} aria-hidden="true" />
-                        <motion.div
-                          initial={{ opacity: 0, y: -8 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: -8 }}
-                          className="absolute right-0 top-full mt-2 py-4 px-6 bg-[#F9F7F2] border border-[#A8B894]/30 min-w-[160px] z-[120] flex flex-col gap-3 shadow-lg text-[#3E2F28]"
-                        >
-                          <Link to="/wishlist" onClick={() => setAccountOpen(false)} className="text-[10px] font-light text-[#5C4A42] hover:text-[#3E2F28] transition-colors tracking-[0.15em] uppercase">{t('nav.wishlist')}</Link>
-                          <Link to="/orders" onClick={() => setAccountOpen(false)} className="text-[10px] font-light text-[#5C4A42] hover:text-[#3E2F28] transition-colors tracking-[0.15em] uppercase">{t('nav.orders')}</Link>
-                          <Link to="/profile" onClick={() => setAccountOpen(false)} className="text-[10px] font-light text-[#5C4A42] hover:text-[#3E2F28] transition-colors tracking-[0.15em] uppercase">{t('nav.profile')}</Link>
-                          <button type="button" onClick={() => { handleLogout(); setAccountOpen(false); }} className="text-[10px] font-light text-[#5C4A42] hover:text-[#3E2F28] transition-colors tracking-[0.15em] uppercase text-left">{t('nav.logout')}</button>
-                        </motion.div>
-                      </>
-                    )}
-                  </AnimatePresence>
+                  {/* 마이페이지 드롭다운: 포털로 body에 렌더링해 히어로/스크롤 영역에 가리지 않도록 함 */}
+                  {typeof document !== 'undefined' && accountOpen && accountDropdownRect && createPortal(
+                    <>
+                      <div className="fixed inset-0 z-[9996]" onClick={() => setAccountOpen(false)} aria-hidden="true" />
+                      <motion.div
+                        initial={{ opacity: 0, y: -8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="fixed py-4 px-6 bg-[#F9F7F2] border border-[#A8B894]/30 min-w-[160px] z-[9997] flex flex-col gap-3 shadow-lg text-[#3E2F28]"
+                        style={{
+                          top: accountDropdownRect.bottom + 8,
+                          right: typeof window !== 'undefined' ? window.innerWidth - accountDropdownRect.right : 0,
+                        }}
+                      >
+                        <Link to="/wishlist" onClick={() => setAccountOpen(false)} className="text-[10px] font-light text-[#5C4A42] hover:text-[#3E2F28] transition-colors tracking-[0.15em] uppercase">{t('nav.wishlist')}</Link>
+                        <Link to="/orders" onClick={() => setAccountOpen(false)} className="text-[10px] font-light text-[#5C4A42] hover:text-[#3E2F28] transition-colors tracking-[0.15em] uppercase">{t('nav.orders')}</Link>
+                        <Link to="/profile" onClick={() => setAccountOpen(false)} className="text-[10px] font-light text-[#5C4A42] hover:text-[#3E2F28] transition-colors tracking-[0.15em] uppercase">{t('nav.profile')}</Link>
+                        <button type="button" onClick={() => { handleLogout(); setAccountOpen(false); }} className="text-[10px] font-light text-[#5C4A42] hover:text-[#3E2F28] transition-colors tracking-[0.15em] uppercase text-left">{t('nav.logout')}</button>
+                      </motion.div>
+                    </>,
+                    document.body
+                  )}
                 </>
               ) : (
                 <Link to="/login" className="flex items-center justify-center w-10 h-10 hover:opacity-80 transition-colors text-[#F9F7F2]">
