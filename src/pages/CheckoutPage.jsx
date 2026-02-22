@@ -8,6 +8,7 @@ import { useCart } from '../store/CartContext';
 import { supabase, publicTable } from '../lib/supabase';
 import AddressInput, { combineAddress, splitAddress } from '../components/AddressInput';
 import { isSoldOut } from '../lib/productStock';
+import { getShippingFee } from '../lib/shipping';
 
 // 포트원 결제 설정 (.env의 VITE_PORTONE_* 사용)
 const PORTONE_STORE_ID = import.meta.env.VITE_PORTONE_STORE_ID;
@@ -51,8 +52,10 @@ const CheckoutPage = () => {
   const [error, setError] = useState('');
   const [orderSuccessData, setOrderSuccessData] = useState(null);
 
-  // 클라이언트 기준 표시용 합계 (UI용)
-  const displayTotal = cart.reduce((sum, item) => sum + parsePrice(item.price) * item.quantity, 0);
+  // 클라이언트 기준 표시용: 소계 + 배송비 (3만원 이상 무료)
+  const displaySubtotal = cart.reduce((sum, item) => sum + parsePrice(item.price) * item.quantity, 0);
+  const displayShippingFee = getShippingFee(displaySubtotal);
+  const displayTotal = displaySubtotal + displayShippingFee;
 
   // 장바구니 비어 있으면 카트로 (주문 완료 화면이 아닐 때만)
   useEffect(() => {
@@ -194,13 +197,15 @@ const CheckoutPage = () => {
       return;
     }
 
-    // 서버 가격 기준으로 총액 계산 (수량 상한 99 적용)
-    const totalAmount = cart.reduce(
+    // 서버 가격 기준 소계 + 배송비 (3만원 이상 무료)
+    const subtotal = cart.reduce(
       (sum, item) => sum + (priceMap[item.id] ?? 0) * Math.max(1, Math.min(MAX_QUANTITY, Math.floor(item.quantity || 1))),
       0
     );
+    const shippingFee = getShippingFee(subtotal);
+    const totalAmount = subtotal + shippingFee;
 
-    if (totalAmount <= 0) {
+    if (subtotal <= 0) {
       setSubmitting(false);
       setError('결제할 상품이 없습니다.');
       return;
@@ -565,7 +570,17 @@ const CheckoutPage = () => {
                 </li>
               ))}
             </ul>
-            <div className="flex justify-between items-center border-t border-[#F0F0F0] pt-4">
+            <div className="space-y-2 border-t border-[#F0F0F0] pt-4">
+              <div className="flex justify-between text-[11px] text-[#666666]">
+                <span className="tracking-widest uppercase">소계</span>
+                <span>₩{displaySubtotal.toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between text-[11px] text-[#666666]">
+                <span className="tracking-widest uppercase">배송비</span>
+                <span>{displayShippingFee === 0 ? '무료배송' : `₩${displayShippingFee.toLocaleString()}`}</span>
+              </div>
+            </div>
+            <div className="flex justify-between items-center border-t border-[#F0F0F0] pt-4 mt-4">
               <span className="text-[11px] font-bold tracking-widest uppercase text-[#666666]">총 결제 금액</span>
               <span className="text-xl font-black italic text-[#000000]">₩{displayTotal.toLocaleString()}</span>
             </div>

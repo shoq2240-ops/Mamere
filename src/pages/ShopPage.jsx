@@ -3,6 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useCart } from '../store/CartContext';
 import { useAuth } from '../store/AuthContext';
+import { useLanguage } from '../store/LanguageContext';
 import LoginRequiredModal from '../components/LoginRequiredModal';
 import { useProducts } from '../hooks/useProducts';
 import { ProductGridSkeleton, LoadingMessage } from '../components/ProductSkeleton';
@@ -28,6 +29,7 @@ const toArray = (v) => {
 const ShopPage = ({ category }) => {
   const { addToCart } = useCart();
   const { isLoggedIn } = useAuth();
+  const { t } = useLanguage();
   const [showLoginModal, setShowLoginModal] = useState(false);
 
   const [searchParams, setSearchParams] = useSearchParams();
@@ -77,7 +79,7 @@ const ShopPage = ({ category }) => {
       return;
     }
     addToCart(product);
-    toast.success('장바구니에 추가되었습니다');
+    toast.success(t('common.addToCartDone'));
   };
 
   const updateFilter = (key, value) => {
@@ -89,12 +91,14 @@ const ShopPage = ({ category }) => {
 
   const categoryLabel =
     category === 'best'
-      ? 'Best'
+      ? t('shop.best')
       : category === 'body_hair'
-        ? 'Body & Hair'
-        : category
-          ? (category[0] || '').toUpperCase() + (category.slice(1) || '').replace(/_/g, ' ')
-          : 'All';
+        ? t('shop.bodyHair')
+        : category === 'skincare'
+          ? t('shop.skincare')
+          : category === 'makeup'
+            ? t('shop.makeup')
+            : t('shop.all');
 
   return (
     <div className="bg-[#F9F7F2] min-h-screen pt-20 md:pt-24 pb-16 md:pb-20 antialiased relative text-[#3E2F28]">
@@ -103,7 +107,7 @@ const ShopPage = ({ category }) => {
         <div className="mb-8 md:mb-10">
           <input
             type="text"
-            placeholder="제품 검색..."
+            placeholder={t('shop.searchPlaceholder')}
             value={searchTerm}
             onChange={(e) => {
               const val = e.target.value.slice(0, 100);
@@ -117,7 +121,7 @@ const ShopPage = ({ category }) => {
         {/* 필터: 피부 타입, 피부 고민 */}
         <div className="mb-10 md:mb-12 flex flex-col gap-6">
           <div>
-            <p className="text-[9px] md:text-[10px] tracking-[0.15em] uppercase text-[#7A6B63] mb-2">피부 타입</p>
+            <p className="text-[9px] md:text-[10px] tracking-[0.15em] uppercase text-[#7A6B63] mb-2">{t('shop.skinType')}</p>
             <div className="flex flex-wrap gap-2">
               <button
                 type="button"
@@ -126,7 +130,7 @@ const ShopPage = ({ category }) => {
                   !skinType ? 'bg-[#A8B894] text-[#2D3A2D]' : 'bg-[#F9F7F2] border border-[#A8B894]/50 text-[#3E2F28] hover:border-[#A8B894]'
                 }`}
               >
-                전체
+                {t('shop.all')}
               </button>
               {SKIN_TYPES.map((t) => (
                 <button
@@ -143,7 +147,7 @@ const ShopPage = ({ category }) => {
             </div>
           </div>
           <div>
-            <p className="text-[9px] md:text-[10px] tracking-[0.15em] uppercase text-[#7A6B63] mb-2">피부 고민</p>
+            <p className="text-[9px] md:text-[10px] tracking-[0.15em] uppercase text-[#7A6B63] mb-2">{t('shop.skinConcern')}</p>
             <div className="flex flex-wrap gap-2">
               <button
                 type="button"
@@ -152,7 +156,7 @@ const ShopPage = ({ category }) => {
                   !skinConcern ? 'bg-[#A8B894] text-[#2D3A2D]' : 'bg-[#F9F7F2] border border-[#A8B894]/50 text-[#3E2F28] hover:border-[#A8B894]'
                 }`}
               >
-                전체
+                {t('shop.all')}
               </button>
               {SKIN_CONCERNS.map((c) => (
                 <button
@@ -173,11 +177,11 @@ const ShopPage = ({ category }) => {
         {/* 헤더 */}
         <div className="mb-12 md:mb-16 flex justify-between items-end">
           <div>
-            <h1 className="text-[9px] md:text-[10px] tracking-[0.2em] uppercase text-[#7A6B63] font-medium mb-2 md:mb-3">Shop</h1>
+            <h1 className="text-[9px] md:text-[10px] tracking-[0.2em] uppercase text-[#7A6B63] font-medium mb-2 md:mb-3">{t('shop.title')}</h1>
             <h2 className="text-lg md:text-2xl font-semibold tracking-tight leading-none text-[#3E2F28]">{categoryLabel}</h2>
           </div>
           <span className="text-[9px] md:text-[10px] font-light text-[#7A6B63] tracking-[0.15em] uppercase mb-2">
-            {loading ? '...' : `${filteredProducts.length}개 상품`}
+            {loading ? '...' : `${filteredProducts.length}${t('shop.productsCount')}`}
           </span>
         </div>
 
@@ -190,7 +194,7 @@ const ShopPage = ({ category }) => {
 
         {error && (
           <div className="min-h-[50vh] flex flex-col items-center justify-center py-24 px-8 text-center border border-red-200 bg-red-50">
-            <p className="text-red-600 text-sm font-medium tracking-wide">DB 연결 실패</p>
+            <p className="text-red-600 text-sm font-medium tracking-wide">{t('landing.dbError')}</p>
             <p className="mt-3 text-xs text-[#666666] font-mono max-w-lg break-all">{error}</p>
           </div>
         )}
@@ -205,11 +209,11 @@ const ShopPage = ({ category }) => {
               ))
             ) : (
               <div className="col-span-full py-40 text-center space-y-4 px-6">
-                <p className="text-[12px] font-medium tracking-[0.15em] text-[#5C4A42] uppercase">등록된 제품이 없습니다</p>
+                <p className="text-[12px] font-medium tracking-[0.15em] text-[#5C4A42] uppercase">{t('shop.noProductsTitle')}</p>
                 <p className="text-[11px] font-light tracking-[0.08em] text-[#7A6B63]">
                   {searchTerm || skinType || skinConcern
-                    ? '필터를 바꿔 보시거나 검색어를 수정해 보세요.'
-                    : '해당 카테고리에 등록된 제품이 없습니다.'}
+                    ? t('shop.noProductsFilter')
+                    : t('shop.noProductsCategory')}
                 </p>
                 <button
                   type="button"
@@ -221,7 +225,7 @@ const ShopPage = ({ category }) => {
                   }}
                   className="mt-6 text-[10px] border-b border-[#A8B894] pb-1 text-[#5C4A42] hover:text-[#3E2F28] transition-colors uppercase tracking-widest"
                 >
-                  전체 보기
+                  {t('shop.viewAll')}
                 </button>
               </div>
             )}

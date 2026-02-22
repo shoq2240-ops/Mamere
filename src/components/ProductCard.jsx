@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useWishlist } from '../store/WishlistContext';
+import { useLanguage } from '../store/LanguageContext';
 import { formatPrice } from '../lib/formatPrice';
 import { isSoldOut } from '../lib/productStock';
 import TiltCard from './TiltCard';
@@ -13,6 +14,7 @@ import TiltCard from './TiltCard';
  */
 const ProductCard = ({ product, onAddToCart, variant = 'grid', grayscale = false }) => {
   const { toggleWishlist, isInWishlist } = useWishlist();
+  const { t } = useLanguage();
   const soldOut = isSoldOut(product);
   const [imgError, setImgError] = useState(false);
   const showPlaceholder = !product.image || imgError;
@@ -30,7 +32,7 @@ const ProductCard = ({ product, onAddToCart, variant = 'grid', grayscale = false
         {showPlaceholder ? (
           <div className="absolute inset-0 flex items-center justify-center p-3 bg-[#EDEAE4]">
             <span className="text-[10px] font-medium tracking-widest uppercase text-[#7A6B63] text-center line-clamp-3">
-              {product.name || 'No Image'}
+              {product.name || t('common.noImage')}
             </span>
           </div>
         ) : (
@@ -53,7 +55,7 @@ const ProductCard = ({ product, onAddToCart, variant = 'grid', grayscale = false
           type="button"
           onClick={handleWishlistClick}
           className="absolute right-2 top-2 z-20 p-1.5 text-[#7A6B63] hover:text-[#3E2F28] transition-colors bg-[#F9F7F2]/90 hover:bg-[#F9F7F2] rounded-full backdrop-blur-sm"
-          aria-label={isInWishlist(product.id) ? '위시리스트에서 제거' : '위시리스트에 추가'}
+          aria-label={isInWishlist(product.id) ? t('product.wishlistRemove') : t('product.wishlistAdd')}
         >
           <svg
             className="w-4 h-4"
@@ -86,7 +88,7 @@ const ProductCard = ({ product, onAddToCart, variant = 'grid', grayscale = false
                   : 'bg-[#A8B894] text-[#2D3A2D] py-4 text-[9px] opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 cursor-pointer'
             }`}
           >
-            {soldOut ? 'SOLD OUT' : 'ADD TO CART +'}
+            {soldOut ? t('product.soldOut') : `${t('product.addToCart')} +`}
           </div>
         )}
       </div>
@@ -120,7 +122,7 @@ const ProductCard = ({ product, onAddToCart, variant = 'grid', grayscale = false
                   : 'border-[#A8B894] text-[#3E2F28] hover:bg-[#A8B894] hover:text-[#2D3A2D] hover:border-[#A8B894]'
               }`}
             >
-              {soldOut ? 'SOLD OUT' : 'Add to Archive'}
+              {soldOut ? t('product.soldOut') : t('product.addToArchive')}
             </button>
           </div>
         )}

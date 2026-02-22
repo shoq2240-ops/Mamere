@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import ContactModal from './ContactModal';
+import { useLanguage } from '../store/LanguageContext';
 
 const FOOTER_LINK_CLASS = "text-[12px] font-light tracking-[0.08em] text-[#F9F7F2] hover:underline hover:opacity-90 transition-all duration-200";
 
@@ -37,17 +38,18 @@ const FooterSection = ({ title, items }) => (
 
 const Footer = () => {
   const [isContactOpen, setIsContactOpen] = useState(false);
+  const { t } = useLanguage();
   const customerService = [
-    { label: '문의 양식 작성하기', onClick: () => setIsContactOpen(true) },
-    { label: 'FAQ', to: '/faq' },
+    { label: t('footer.contactForm'), onClick: () => setIsContactOpen(true) },
+    { label: t('footer.faq'), to: '/faq' },
   ];
   const shoppingGuide = [
-    { label: '배송 정보', to: '/shipping' },
-    { label: '반품 및 교환 요청하기', to: '/returns' },
+    { label: t('footer.shippingInfo'), to: '/shipping' },
+    { label: t('footer.returns'), to: '/returns' },
   ];
   const legal = [
-    { label: '이용약관', to: '/terms' },
-    { label: '개인정보 처리방침', to: '/privacy' },
+    { label: t('footer.terms'), to: '/terms' },
+    { label: t('footer.privacy'), to: '/privacy' },
   ];
 
   return (
@@ -57,40 +59,40 @@ const Footer = () => {
       <div className="max-w-7xl mx-auto">
         {/* 고객 서비스 / 쇼핑 가이드 / 법적 고지 */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-10 md:gap-16 mb-14">
-          <FooterSection title="고객 서비스" items={customerService} />
-          <FooterSection title="쇼핑 가이드" items={shoppingGuide} />
-          <FooterSection title="법적 고지" items={legal} />
+          <FooterSection title={t('footer.customerService')} items={customerService} />
+          <FooterSection title={t('footer.shoppingGuide')} items={shoppingGuide} />
+          <FooterSection title={t('footer.legal')} items={legal} />
         </div>
 
         {/* 기업 정보 */}
         <div className="space-y-2">
           <div className="flex flex-wrap gap-x-4 gap-y-1 text-[10px] font-light tracking-[0.12em] leading-relaxed text-[#F9F7F2]/90">
-            <span>COMPANY : Mamère</span>
+            <span>COMPANY : Dr.Care</span>
             <span className="text-[#F9F7F2]/40">|</span>
             <span>CEO : 신천영</span>
             <span className="text-[#F9F7F2]/40">|</span>
-            <span>ADDRESS : SEOUL, KOREA</span>
+            <span>ADDRESS : 경기도 용인시 기흥구 흥덕중앙로 120 유타워 3208호</span>
           </div>
           <div className="flex flex-wrap gap-x-4 gap-y-1 text-[10px] font-light tracking-[0.12em] leading-relaxed text-[#F9F7F2]">
-            <span>EMAIL : shox2240@gmail.com</span>
+            <span>EMAIL : pjk6412@naver.com</span>
             <span className="text-[#F9F7F2]/40">|</span>
-            <span>TEL : 070-1234-5678</span>
+            <span>TEL : 010-3126-6701</span>
             <span className="text-[#F9F7F2]/40">|</span>
-            <span>BUSINESS LICENSE : 123-45-67890</span>
+            <span>BUSINESS LICENSE : 241-14-00646</span>
             <span className="text-[#F9F7F2]/40">|</span>
-            <span>ONLINE LICENSE : 2026-SEOUL-0000</span>
+            <span>ONLINE LICENSE : 2019-용인기흥-0330</span>
           </div>
           <p className="text-[10px] font-light tracking-[0.1em] mt-6 text-[#F9F7F2]/80 leading-relaxed">
-            당사는 고객님이 현금 결제한 금액에 대해 토스페이먼츠와 소비자 피해 보상 보험 계약을 체결하여 안전거래를 보장하고 있습니다.
+            {t('footer.escrowNotice')}
           </p>
         </div>
 
         <div className="mt-12 pt-8 border-t border-[#F9F7F2]/20 flex flex-col sm:flex-row justify-between items-center gap-4">
           <p className="text-[10px] font-light tracking-[0.15em] uppercase text-[#F9F7F2]/70">
-            © Mamère. All rights reserved.
+            {t('footer.allRightsReserved')}
           </p>
           <div className="flex items-center opacity-80">
-            <span className="text-[9px] font-light tracking-[0.1em] border border-[#F9F7F2]/30 px-2 py-1 text-[#F9F7F2]/80">ESCROW SAFE</span>
+            <span className="text-[9px] font-light tracking-[0.1em] border border-[#F9F7F2]/30 px-2 py-1 text-[#F9F7F2]/80">{t('footer.escrowSafe')}</span>
           </div>
         </div>
       </div>

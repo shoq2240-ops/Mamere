@@ -15,8 +15,8 @@ const MarqueeItem = ({ text, textClassName }) => (
  * 두 개의 동일한 스트립을 0 → -50% 이동 시킨 뒤 루프 → 시각적으로 끊김 없음
  */
 const Marquee = ({
-  text = "FREE SHIPPING",
-  speed = 45,
+  text = 'FREE SHIPPING OVER 30,000KRW',
+  speed = 100,
   className = '',
   textClassName = '',
 }) => {

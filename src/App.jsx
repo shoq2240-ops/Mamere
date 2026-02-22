@@ -5,7 +5,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { CartProvider, useCart } from "./store/CartContext";
 import { WishlistProvider } from "./store/WishlistContext";
 import { AuthProvider, useAuth } from "./store/AuthContext";
-import { LanguageProvider } from "./store/LanguageContext";
+import { LanguageProvider, useLanguage } from "./store/LanguageContext";
 import ScrollToTop from "./components/ScrollToTop";
 
 import Navbar from "./components/Navbar";
@@ -121,6 +121,7 @@ function AppContent() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { pathname } = useLocation();
+  const { t } = useLanguage();
 
   const handleScroll = () => {
     const el = mainScrollRef.current;
@@ -145,7 +146,7 @@ function AppContent() {
       <header
         className={`sticky top-0 z-[150] flex flex-col flex-none shrink-0 transition-all duration-300 ${headerBgClass}`}
       >
-        {!isAdmin && <Marquee />}
+        {!isAdmin && <Marquee text={t('marquee.freeShipping')} />}
         <Navbar isScrolled={isScrolled} isMobileMenuOpen={isMobileMenuOpen} onMobileMenuChange={setIsMobileMenuOpen} />
       </header>
       <main
