@@ -51,13 +51,30 @@ export default async function handler(req, res) {
     });
   }
 
+  // 디버깅: 클라이언트에서 받은 cartItems 구조 확인 (Vercel 로그에서 확인)
+  console.log('클라이언트에서 받은 cartItems:', JSON.stringify(items.map((it) => ({
+    id: it?.id,
+    product_id: it?.product_id,
+    quantity: it?.quantity,
+    keys: it ? Object.keys(it) : [],
+  }))));
+
   const MAX_ITEMS = 50;
   const MAX_QUANTITY = 99;
+  const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  // Supabase products.id: UUID 또는 BIGINT 모두 수용. id / product_id 키 모두 수용
+  const normalizeId = (raw) => {
+    if (raw == null || raw === '') return null;
+    const s = typeof raw === 'string' ? raw.trim() : String(raw);
+    if (UUID_REGEX.test(s)) return s;
+    const n = typeof raw === 'number' ? raw : Number(raw);
+    return Number.isNaN(n) || n < 1 ? null : n;
+  };
   const sanitizedItems = items.slice(0, MAX_ITEMS).map((it) => {
-    const id = it.id != null ? Number(it.id) : null;
+    const id = normalizeId(it.id ?? it.product_id);
     const qty = Math.max(1, Math.min(MAX_QUANTITY, Math.floor(Number(it.quantity) || 1)));
     return { id, quantity: qty };
-  }).filter((it) => it.id != null && !Number.isNaN(it.id) && it.id > 0);
+  }).filter((it) => it.id != null);
   if (sanitizedItems.length === 0) {
     return res.status(400).json({ success: false, error: '유효한 상품이 없습니다.' });
   }
@@ -74,34 +91,42 @@ export default async function handler(req, res) {
   }
   const supabase = createClient(supabaseUrl, serviceRoleKey, { db: { schema: 'public' } });
 
-  // 1) 서버에서 cartItems의 productId 기준 DB 단가 조회 후 총액 계산 (클라이언트 금액 불신)
+  // 1) 서버에서 cartItems의 상품 ID 기준 DB 단가 조회 (products.id = UUID 또는 BIGINT, 컬럼 id, price, stock_quantity)
   const productIds = [...new Set(sanitizedItems.map((it) => it.id))];
-  const { data: products, error: productsError } = await supabase
+  const { data: dbProducts, error: productsError } = await supabase
     .from('products')
     .select('id, price, stock_quantity')
     .in('id', productIds);
 
-  if (productsError || !products?.length) {
+  // 디버깅: DB에서 조회된 상품 (Vercel 로그에서 확인)
+  console.log('DB에서 조회된 products:', dbProducts ? JSON.stringify(dbProducts.map((p) => ({ id: p?.id, price: p?.price, typeOfId: typeof p?.id }))) : dbProducts, 'productsError:', productsError?.message ?? productsError);
+
+  if (productsError || !dbProducts?.length) {
     return res.status(400).json({ success: false, error: '상품 정보를 확인할 수 없습니다.' });
   }
 
+  // id를 키로 사용 (UUID 문자열 또는 숫자 모두 매칭되도록 id 그대로 사용)
   const priceById = Object.fromEntries(
-    products.map((p) => [Number(p.id), Math.max(0, Number(p.price) || 0)])
+    dbProducts.map((p) => [p.id, Math.max(0, Number(p.price) || 0)])
   );
   let serverTotal = 0;
   const orderItemsForDb = [];
   for (const it of sanitizedItems) {
-    const unitPrice = priceById[it.id];
+    const unitPrice = priceById[it.id] ?? priceById[String(it.id)];
     if (unitPrice == null) {
       return res.status(400).json({ success: false, error: '존재하지 않는 상품이 포함되어 있습니다.' });
     }
     serverTotal += unitPrice * it.quantity;
+    const orig = items.find((i) => {
+      const n = normalizeId(i.id ?? i.product_id);
+      return n === it.id || (n != null && it.id != null && String(n) === String(it.id));
+    });
     orderItemsForDb.push({
       id: it.id,
       quantity: it.quantity,
       price: unitPrice,
-      name: (items.find((i) => Number(i.id) === it.id)?.name || '').slice(0, 200),
-      image: (items.find((i) => Number(i.id) === it.id)?.image || null)?.slice(0, 2048) ?? null,
+      name: (orig?.name ?? '').slice(0, 200),
+      image: (orig?.image ?? null)?.slice(0, 2048) ?? null,
     });
   }
 
@@ -138,11 +163,16 @@ export default async function handler(req, res) {
     });
   }
 
+  // 총 결제 금액 검증: 포트원 amount.total = 상품 소계 + 배송비(3만원 미만 시 3000원)
+  const FREE_SHIPPING_THRESHOLD = 30000;
+  const DEFAULT_SHIPPING_FEE = 3000;
+  const serverShippingFee = serverTotal >= FREE_SHIPPING_THRESHOLD ? 0 : DEFAULT_SHIPPING_FEE;
+  const expectedTotal = serverTotal + serverShippingFee;
   const actual = Number(actualAmount);
-  if (actual !== serverTotal) {
+  if (actual !== expectedTotal) {
     return res.status(400).json({
       success: false,
-      error: '위조된 결제 시도',
+      error: '결제 금액이 일치하지 않습니다.',
     });
   }
 
@@ -177,11 +207,10 @@ export default async function handler(req, res) {
     return res.status(500).json({ success: false, error: '주문 저장에 실패했습니다.' });
   }
 
-  // 4) 재고 차감 (deduct_stock RPC: FOR UPDATE + 원자적 차감)
+  // 4) 재고 차감 (deduct_stock RPC: UUID/BIGINT 공통으로 TEXT 인자 전달)
   for (const item of sanitizedItems) {
-
     const { error: stockError } = await supabase.rpc('deduct_stock', {
-      p_product_id: item.id,
+      p_product_id: String(item.id),
       p_quantity: item.quantity,
     });
 

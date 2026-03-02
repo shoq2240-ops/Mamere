@@ -241,13 +241,18 @@ const CheckoutPage = () => {
     }
 
     // 주문 저장 시 서버 가격 사용 (클라이언트 조작 방지, 필드 길이 제한)
-    const items = cart.map((item) => ({
-      id: item.id,
-      name: String(item.name ?? '').slice(0, 200),
-      price: priceMap[item.id] ?? parsePrice(item.price),
-      quantity: Math.max(1, Math.min(MAX_QUANTITY, Math.floor(item.quantity || 1))),
-      image: typeof item.image === 'string' ? item.image.slice(0, 2048) : null,
-    }));
+    // Supabase products.id(BIGINT)와 매칭되도록 id를 명시. API에서 id 또는 product_id 로 수용.
+    const items = cart.map((item) => {
+      const productId = item.id != null ? item.id : item.product_id;
+      return {
+        id: productId,
+        product_id: productId,
+        name: String(item.name ?? '').slice(0, 200),
+        price: priceMap[item.id] ?? parsePrice(item.price),
+        quantity: Math.max(1, Math.min(MAX_QUANTITY, Math.floor(item.quantity || 1))),
+        image: typeof item.image === 'string' ? item.image.slice(0, 2048) : null,
+      };
+    });
 
     // 포트원 V2 결제창 호출 (requestPayment) — paymentId 40자 이하(이니시스 등 제한)
     const paymentId = `payment-${Date.now()}`;
