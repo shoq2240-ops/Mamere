@@ -11,12 +11,12 @@ const BrandStoryPage = () => {
           transition={{ duration: 0.8 }}
           className="mb-20 md:mb-32"
         >
-          <h1 className="text-[10px] tracking-[0.2em] uppercase text-[#8B8B8B] font-medium mb-4">
+          <p className="text-[10px] tracking-[0.2em] uppercase text-[#8B8B8B] font-medium mb-4" aria-hidden="true">
             Brand Story
-          </h1>
-          <h2 className="text-3xl md:text-5xl font-light tracking-tight leading-tight text-[#1a1a1a]">
+          </p>
+          <h1 className="text-3xl md:text-5xl font-light tracking-tight leading-tight text-[#1a1a1a]">
             다정한 손길로 완성하는 맑은 피부, 마메르
-          </h2>
+          </h1>
         </motion.div>
 
         <motion.div

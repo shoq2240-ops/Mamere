@@ -62,7 +62,7 @@ const OrderLookupPage = () => {
 
     setLoading(false);
     if (rpcError) {
-      setError(rpcError.message || '조회에 실패했습니다.');
+      setError('조회에 실패했습니다. 잠시 후 다시 시도해 주세요.');
       return;
     }
     const list = Array.isArray(data) ? data : data ? [data] : [];

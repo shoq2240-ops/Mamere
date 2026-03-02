@@ -1,6 +1,7 @@
 import React, { useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import toast from 'react-hot-toast';
 import { useCart } from '../store/CartContext';
 import { useProducts } from '../hooks/useProducts';
@@ -8,6 +9,7 @@ import { useRecentlyViewed } from '../hooks/useRecentlyViewed';
 import { useLanguage } from '../store/LanguageContext';
 import { ProductCarouselSkeleton, LoadingMessage } from '../components/ProductSkeleton';
 import ProductCard from '../components/ProductCard';
+import { getAbsoluteUrl } from '../lib/getAbsoluteUrl';
 import flower3 from '../asset/flower3.png';
 
 const LandingPage = () => {
@@ -50,14 +52,25 @@ const LandingPage = () => {
     }
   };
 
+  const mainOgImage = getAbsoluteUrl(flower3);
+  const mainDescription = '매일 마주하는 자극으로부터 피부를 다정하게 지켜냅니다. 마메르와 함께 피부가 편안하게 숨 쉬는 시간을 경험해 보세요.';
+
   return (
     <div className="bg-[#F9F7F2] text-[#3E2F28] antialiased overflow-x-hidden relative font-sans pb-20 md:pb-24">
+      <Helmet>
+        <meta property="og:type" content="website" />
+        <meta property="og:title" content="마메르(Mamère) | 다정한 위로, 순수한 자연" />
+        <meta property="og:description" content={mainDescription} />
+        <meta property="og:url" content={getAbsoluteUrl('/')} />
+        {mainOgImage && <meta property="og:image" content={mainOgImage} />}
+        <meta property="og:site_name" content="마메르(Mamère)" />
+      </Helmet>
       {/* 1. 히어로: 그라데이션 오버레이로 천연 원료 톤과 조화 */}
-      <section className="relative w-[100vw] h-[85vh] min-h-[400px] m-0 overflow-hidden bg-[#EDEAE4]">
+      <section className="relative w-[100vw] h-[85vh] min-h-[400px] m-0 overflow-hidden bg-[#EDEAE4]" aria-labelledby="hero-heading">
         <div className="absolute inset-0 w-full h-full">
           <img
             src={flower3}
-            alt="Mamère"
+            alt="마메르 메인 배너, 깊은 숲에서 찾은 순수한 휴식"
             className="w-full h-full object-cover object-center block opacity-85"
             decoding="async"
             loading="eager"
@@ -69,7 +82,7 @@ const LandingPage = () => {
             background: 'linear-gradient(to bottom, rgba(45,58,45,0.25) 0%, rgba(249,247,242,0.4) 50%, rgba(249,247,242,0.85) 100%)',
           }}
         >
-          <h1 className="text-2xl md:text-4xl lg:text-5xl font-semibold tracking-tight text-[#3E2F28] drop-shadow-sm">
+          <h1 id="hero-heading" className="text-2xl md:text-4xl lg:text-5xl font-semibold tracking-tight text-[#3E2F28] drop-shadow-sm">
             {t('landing.heroTitle')}
           </h1>
           <p className="mt-3 text-sm md:text-base font-light text-[#3E2F28]/90 max-w-md">

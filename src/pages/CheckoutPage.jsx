@@ -2,18 +2,23 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import * as PortOne from '@portone/browser-sdk/v2';
 import { useAuth } from '../store/AuthContext';
 import { useCart } from '../store/CartContext';
 import { supabase, publicTable } from '../lib/supabase';
-import AddressInput, { combineAddress, splitAddress } from '../components/AddressInput';
+import AddressInput, { combineAddress, splitAddress, serializeAddress } from '../components/AddressInput';
 import { isSoldOut } from '../lib/productStock';
 import { getShippingFee } from '../lib/shipping';
 import { formatPhoneDisplay } from '../lib/formatPhone';
 
-// 포트원 결제 설정 (.env의 VITE_PORTONE_* 사용)
-const PORTONE_STORE_ID = import.meta.env.VITE_PORTONE_STORE_ID;
-const PORTONE_CHANNEL_KEY = import.meta.env.VITE_PORTONE_CHANNEL_KEY;
+// 포트원 V2 결제 설정 (.env의 VITE_PORTONE_* 사용, 비어 있으면 테스트용 기본값)
+const getPortOneStoreId = () => {
+  const v = (import.meta.env.VITE_PORTONE_STORE_ID ?? '').toString().trim();
+  return v || 'store-147f2609-c82d-42f4-96d8-5e29d0ea773a';
+};
+const getPortOneChannelKey = () => {
+  const v = (import.meta.env.VITE_PORTONE_CHANNEL_KEY ?? '').toString().trim();
+  return v || 'channel-key-129cc6e8-0275-415d-b9e4-11f5d4f50146';
+};
 
 // 가격이 "₩890,000" 문자열이거나 숫자일 수 있음
 const parsePrice = (price) => {
@@ -132,8 +137,16 @@ const CheckoutPage = () => {
       return;
     }
 
-    if (!PORTONE_STORE_ID || !PORTONE_CHANNEL_KEY) {
+    const portOneStoreId = getPortOneStoreId();
+    const portOneChannelKey = getPortOneChannelKey();
+    if (!portOneStoreId || !portOneChannelKey) {
       setError('결제 기능이 일시적으로 준비 중입니다. 잠시 후 다시 시도해 주세요.');
+      return;
+    }
+
+    if (typeof window === 'undefined' || !window.PortOne) {
+      setError('결제 모듈을 불러오는 중입니다. 잠시 후 다시 시도해 주세요.');
+      toast.error('결제 모듈을 불러오는 중입니다. 잠시 후 다시 시도해 주세요.');
       return;
     }
 
@@ -217,7 +230,7 @@ const CheckoutPage = () => {
         {
           id: user.id,
           full_name: name || null,
-          address: addressFull || null,
+          address: serializeAddress(shippingAddress, shippingAddressDetail) || null,
           phone: shippingPhone.replace(/\D/g, '').trim() || null,
         },
         { onConflict: 'id' }
@@ -236,152 +249,98 @@ const CheckoutPage = () => {
       image: typeof item.image === 'string' ? item.image.slice(0, 2048) : null,
     }));
 
-    // 포트원 결제창 호출
-    const paymentId = `dn-${Date.now()}-${crypto.randomUUID().slice(0, 8)}`;
+    // 포트원 V2 결제창 호출 (requestPayment) — paymentId 40자 이하(이니시스 등 제한)
+    const paymentId = `payment-${Date.now()}`;
     const orderName = cart.length === 1
       ? cart[0].name
       : `${cart[0].name} 외 ${cart.length - 1}건`;
 
+    const customerEmail = isGuest ? (guestEmail ?? '').trim() : (user?.email ?? 'test@test.com');
+    const customer = {
+      fullName: name || '테스트',
+      email: customerEmail || 'test@test.com',
+      phoneNumber: phone || '010-1234-5678',
+    };
+
     try {
-      const response = await PortOne.requestPayment({
-        storeId: PORTONE_STORE_ID,
-        channelKey: PORTONE_CHANNEL_KEY,
+      const response = await window.PortOne.requestPayment({
+        storeId: portOneStoreId,
+        channelKey: portOneChannelKey,
         paymentId,
         orderName,
-        totalAmount,
-        currency: 'CURRENCY_KRW',
-        payMethod: 'EASY_PAY', // 카카오페이 간편결제
-        customer: {
-          fullName: name,
-          phoneNumber: phone,
-        },
+        totalAmount: Number(totalAmount),
+        currency: 'KRW',
+        payMethod: 'CARD',
+        customer,
       });
 
-      // 결제 실패
-      if (response?.code) {
+      // 결제 실패 또는 취소: response.code 가 있으면 에러
+      if (response?.code != null) {
         setSubmitting(false);
-        setError(response.message || '결제가 완료되지 않았습니다. 다시 시도해 주세요.');
+        const message = response?.message || '결제가 완료되지 않았습니다. 다시 시도해 주세요.';
+        setError(message);
+        toast.error(message);
         return;
       }
 
-      if (isGuest) {
-        // 게스트 주문: user_id null, is_guest true, guest_email, order_number
-        const orderNumber = generateOrderNumber();
-        const guestEmailTrimmed = (guestEmail ?? '').trim();
-        const orderPayload = {
-          user_id: null,
-          is_guest: true,
-          guest_email: guestEmailTrimmed,
-          order_number: orderNumber,
-          items,
-          status: '결제완료',
-          customer_name: name,
-          shipping_name: name,
-          phone,
-          shipping_phone: phone,
-          total_price: totalAmount,
-          total_amount: totalAmount,
-          address: addressFull,
-          shipping_address: addressFull,
-        };
-        const { data: guestOrderRow, error: orderError } = await publicTable('orders')
-          .insert(orderPayload)
-          .select('id')
-          .single();
-
-        setSubmitting(false);
-        if (orderError) {
-          setError('주문 저장에 실패했습니다. 고객센터로 문의해 주세요.');
-          return;
-        }
-
-        for (const item of items) {
-          const qty = Math.max(1, Math.min(MAX_QUANTITY, Math.floor(item.quantity || 1)));
-          const { error: stockError } = await supabase.rpc('deduct_stock', { p_product_id: item.id, p_quantity: qty });
-          if (stockError) {
-            setSubmitting(false);
-            if (guestOrderRow?.id) {
-              await publicTable('orders').update({ status: '취소됨' }).eq('id', guestOrderRow.id);
-            }
-            const isInsufficient = (stockError.message || '').toUpperCase().includes('INSUFFICIENT_STOCK') || stockError.code === 'P0001';
-            setError(isInsufficient
-              ? '재고가 부족하여 주문이 취소되었습니다. 장바구니에서 수량을 조정 후 다시 결제해 주세요.'
-              : '재고 반영 중 오류가 발생하여 주문이 취소되었습니다. 다시 시도해 주세요.');
-            clearCart();
-            return;
-          }
-        }
-
-        clearCart();
-        toast.success('주문이 완료되었습니다');
-        setOrderSuccessData({ orderNumber, guestEmail: guestEmailTrimmed, isGuest: true });
-        return;
+      // 결제 성공: 서버 검증 API 호출 후, 검증 성공 시에만 완료 처리 (금액 조작 방지)
+      if (typeof console !== 'undefined' && console.log) {
+        console.log('PortOne payment success:', response);
       }
 
-      // 로그인 사용자: 프로필 참고 후 주문 저장 (회원도 order_number 부여해 조회·관리 일관성)
-      const { data: profile } = await publicTable('profiles')
-        .select('full_name, name, address, phone')
-        .eq('id', user.id)
-        .maybeSingle();
-
-      const shippingNameFinal = (profile?.full_name ?? profile?.name ?? name).trim() || name.trim();
-      const shippingAddressFinal = (profile?.address ?? addressFull).trim() || addressFull.trim();
-      const shippingPhoneFinal = (profile?.phone ?? shippingPhone.trim()).trim() || shippingPhone.trim();
-
-      if (!shippingNameFinal || !shippingAddressFinal || !shippingPhoneFinal) {
-        setSubmitting(false);
-        setError('이름, 주소, 전화번호를 모두 입력해주세요.');
-        return;
-      }
-
-      const memberOrderNumber = generateOrderNumber();
-      const orderPayload = {
-        user_id: user.id,
-        is_guest: false,
-        order_number: memberOrderNumber,
+      const orderPayloadForVerify = {
         items,
-        status: '결제완료',
-        customer_name: shippingNameFinal,
-        shipping_name: shippingNameFinal,
-        phone: shippingPhoneFinal,
-        shipping_phone: shippingPhoneFinal,
-        total_price: totalAmount,
-        total_amount: totalAmount,
-        address: shippingAddressFinal,
-        shipping_address: shippingAddressFinal,
+        customer_name: name,
+        shipping_name: name,
+        phone,
+        shipping_phone: phone,
+        address: addressFull,
+        shipping_address: addressFull,
       };
-      const { data: insertedOrder, error: orderError } = await publicTable('orders')
-        .insert(orderPayload)
-        .select('id')
-        .single();
 
-      setSubmitting(false);
-      if (orderError) {
-        setError('주문 저장에 실패했습니다. 고객센터로 문의해 주세요.');
+      let verifyRes;
+      let verifyJson = {};
+      try {
+        verifyRes = await fetch('/api/verify-payment', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            paymentId,
+            expectedAmount: totalAmount,
+            cartItems: items,
+            orderPayload: orderPayloadForVerify,
+            isGuest,
+            guestEmail: isGuest ? (guestEmail ?? '').trim() : null,
+            userId: user?.id ?? null,
+          }),
+        });
+        verifyJson = await verifyRes.json().catch(() => ({}));
+      } catch {
+        setSubmitting(false);
+        const msg = '결제 검증 요청 중 오류가 발생했습니다. 네트워크를 확인한 뒤 다시 시도해 주세요.';
+        setError(msg);
+        toast.error(msg);
         return;
       }
 
-      for (const item of items) {
-        const qty = Math.max(1, Math.min(MAX_QUANTITY, Math.floor(item.quantity || 1)));
-        const { error: stockError } = await supabase.rpc('deduct_stock', { p_product_id: item.id, p_quantity: qty });
-        if (stockError) {
-          stockFailed = true;
-          await publicTable('orders').update({ status: '취소됨' }).eq('id', insertedOrder?.id);
-          const isInsufficient = (stockError.message || '').toUpperCase().includes('INSUFFICIENT_STOCK') || stockError.code === 'P0001';
-          setError(isInsufficient
-            ? '재고가 부족하여 주문이 취소되었습니다. 장바구니에서 수량을 조정 후 다시 결제해 주세요.'
-            : '재고 반영 중 오류가 발생하여 주문이 취소되었습니다. 다시 시도해 주세요.');
-          clearCart();
+        if (!verifyRes.ok || !verifyJson?.success) {
+          setSubmitting(false);
+          const msg = verifyJson?.error || '결제 검증에 실패했습니다. 다시 시도해 주세요.';
+          setError(msg);
+          toast.error(msg);
           return;
         }
-      }
 
+      toast.success('결제가 완료되었습니다!');
       clearCart();
-      toast.success('주문이 완료되었습니다');
-      setOrderSuccessData({ orderNumber: memberOrderNumber, isGuest: false });
-    } catch (err) {
+      setOrderSuccessData({
+        orderNumber: verifyJson.orderNumber || generateOrderNumber(),
+        guestEmail: isGuest ? (guestEmail ?? '').trim() : undefined,
+        isGuest: !!isGuest,
+      });
+    } catch {
       setSubmitting(false);
-      setError(err?.message || '결제 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.');
+      setError('결제 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.');
     }
   };
 
@@ -489,8 +448,9 @@ const CheckoutPage = () => {
               <input
                 type="email"
                 value={guestEmail}
-                onChange={(e) => setGuestEmail(e.target.value.slice(0, 255))}
+                onChange={(e) => setGuestEmail(e.target.value.slice(0, 254))}
                 placeholder="example@email.com"
+                maxLength={254}
                 className="w-full bg-[#F9F9F9] px-4 py-3 text-[11px] text-[#000000] outline-none focus:bg-[#F5F5F5] placeholder:text-[#999999]"
                 autoComplete="email"
               />
@@ -517,6 +477,7 @@ const CheckoutPage = () => {
                     value={shippingName}
                     onChange={(e) => setShippingName(e.target.value.slice(0, 100))}
                     placeholder="수령인 이름"
+                    maxLength={100}
                     className="w-full bg-[#F9F9F9] px-4 py-3 text-[11px] text-[#000000] outline-none focus:bg-[#F5F5F5] placeholder:text-[#999999]"
                   />
                 </div>
@@ -536,8 +497,9 @@ const CheckoutPage = () => {
                   <input
                     type="tel"
                     value={shippingPhone}
-                    onChange={(e) => setShippingPhone(formatPhoneDisplay(e.target.value))}
+                    onChange={(e) => setShippingPhone(formatPhoneDisplay(e.target.value.slice(0, 20)))}
                     placeholder="010-0000-0000"
+                    maxLength={20}
                     className="w-full bg-[#F9F9F9] px-4 py-3 text-[11px] text-[#000000] outline-none focus:bg-[#F5F5F5] placeholder:text-[#999999]"
                   />
                 </div>

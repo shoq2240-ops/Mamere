@@ -127,7 +127,7 @@ const Navbar = ({ isScrolled = false, isMobileMenuOpen = false, onMobileMenuChan
           <div className="max-w-[1800px] mx-auto h-20 flex items-center justify-between px-6 md:px-10">
             {/* [이미지 교체] 관리자용 로고: 상단 import brandLogo 경로를 실제 로고 파일로 변경 */}
             <Link to="/" className="flex items-center opacity-90 hover:opacity-100 transition-opacity" style={{ height: '76px' }}>
-              <img src={brandLogo} alt="Mamère" className="h-full w-auto object-contain invert" decoding="async" />
+              <img src={brandLogo} alt="마메르 로고" className="h-full w-auto object-contain invert" decoding="async" />
             </Link>
             <div className="flex items-center gap-6 md:gap-8 text-[10px] font-light tracking-[0.12em] uppercase">
               <Link to="/admin/orders" className="text-white/70 hover:text-white transition-colors">주문 관리</Link>
@@ -193,7 +193,7 @@ const Navbar = ({ isScrolled = false, isMobileMenuOpen = false, onMobileMenuChan
           >
             <img
               src={brandLogo}
-              alt="Mamère"
+              alt="마메르 로고"
               className="h-full w-auto object-contain max-h-[88px] md:max-h-[96px] block bg-transparent mix-blend-multiply"
               decoding="async"
             />

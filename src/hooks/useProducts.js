@@ -39,7 +39,7 @@ export const useProducts = () => {
       setError(null);
     } catch (e) {
       if (import.meta.env.DEV) console.error('제품 데이터 로딩 에러:', e);
-      setError(e.message);
+      setError('상품 목록을 불러오지 못했습니다.');
     } finally {
       setLoading(false);
     }

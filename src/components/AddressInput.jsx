@@ -38,7 +38,7 @@ const formatAddress = (data) => {
 };
 
 /**
- * 기본 주소 + 상세 주소를 하나의 문자열로 결합
+ * 기본 주소 + 상세 주소를 하나의 문자열로 결합 (화면 표시·주문 저장용)
  */
 export const combineAddress = (base, detail) => {
   const b = (base || '').trim();
@@ -46,13 +46,33 @@ export const combineAddress = (base, detail) => {
   return d ? `${b} ${d}`.trim() : b;
 };
 
+/** 구분자: DB 한 컬럼에 기본주소와 상세주소를 함께 저장할 때 사용 */
+const ADDRESS_DELIMITER = '\n';
+
 /**
- * 저장된 주소 분리 (기존 단일 필드 데이터 호환)
- * 새로 저장 시 combineAddress로 합쳐지므로, 로드 시엔 전체를 기본 주소에 넣고 상세는 비움
+ * DB 저장용: 기본주소와 상세주소를 구분자로 합침 (로드 시 splitAddress로 복원 가능)
+ */
+export const serializeAddress = (base, detail) => {
+  const b = (base || '').trim();
+  const d = (detail || '').trim();
+  return d ? `${b}${ADDRESS_DELIMITER}${d}` : b;
+};
+
+/**
+ * DB에 저장된 주소 문자열에서 기본주소·상세주소 복원
+ * (구분자로 저장된 데이터는 분리, 예전에 한 덩어리로 저장된 데이터는 base만 채움)
  */
 export const splitAddress = (full) => {
   if (!full || typeof full !== 'string') return { base: '', detail: '' };
-  return { base: full.trim(), detail: '' };
+  const trimmed = full.trim();
+  const idx = trimmed.indexOf(ADDRESS_DELIMITER);
+  if (idx >= 0) {
+    return {
+      base: trimmed.slice(0, idx).trim(),
+      detail: trimmed.slice(idx + ADDRESS_DELIMITER.length).trim(),
+    };
+  }
+  return { base: trimmed, detail: '' };
 };
 
 /**

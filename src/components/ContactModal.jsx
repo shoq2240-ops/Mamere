@@ -7,6 +7,9 @@ import { useLanguage } from '../store/LanguageContext';
 import { toast } from 'react-hot-toast';
 
 const MESSAGE_MAX_LENGTH = 1000;
+const NAME_MAX_LENGTH = 50;
+const EMAIL_MAX_LENGTH = 254;
+const PHONE_MAX_LENGTH = 20;
 
 const SUBJECT_OPTIONS = [
   { value: '', label: '주제 선택' },
@@ -40,9 +43,13 @@ const ContactModal = ({ isOpen, onClose }) => {
   const validate = () => {
     const next = {};
     if (!form.firstName?.trim()) next.firstName = '이름을 입력해 주세요.';
+    else if (form.firstName.length > NAME_MAX_LENGTH) next.firstName = `이름은 ${NAME_MAX_LENGTH}자 이내로 입력해 주세요.`;
     if (!form.lastName?.trim()) next.lastName = '성을 입력해 주세요.';
+    else if (form.lastName.length > NAME_MAX_LENGTH) next.lastName = `성은 ${NAME_MAX_LENGTH}자 이내로 입력해 주세요.`;
     if (!form.email?.trim()) next.email = '이메일 주소를 입력해 주세요.';
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) next.email = '올바른 이메일 형식이 아닙니다.';
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) next.email = '올바른 이메일 형식이 아닙니다.';
+    else if (form.email.length > EMAIL_MAX_LENGTH) next.email = `이메일은 ${EMAIL_MAX_LENGTH}자 이내로 입력해 주세요.`;
+    if ((form.phone ?? '').length > PHONE_MAX_LENGTH) next.phone = `전화번호는 ${PHONE_MAX_LENGTH}자 이내로 입력해 주세요.`;
     const messageLen = (form.message ?? '').length;
     if (messageLen > MESSAGE_MAX_LENGTH) next.message = `메시지는 ${MESSAGE_MAX_LENGTH}자 이내로 입력해 주세요. (현재 ${messageLen}자)`;
     setErrors(next);
@@ -59,11 +66,11 @@ const ContactModal = ({ isOpen, onClose }) => {
       const rawMessage = (form.message ?? '').trim();
     const message = rawMessage.length > MESSAGE_MAX_LENGTH ? rawMessage.slice(0, MESSAGE_MAX_LENGTH) : rawMessage || null;
     const payload = {
-        first_name: form.firstName.trim(),
-        last_name: form.lastName.trim(),
-        phone: form.phone?.trim() || null,
-        email: form.email.trim(),
-        subject: form.subject || null,
+        first_name: form.firstName.trim().slice(0, NAME_MAX_LENGTH),
+        last_name: form.lastName.trim().slice(0, NAME_MAX_LENGTH),
+        phone: (form.phone?.trim() || '').slice(0, PHONE_MAX_LENGTH) || null,
+        email: form.email.trim().slice(0, EMAIL_MAX_LENGTH),
+        subject: (form.subject || '').slice(0, 50) || null,
         message,
       };
       if (user?.id) payload.user_id = user.id;
@@ -74,9 +81,9 @@ const ContactModal = ({ isOpen, onClose }) => {
       toast.success('문의가 접수되었습니다. 곧 답변 드리겠습니다.');
       setForm({ firstName: '', lastName: '', phone: '', email: '', subject: '', message: '' });
       onClose();
-    } catch (err) {
-      toast.error(err?.message || '문의 접수에 실패했습니다. 잠시 후 다시 시도해 주세요.');
-      setErrors({ submit: err?.message || '문의 접수에 실패했습니다.' });
+    } catch {
+      toast.error('문의 접수에 실패했습니다. 잠시 후 다시 시도해 주세요.');
+      setErrors({ submit: '문의 접수에 실패했습니다.' });
     } finally {
       setIsSubmitting(false);
     }
@@ -154,7 +161,8 @@ const ContactModal = ({ isOpen, onClose }) => {
               <input
                 type="text"
                 value={form.firstName}
-                onChange={(e) => handleChange('firstName', e.target.value)}
+                onChange={(e) => handleChange('firstName', e.target.value.slice(0, NAME_MAX_LENGTH))}
+                maxLength={NAME_MAX_LENGTH}
                 className="w-full bg-transparent border-0 border-b border-[#E0E0E0] py-2 text-[13px] text-[#000000] placeholder:text-[#CCCCCC] focus:outline-none focus:border-[#000000] transition-colors"
                 placeholder=""
               />
@@ -166,7 +174,8 @@ const ContactModal = ({ isOpen, onClose }) => {
               <input
                 type="text"
                 value={form.lastName}
-                onChange={(e) => handleChange('lastName', e.target.value)}
+                onChange={(e) => handleChange('lastName', e.target.value.slice(0, NAME_MAX_LENGTH))}
+                maxLength={NAME_MAX_LENGTH}
                 className="w-full bg-transparent border-0 border-b border-[#E0E0E0] py-2 text-[13px] text-[#000000] placeholder:text-[#CCCCCC] focus:outline-none focus:border-[#000000] transition-colors"
                 placeholder=""
               />
@@ -178,7 +187,8 @@ const ContactModal = ({ isOpen, onClose }) => {
               <input
                 type="tel"
                 value={form.phone}
-                onChange={(e) => handleChange('phone', e.target.value)}
+                onChange={(e) => handleChange('phone', e.target.value.slice(0, PHONE_MAX_LENGTH))}
+                maxLength={PHONE_MAX_LENGTH}
                 className="w-full bg-transparent border-0 border-b border-[#E0E0E0] py-2 text-[13px] text-[#000000] placeholder:text-[#CCCCCC] focus:outline-none focus:border-[#000000] transition-colors"
                 placeholder=""
               />
@@ -189,7 +199,8 @@ const ContactModal = ({ isOpen, onClose }) => {
               <input
                 type="email"
                 value={form.email}
-                onChange={(e) => handleChange('email', e.target.value)}
+                onChange={(e) => handleChange('email', e.target.value.slice(0, EMAIL_MAX_LENGTH))}
+                maxLength={EMAIL_MAX_LENGTH}
                 className="w-full bg-transparent border-0 border-b border-[#E0E0E0] py-2 text-[13px] text-[#000000] placeholder:text-[#CCCCCC] focus:outline-none focus:border-[#000000] transition-colors"
                 placeholder={t('footer.emailPlaceholder')}
               />

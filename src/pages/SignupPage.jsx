@@ -5,6 +5,11 @@ import { supabase, fetchClientIp, logUserConsent, getAuthRedirectUrl } from '../
 import { useLanguage } from '../store/LanguageContext';
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const EMAIL_MAX_LENGTH = 254;
+const PASSWORD_MIN_LENGTH = 8;
+const PASSWORD_MAX_LENGTH = 128;
+// 영문, 숫자, 특수문자 각 1종 이상 포함
+const PASSWORD_REGEX = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?])[A-Za-z\d!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]{8,128}$/;
 
 function isDuplicateEmailError(err) {
   if (!err?.message) return false;
@@ -45,9 +50,9 @@ const SignupPage = () => {
         provider,
         options: { redirectTo: getAuthRedirectUrl('/') },
       });
-      if (error) setError(error.message);
+      if (error) setError('OAuth 로그인에 실패했습니다. 잠시 후 다시 시도해 주세요.');
     } catch (err) {
-      setError(err?.message || 'OAuth 로그인에 실패했습니다.');
+      setError('OAuth 로그인에 실패했습니다.');
     } finally {
       setLoading(false);
     }
@@ -63,9 +68,21 @@ const SignupPage = () => {
       return;
     }
 
-    const trimmedEmail = email.trim();
+    const trimmedEmail = email.trim().slice(0, EMAIL_MAX_LENGTH);
+    if (!trimmedEmail) {
+      setError(t('signup.emailInvalid'));
+      return;
+    }
     if (!EMAIL_REGEX.test(trimmedEmail)) {
       setError(t('signup.emailInvalid'));
+      return;
+    }
+    if (password.length < PASSWORD_MIN_LENGTH || password.length > PASSWORD_MAX_LENGTH) {
+      setError('비밀번호는 8자 이상 128자 이하여야 합니다.');
+      return;
+    }
+    if (!PASSWORD_REGEX.test(password)) {
+      setError('비밀번호는 영문, 숫자, 특수문자를 각 1종 이상 포함해 주세요.');
       return;
     }
 
@@ -73,7 +90,7 @@ const SignupPage = () => {
     try {
       const { data, error: signUpError } = await supabase.auth.signUp({
         email: trimmedEmail,
-        password,
+        password: password.slice(0, PASSWORD_MAX_LENGTH),
         options: { data: {} },
       });
 
@@ -82,7 +99,7 @@ const SignupPage = () => {
           setError(t('signup.emailAlreadyRegistered'));
           return;
         }
-        setError(signUpError.message || '가입에 실패했습니다. 잠시 후 다시 시도해 주세요.');
+        setError('가입에 실패했습니다. 잠시 후 다시 시도해 주세요.');
         return;
       }
 
@@ -115,7 +132,7 @@ const SignupPage = () => {
 
       navigate('/', { replace: true });
     } catch (err) {
-      setError(err?.message || '가입 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.');
+      setError('가입 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.');
     } finally {
       setLoading(false);
     }
@@ -145,8 +162,9 @@ const SignupPage = () => {
             type="email"
             placeholder={t('signup.email').toUpperCase()}
             value={email}
-            onChange={(e) => { setEmail(e.target.value); setError(''); }}
+            onChange={(e) => { setEmail(e.target.value.slice(0, EMAIL_MAX_LENGTH)); setError(''); }}
             required
+            maxLength={EMAIL_MAX_LENGTH}
             disabled={loading}
             autoComplete="email"
             className="w-full bg-[#F9F9F9] px-6 py-4 text-[11px] text-[#000000] outline-none focus:bg-[#F5F5F5] transition-all font-light placeholder:text-[#999999] disabled:opacity-70 disabled:cursor-not-allowed"
@@ -155,9 +173,10 @@ const SignupPage = () => {
             type="password"
             placeholder={t('signup.passwordPlaceholder')}
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={(e) => setPassword(e.target.value.slice(0, PASSWORD_MAX_LENGTH))}
             required
-            minLength={6}
+            minLength={PASSWORD_MIN_LENGTH}
+            maxLength={PASSWORD_MAX_LENGTH}
             disabled={loading}
             autoComplete="new-password"
             className="w-full bg-[#F9F9F9] px-6 py-4 text-[11px] text-[#000000] outline-none focus:bg-[#F5F5F5] transition-all font-light placeholder:text-[#999999] disabled:opacity-70 disabled:cursor-not-allowed"

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useParams, useLocation } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { useCart } from '../store/CartContext';
@@ -9,6 +10,7 @@ import { useRecentlyViewed } from '../hooks/useRecentlyViewed';
 import { formatPrice } from '../lib/formatPrice';
 import { isSoldOut, getStockQuantity } from '../lib/productStock';
 import { parseDescription } from '../lib/descriptionSections';
+import { getAbsoluteUrl } from '../lib/getAbsoluteUrl';
 
 const toArray = (v) => {
   if (Array.isArray(v)) return v;
@@ -94,6 +96,7 @@ const SHIPPING_RETURNS_TEXT = `배송은 결제 완료 후 2–3 영업일 내 �
 
 const ProductDetailPage = () => {
   const { id } = useParams();
+  const location = useLocation();
   const { products, loading, error } = useProducts();
   const { addToCart } = useCart();
   const { toggleWishlist, isInWishlist } = useWishlist();
@@ -190,8 +193,43 @@ const ProductDetailPage = () => {
     );
   }
 
+  const productName = product.name || '상품';
+  const metaDescSource = (details && details.trim().slice(0, 155)) || keyIngredients.map((k) => (typeof k === 'string' ? k : k?.name ?? String(k)).trim()).filter(Boolean).join(', ') || productName;
+  const metaDescription = (metaDescSource.length > 155 ? metaDescSource.slice(0, 152) + '...' : metaDescSource) || `${productName}. 마메르(Mamère)`;
+  const mainImageForMeta = imageList[0]?.url || product.image;
+  const absoluteImageUrl = mainImageForMeta ? getAbsoluteUrl(mainImageForMeta) : '';
+  const canonicalUrl = getAbsoluteUrl(location.pathname);
+
+  const productSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: productName,
+    description: metaDescription,
+    brand: { '@type': 'Brand', name: 'Mamère' },
+    image: (imageList.length ? imageList.map((i) => getAbsoluteUrl(i.url)).filter(Boolean) : absoluteImageUrl ? [absoluteImageUrl] : []),
+    offers: {
+      '@type': 'Offer',
+      price: product.price ?? 0,
+      priceCurrency: 'KRW',
+      availability: soldOut ? 'https://schema.org/OutOfStock' : 'https://schema.org/InStock',
+      url: canonicalUrl,
+    },
+  };
+
   return (
     <div className="min-h-screen bg-[#F9F7F2] pt-20 md:pt-24 pb-16 antialiased text-[#3E2F28]">
+      <Helmet>
+        <title>{productName}</title>
+        <meta name="description" content={metaDescription} />
+        <meta property="og:type" content="website" />
+        <meta property="og:title" content={`${productName} | 마메르(Mamère)`} />
+        <meta property="og:description" content={metaDescription} />
+        <meta property="og:url" content={canonicalUrl} />
+        {absoluteImageUrl && <meta property="og:image" content={absoluteImageUrl} />}
+        <meta property="og:site_name" content="마메르(Mamère)" />
+        <link rel="canonical" href={canonicalUrl} />
+        <script type="application/ld+json">{JSON.stringify(productSchema)}</script>
+      </Helmet>
       <div className="max-w-[1200px] mx-auto px-6 md:px-12">
         {/* 768px 초과: 2컬럼(좌 이미지 | 우 구매정보), 768px 이하: column 위아래 쌓임 */}
         <div className="flex flex-col md:flex-row gap-8 md:gap-[100px] md:items-start">
@@ -210,7 +248,7 @@ const ProductDetailPage = () => {
                     <img
                       key={idx}
                       src={typeof img === 'string' ? img : img.url}
-                      alt={`${product.name} ${idx + 1}`}
+                      alt={idx === 0 ? `${product.name} 정면 패키지` : `${product.name} 상세 이미지 ${idx + 1}`}
                       className="product-detail-image"
                       loading={idx === 0 ? 'eager' : 'lazy'}
                       decoding="async"
@@ -243,7 +281,7 @@ const ProductDetailPage = () => {
                       selectedImageIndex === idx ? 'border-[#1a1a1a]' : 'border-[#E8E4DF] hover:border-[#8B8B8B]'
                     }`}
                   >
-                    <img src={img.url} alt="" className="w-full h-full object-cover" loading="lazy" />
+                    <img src={img.url} alt={`${product.name} 상세 이미지 ${idx + 1} 썸네일`} className="w-full h-full object-cover" loading="lazy" />
                   </button>
                 ))}
               </div>

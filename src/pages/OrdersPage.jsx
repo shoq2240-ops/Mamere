@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../store/AuthContext';
 import { publicTable } from '../lib/supabase';
 import OrderTrackingStepper from '../components/OrderTrackingStepper';
@@ -36,17 +36,10 @@ const formatDate = (dateStr) => {
 };
 
 const OrdersPage = () => {
-  const navigate = useNavigate();
-  const { user, isLoggedIn, loading: authLoading } = useAuth();
+  const { user } = useAuth();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-
-  useEffect(() => {
-    if (!authLoading && !isLoggedIn) {
-      navigate('/login', { replace: true });
-    }
-  }, [authLoading, isLoggedIn, navigate]);
 
   useEffect(() => {
     if (!user?.id) return;
@@ -61,7 +54,7 @@ const OrdersPage = () => {
 
       setLoading(false);
       if (err) {
-        setError(err.message);
+        setError('주문 내역을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.');
         return;
       }
       setOrders(data ?? []);
@@ -69,8 +62,6 @@ const OrdersPage = () => {
 
     loadOrders();
   }, [user?.id]);
-
-  if (authLoading || !isLoggedIn) return null;
 
   return (
     <div className="pt-32 pb-20 px-6 min-h-screen bg-[#FFFFFF] text-[#000000] antialiased">

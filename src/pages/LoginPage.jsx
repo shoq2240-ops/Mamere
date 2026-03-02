@@ -5,6 +5,9 @@ import { supabase, getAuthRedirectUrl } from '../lib/supabase';
 import { useLanguage } from '../store/LanguageContext';
 
 const SAVED_EMAIL_KEY = 'dn_saved_email';
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const EMAIL_MAX_LENGTH = 254;
+const PASSWORD_MAX_LENGTH = 128;
 
 const LoginPage = () => {
   const navigate = useNavigate();
@@ -37,9 +40,21 @@ const LoginPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    const trimmedEmail = (email ?? '').trim().slice(0, EMAIL_MAX_LENGTH);
+    if (!trimmedEmail || !EMAIL_REGEX.test(trimmedEmail)) {
+      setError('올바른 이메일 형식을 입력해 주세요.');
+      return;
+    }
+    if (!password || password.length > PASSWORD_MAX_LENGTH) {
+      setError('비밀번호를 입력해 주세요.');
+      return;
+    }
     setLoading(true);
 
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { error } = await supabase.auth.signInWithPassword({
+      email: trimmedEmail,
+      password: password.slice(0, PASSWORD_MAX_LENGTH),
+    });
 
     setLoading(false);
     if (error) {
@@ -61,7 +76,7 @@ const LoginPage = () => {
       options: { redirectTo: getAuthRedirectUrl('/') },
     });
     setLoading(false);
-    if (error) setError(error.message);
+    if (error) setError('로그인에 실패했습니다. 이메일과 비밀번호를 확인해 주세요.');
   };
 
   const handleForgotPassword = async (e) => {
@@ -116,16 +131,20 @@ const LoginPage = () => {
             type="email"
             placeholder={t('login.email').toUpperCase()}
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={(e) => setEmail(e.target.value.slice(0, EMAIL_MAX_LENGTH))}
             required
+            maxLength={EMAIL_MAX_LENGTH}
+            autoComplete="email"
             className="w-full bg-[#F9F9F9] px-5 py-4 text-[9pt] text-[#000000] outline-none focus:bg-[#F5F5F5] transition-all placeholder-[#999999] tracking-[0.1em]"
           />
           <input
             type="password"
             placeholder={t('login.password').toUpperCase()}
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={(e) => setPassword(e.target.value.slice(0, PASSWORD_MAX_LENGTH))}
             required
+            maxLength={PASSWORD_MAX_LENGTH}
+            autoComplete="current-password"
             className="w-full bg-[#F9F9F9] px-5 py-4 text-[9pt] text-[#000000] outline-none focus:bg-[#F5F5F5] transition-all placeholder-[#999999] tracking-[0.1em]"
           />
           <label className="flex items-center gap-3 cursor-pointer group">

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, lazy, Suspense } from "react";
 import { Toaster, toast } from "react-hot-toast";
 import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
+import { HelmetProvider, Helmet } from "react-helmet-async";
 import { CartProvider, useCart } from "./store/CartContext";
 import { WishlistProvider } from "./store/WishlistContext";
 import { AuthProvider, useAuth } from "./store/AuthContext";
@@ -12,6 +13,7 @@ import Navbar from "./components/Navbar";
 import Marquee from "./components/Marquee";
 import Footer from './components/Footer';
 import RequireAdmin from './components/RequireAdmin';
+import RequireAuth from './components/RequireAuth';
 import CookieBanner from './components/CookieBanner';
 
 // 라우트별 코드 스플리팅 (Lazy Loading) — 초기 번들 축소
@@ -70,10 +72,10 @@ const AnimatedRoutes = () => {
         <Route path="/wishlist" element={<PageWrapper><WishlistPage /></PageWrapper>} />
         <Route path="/login" element={<PageWrapper><LoginPage /></PageWrapper>} />
         <Route path="/signup" element={<PageWrapper><SignupPage /></PageWrapper>} />
-        <Route path="/profile" element={<PageWrapper><ProfilePage /></PageWrapper>} />
+        <Route path="/profile" element={<PageWrapper><RequireAuth><ProfilePage /></RequireAuth></PageWrapper>} />
         <Route path="/cart" element={<PageWrapper><CartPage /></PageWrapper>} />
         <Route path="/checkout" element={<PageWrapper><CheckoutPage /></PageWrapper>} />
-        <Route path="/orders" element={<PageWrapper><OrdersPage /></PageWrapper>} />
+        <Route path="/orders" element={<PageWrapper><RequireAuth><OrdersPage /></RequireAuth></PageWrapper>} />
         <Route path="/order-lookup" element={<PageWrapper><OrderLookupPage /></PageWrapper>} />
         {/* 관리자 전용: RequireAdmin이 로그인 + profiles.is_admin 확인 후 허용, 미충족 시 /login 또는 / 리다이렉트. 데이터는 .env의 Supabase(products/orders) 및 Storage(product-images) 사용 */}
         <Route path="/admin/upload" element={<PageWrapper><RequireAdmin><AdminUploadPage /></RequireAdmin></PageWrapper>} />
@@ -143,6 +145,12 @@ function AppContent() {
 
   return (
     <>
+      <Helmet
+        titleTemplate="%s | 마메르(Mamère)"
+        defaultTitle={DEFAULT_META.title}
+      >
+        <meta name="description" content={DEFAULT_META.description} />
+      </Helmet>
       <header
         className={`sticky top-0 z-[150] flex flex-col flex-none shrink-0 transition-all duration-300 ${headerBgClass}`}
       >
@@ -162,9 +170,15 @@ function AppContent() {
   );
 }
 
+const DEFAULT_META = {
+  title: '마메르(Mamère) | 다정한 위로, 순수한 자연',
+  description: '깊은 숲에서 찾은 순수한 휴식. 마메르와 함께 피부가 편안하게 숨 쉬는 시간을 경험해 보세요.',
+};
+
 function App() {
 
   return (
+    <HelmetProvider>
     <AuthProvider>
       <LanguageProvider>
       <CartProvider>
@@ -194,6 +208,7 @@ function App() {
       </CartProvider>
       </LanguageProvider>
     </AuthProvider>
+    </HelmetProvider>
   );
 }
 

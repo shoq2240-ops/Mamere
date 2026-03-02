@@ -210,8 +210,8 @@ const ShopPage = ({ category }) => {
         {/* 헤더 */}
         <div className="mb-12 md:mb-16 flex justify-between items-end">
           <div>
-            <h1 className="text-[9px] md:text-[10px] tracking-[0.2em] uppercase text-[#7A6B63] font-medium mb-2 md:mb-3">{t('shop.title')}</h1>
-            <h2 className="text-lg md:text-2xl font-semibold tracking-tight leading-none text-[#3E2F28]">{categoryLabel}</h2>
+            <p className="text-[9px] md:text-[10px] tracking-[0.2em] uppercase text-[#7A6B63] font-medium mb-2 md:mb-3" aria-hidden="true">{t('shop.title')}</p>
+            <h1 className="text-lg md:text-2xl font-semibold tracking-tight leading-none text-[#3E2F28]">{categoryLabel}</h1>
             {categorySubCopy && (
               <p className="mt-2 md:mt-3 text-[11px] md:text-[12px] font-light text-[#7A6B63] tracking-[0.04em] leading-relaxed max-w-xl">
                 {categorySubCopy}

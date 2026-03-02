@@ -1,15 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../store/AuthContext';
 import { publicTable, checkSupabaseConnection, withdrawUser } from '../lib/supabase';
 import { supabase } from '../lib/supabase';
-import AddressInput, { combineAddress, splitAddress } from '../components/AddressInput';
+import AddressInput, { serializeAddress, splitAddress } from '../components/AddressInput';
 import { formatPhoneDisplay } from '../lib/formatPhone';
 
 const ProfilePage = () => {
-  const navigate = useNavigate();
-  const { user, isLoggedIn, loading: authLoading } = useAuth();
+  const { user } = useAuth();
   const [name, setName] = useState('');
   const [address, setAddress] = useState('');
   const [addressDetail, setAddressDetail] = useState('');
@@ -22,14 +21,7 @@ const ProfilePage = () => {
   const [withdrawConfirm, setWithdrawConfirm] = useState('');
   const [withdrawing, setWithdrawing] = useState(false);
 
-  // 로그인 안 되어 있으면 로그인 페이지로 (auth 로딩 끝난 뒤에만)
-  useEffect(() => {
-    if (!authLoading && !isLoggedIn) {
-      navigate('/login', { replace: true });
-    }
-  }, [authLoading, isLoggedIn, navigate]);
-
-  // 프로필 로드 (본인 행만)
+  // 프로필 로드 (RequireAuth로 인증 보장됨)
   useEffect(() => {
     if (!user?.id) return;
 
@@ -49,7 +41,7 @@ const ProfilePage = () => {
 
       setLoading(false);
       if (error) {
-        setError(error.message);
+        setError('프로필을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.');
         return;
       }
       if (data) {
@@ -72,7 +64,7 @@ const ProfilePage = () => {
     setError('');
     setMessage('');
 
-    const fullAddress = combineAddress(address, addressDetail);
+    const fullAddress = serializeAddress(address, addressDetail);
     const { error } = await publicTable('profiles')
       .upsert(
         {
@@ -86,7 +78,7 @@ const ProfilePage = () => {
 
     setSaving(false);
     if (error) {
-      setError(error.message);
+      setError('저장에 실패했습니다. 잠시 후 다시 시도해 주세요.');
       return;
     }
     setMessage('저장되었습니다.');
@@ -101,14 +93,13 @@ const ProfilePage = () => {
     setShowWithdrawModal(false);
     setWithdrawConfirm('');
     if (error) {
-      setError(error);
+      setError('탈퇴 처리에 실패했습니다. 잠시 후 다시 시도해 주세요.');
       return;
     }
     await supabase.auth.signOut();
     navigate('/', { replace: true });
   };
 
-  if (authLoading || !isLoggedIn) return null;
 
   return (
     <div className="min-h-screen bg-[#FFFFFF] flex items-center justify-center px-8 pt-24 pb-20 antialiased">

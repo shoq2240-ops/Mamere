@@ -131,7 +131,7 @@ function SortableThumb({ item, onDelete, onSetMain, onCrop, isMain }) {
     >
       <img
         src={item.url}
-        alt=""
+        alt={isMain ? '대표 이미지 미리보기' : '상품 이미지 미리보기'}
         className="w-full h-full object-cover"
         loading="lazy"
         decoding="async"
@@ -893,7 +893,7 @@ const AdminUploadPage = () => {
                   className="flex items-center gap-6 py-5 px-6"
                 >
                   <div className="w-14 h-18 bg-[#F0F0F0] overflow-hidden flex-shrink-0 border border-[#E0E0E0]">
-                    {p.image && <img src={p.image} alt="" className="w-full h-full object-cover" loading="lazy" decoding="async" />}
+                    {p.image && <img src={p.image} alt={p.name ? `${p.name} 상품 이미지` : '상품 이미지'} className="w-full h-full object-cover" loading="lazy" decoding="async" />}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
