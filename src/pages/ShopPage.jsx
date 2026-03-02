@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
+import { AnimatePresence, motion } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { useCart } from '../store/CartContext';
 import { useAuth } from '../store/AuthContext';
@@ -10,6 +11,12 @@ import { ProductGridSkeleton, LoadingMessage } from '../components/ProductSkelet
 import ProductCard from '../components/ProductCard';
 
 const SKIN_TYPES = ['건성', '지성', '복합성', '민감성'];
+const SKIN_TYPE_TOOLTIPS = {
+  건성: '세안 후 얇은 당김이 느껴지고, 피부가 쉽게 메마른다면',
+  지성: '오후가 되면 자연스러운 윤기를 넘어 유분감이 맴돈다면',
+  복합성: '이마와 코는 번들거리지만 볼은 건조해, 세심한 균형이 필요하다면',
+  민감성: '작은 변화에도 쉽게 반응하여, 진정이 필요하다면',
+};
 const SKIN_CONCERNS = ['보습', '진정', '트러블', '미백', '탄력'];
 
 const normalizeCategory = (c) => (c || '').toLowerCase().replace(/-/g, '_');
@@ -40,6 +47,7 @@ const ShopPage = ({ category }) => {
   const [searchTerm, setSearchTerm] = useState(query);
   const [skinType, setSkinType] = useState(skinTypeParam);
   const [skinConcern, setSkinConcern] = useState(skinConcernParam);
+  const [hoveredSkinType, setHoveredSkinType] = useState(null);
 
   const { products, loading, error } = useProducts();
 
@@ -152,7 +160,7 @@ const ShopPage = ({ category }) => {
         {/* 필터: 피부 타입, 피부 고민 — 스킨케어·전체(Best)일 때만 노출 */}
         {showSkinFilters && (
           <div className="mb-10 md:mb-12 flex flex-col gap-6">
-            <div>
+            <div className="relative">
               <p className="text-[9px] md:text-[10px] tracking-[0.15em] uppercase text-[#7A6B63] mb-2">{t('shop.skinType')}</p>
               <div className="flex flex-wrap gap-2">
                 <button
@@ -165,16 +173,36 @@ const ShopPage = ({ category }) => {
                   {t('shop.all')}
                 </button>
                 {SKIN_TYPES.map((typeLabel) => (
-                  <button
+                  <div
                     key={typeLabel}
-                    type="button"
-                    onClick={() => updateFilter('skinType', skinType === typeLabel ? '' : typeLabel)}
-                    className={`px-4 py-2 text-[10px] font-light tracking-[0.08em] uppercase transition-colors ${
-                      skinType === typeLabel ? 'bg-[#A8B894] text-[#2D3A2D]' : 'bg-[#F9F7F2] border border-[#A8B894]/50 text-[#3E2F28] hover:border-[#A8B894]'
-                    }`}
+                    className="relative inline-block"
+                    onMouseEnter={() => setHoveredSkinType(typeLabel)}
+                    onMouseLeave={() => setHoveredSkinType(null)}
                   >
-                    {typeLabel}
-                  </button>
+                    <button
+                      type="button"
+                      onClick={() => updateFilter('skinType', skinType === typeLabel ? '' : typeLabel)}
+                      className={`px-4 py-2 text-[10px] font-light tracking-[0.08em] uppercase transition-colors ${
+                        skinType === typeLabel ? 'bg-[#A8B894] text-[#2D3A2D]' : 'bg-[#F9F7F2] border border-[#A8B894]/50 text-[#3E2F28] hover:border-[#A8B894]'
+                      }`}
+                    >
+                      {typeLabel}
+                    </button>
+                    <AnimatePresence>
+                      {hoveredSkinType === typeLabel && SKIN_TYPE_TOOLTIPS[typeLabel] && (
+                        <motion.div
+                          initial={{ opacity: 0, y: -4 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -4 }}
+                          transition={{ duration: 0.2, ease: [0.25, 0.1, 0.25, 1] }}
+                          className="absolute left-0 z-10 mt-1 min-w-[200px] max-w-[280px] rounded-sm border border-[#E8E4DF] bg-[#F5F3EE] px-3 py-2.5 text-[11px] font-light leading-relaxed text-[#5C4A42] shadow-[0_8px_20px_rgba(62,47,40,0.08)]"
+                          style={{ top: '100%' }}
+                        >
+                          {SKIN_TYPE_TOOLTIPS[typeLabel]}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
                 ))}
               </div>
             </div>

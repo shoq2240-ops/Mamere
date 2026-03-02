@@ -6,6 +6,42 @@ import { formatPrice } from '../lib/formatPrice';
 import { isSoldOut } from '../lib/productStock';
 import TiltCard from './TiltCard';
 
+const resolveProductImages = (product) => {
+  if (!product) return [];
+  const urls = [];
+
+  const rawImages = product.images;
+  if (rawImages) {
+    let arr = [];
+    if (Array.isArray(rawImages)) {
+      arr = rawImages;
+    } else if (typeof rawImages === 'string') {
+      try {
+        const parsed = JSON.parse(rawImages);
+        arr = Array.isArray(parsed) ? parsed : [rawImages];
+      } catch {
+        arr = [rawImages];
+      }
+    }
+    arr.forEach((img) => {
+      if (typeof img === 'string' && img.trim()) {
+        urls.push(img.trim());
+      } else if (img && typeof img === 'object') {
+        const u = img.url || img.src;
+        if (typeof u === 'string' && u.trim()) {
+          urls.push(u.trim());
+        }
+      }
+    });
+  }
+
+  if (urls.length === 0 && typeof product.image === 'string' && product.image.trim()) {
+    urls.push(product.image.trim());
+  }
+
+  return urls;
+};
+
 /**
  * @param {Object} product - { id, name, price, image }
  * @param {Function} onAddToCart - optional, 호출 시 (product, e) 전달
@@ -17,7 +53,10 @@ const ProductCard = ({ product, onAddToCart, variant = 'grid', grayscale = false
   const { t } = useLanguage();
   const soldOut = isSoldOut(product);
   const [imgError, setImgError] = useState(false);
-  const showPlaceholder = !product.image || imgError;
+  const imageUrls = resolveProductImages(product);
+  const primaryImage = product.card_image || imageUrls[0] || product.image;
+  const hoverImage = product.card_hover_image || (imageUrls.length > 1 ? imageUrls[1] : null);
+  const showPlaceholder = !primaryImage || imgError;
 
   const handleWishlistClick = (e) => {
     e.preventDefault();
@@ -36,16 +75,29 @@ const ProductCard = ({ product, onAddToCart, variant = 'grid', grayscale = false
             </span>
           </div>
         ) : (
-          <img
-            src={product.image}
-            alt={product.name}
-            loading="lazy"
-            decoding="async"
-            onError={() => setImgError(true)}
-            className={`w-full h-full object-cover transition-all duration-500 ${
-              variant === 'carousel' ? 'opacity-90 group-hover:scale-105' : 'opacity-80 group-hover:scale-[1.03] group-hover:opacity-100'
-            } ${grayscale ? 'grayscale group-hover:grayscale-0' : ''}`}
-          />
+          <>
+            <img
+              src={primaryImage}
+              alt={product.name}
+              loading="lazy"
+              decoding="async"
+              onError={() => setImgError(true)}
+              className={`w-full h-full object-cover transition-all duration-500 ${
+                variant === 'carousel'
+                  ? 'opacity-90 group-hover:scale-105'
+                  : 'opacity-80 group-hover:scale-[1.03] group-hover:opacity-100'
+              } ${grayscale ? 'grayscale group-hover:grayscale-0' : ''}`}
+            />
+            {hoverImage && (
+              <img
+                src={hoverImage}
+                alt={product.name}
+                loading="lazy"
+                decoding="async"
+                className="absolute inset-0 w-full h-full object-cover opacity-0 group-hover:opacity-100 transition-opacity duration-500 ease-in-out"
+              />
+            )}
+          </>
         )}
         {!showPlaceholder && (
           <div className="absolute inset-0 bg-[#2D3A2D]/[0.04] opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />

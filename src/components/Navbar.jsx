@@ -132,6 +132,7 @@ const Navbar = ({ isScrolled = false, isMobileMenuOpen = false, onMobileMenuChan
             <div className="flex items-center gap-6 md:gap-8 text-[10px] font-light tracking-[0.12em] uppercase">
               <Link to="/admin/orders" className="text-white/70 hover:text-white transition-colors">주문 관리</Link>
               <Link to="/admin/upload" className="text-white/70 hover:text-white transition-colors">상품 등록</Link>
+              <Link to="/admin/returns" className="text-white/70 hover:text-white transition-colors">반품/교환</Link>
               <Link to="/admin/users" className="text-white/70 hover:text-white transition-colors">회원 관리</Link>
               <span className="text-white/30">|</span>
               <Link to="/" className="text-white/70 hover:text-white transition-colors">메인으로</Link>

@@ -10,6 +10,12 @@
 ALTER TABLE products ADD COLUMN IF NOT EXISTS images JSONB DEFAULT '[]';
 COMMENT ON COLUMN products.images IS '이미지 목록: [{ "url": "...", "priority": 0, "isMain": true }, ...]';
 
+-- 상품 카드용 대표/호버 이미지 (선택)
+ALTER TABLE products ADD COLUMN IF NOT EXISTS card_image TEXT;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS card_hover_image TEXT;
+COMMENT ON COLUMN products.card_image IS '상품 카드 대표 이미지 URL';
+COMMENT ON COLUMN products.card_hover_image IS '상품 카드 호버 이미지 URL';
+
 -- 재고 수량
 ALTER TABLE products ADD COLUMN IF NOT EXISTS stock_quantity INTEGER DEFAULT 0;
 COMMENT ON COLUMN products.stock_quantity IS '재고 수량. 결제 시 차감, 0 이하 시 자동 품절';

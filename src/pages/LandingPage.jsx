@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
@@ -11,6 +11,87 @@ import { ProductCarouselSkeleton, LoadingMessage } from '../components/ProductSk
 import ProductCard from '../components/ProductCard';
 import { getAbsoluteUrl } from '../lib/getAbsoluteUrl';
 import flower3 from '../asset/flower3.png';
+
+// 메인 히어로 캐러셀 이미지 목록
+// 관리자: 아래 배열의 src/alt만 교체하면 배너 이미지를 손쉽게 변경할 수 있습니다.
+const HERO_SLIDES = [
+  {
+    src: flower3,
+    alt: '마메르 메인 배너, 깊은 숲에서 찾은 순수한 휴식',
+  },
+  {
+    src: flower3,
+    alt: '피부를 감싸는 자연 유래 성분의 편안한 질감',
+  },
+  {
+    src: flower3,
+    alt: '마메르의 차분한 톤온톤 패키지와 자연광',
+  },
+];
+
+const HeroCarousel = () => {
+  const [current, setCurrent] = useState(0);
+
+  const next = () => {
+    setCurrent((prev) => (prev + 1) % HERO_SLIDES.length);
+  };
+
+  const prev = () => {
+    setCurrent((prev) => (prev - 1 + HERO_SLIDES.length) % HERO_SLIDES.length);
+  };
+
+  // Auto-play
+  useEffect(() => {
+    const id = setInterval(next, 6000);
+    return () => clearInterval(id);
+  }, []);
+
+  return (
+    <>
+      <div className="absolute inset-0 w-full h-full overflow-hidden">
+        <motion.div
+          className="flex w-full h-full"
+          animate={{ x: `-${current * 100}%` }}
+          transition={{ duration: 0.8, ease: 'easeInOut' }}
+          drag="x"
+          dragConstraints={{ left: 0, right: 0 }}
+          dragElastic={0.2}
+          onDragEnd={(_, info) => {
+            if (info.offset.x < -40) next();
+            else if (info.offset.x > 40) prev();
+          }}
+        >
+          {HERO_SLIDES.map((slide, idx) => (
+            <div key={idx} className="w-full h-full flex-shrink-0">
+              <img
+                src={slide.src}
+                alt={slide.alt}
+                className="w-full h-full object-cover object-center block opacity-85"
+                decoding="async"
+                loading={idx === 0 ? 'eager' : 'lazy'}
+              />
+            </div>
+          ))}
+        </motion.div>
+      </div>
+
+      {/* 인디케이터 Dots */}
+      <div className="absolute bottom-8 left-0 right-0 flex justify-center gap-2 z-10">
+        {HERO_SLIDES.map((_, idx) => (
+          <button
+            key={idx}
+            type="button"
+            onClick={() => setCurrent(idx)}
+            className={`w-2.5 h-2.5 rounded-full border border-white/60 transition-all ${
+              current === idx ? 'bg-white' : 'bg-transparent'
+            }`}
+            aria-label={`배너 ${idx + 1} 보기`}
+          />
+        ))}
+      </div>
+    </>
+  );
+};
 
 const LandingPage = () => {
   const { addToCart } = useCart();
@@ -65,17 +146,9 @@ const LandingPage = () => {
         {mainOgImage && <meta property="og:image" content={mainOgImage} />}
         <meta property="og:site_name" content="마메르(Mamère)" />
       </Helmet>
-      {/* 1. 히어로: 그라데이션 오버레이로 천연 원료 톤과 조화 */}
+      {/* 1. 히어로: 무한 스와이프 캐러셀 + 그라데이션 오버레이 */}
       <section className="relative w-[100vw] h-[85vh] min-h-[400px] m-0 overflow-hidden bg-[#EDEAE4]" aria-labelledby="hero-heading">
-        <div className="absolute inset-0 w-full h-full">
-          <img
-            src={flower3}
-            alt="마메르 메인 배너, 깊은 숲에서 찾은 순수한 휴식"
-            className="w-full h-full object-cover object-center block opacity-85"
-            decoding="async"
-            loading="eager"
-          />
-        </div>
+        <HeroCarousel />
         <div
           className="absolute inset-0 flex flex-col items-center justify-center text-center px-6"
           style={{

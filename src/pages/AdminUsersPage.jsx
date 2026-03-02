@@ -81,6 +81,12 @@ const AdminUsersPage = () => {
               주문 관리
             </Link>
             <Link
+              to="/admin/returns"
+              className="text-[10px] font-medium tracking-[0.12em] uppercase text-white/60 hover:text-[#FDFDFB] transition-colors"
+            >
+              반품/교환
+            </Link>
+            <Link
               to="/admin/upload"
               className="text-[10px] font-medium tracking-[0.12em] uppercase text-white/60 hover:text-[#FDFDFB] transition-colors"
             >

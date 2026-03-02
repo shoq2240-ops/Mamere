@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useDropzone } from 'react-dropzone';
@@ -106,7 +106,7 @@ function createImage(url) {
   });
 }
 
-function SortableThumb({ item, onDelete, onSetMain, onCrop, isMain }) {
+function SortableThumb({ item, onDelete, onSetMain, onSetHover, onCrop, isMain, isHover }) {
   const {
     attributes,
     listeners,
@@ -141,11 +141,23 @@ function SortableThumb({ item, onDelete, onSetMain, onCrop, isMain }) {
           <span className="text-[10px] font-bold text-white">{item.progress}%</span>
         </div>
       )}
+      {isHover && (
+        <div className="absolute top-0 left-0 bg-[#000000]/80 text-[8px] text-white px-1.5 py-0.5 font-medium">
+          호버
+        </div>
+      )}
       {isMain && (
         <div className="absolute bottom-0 left-0 right-0 bg-[#000000] text-[9px] text-white text-center py-0.5 font-medium">
           대표
         </div>
       )}
+      <button
+        type="button"
+        onClick={(e) => { e.preventDefault(); e.stopPropagation(); onSetHover(item.id); }}
+        className="absolute bottom-6 left-0 right-0 py-0.5 bg-black/50 text-[8px] text-white text-center hover:bg-black/80"
+      >
+        호버로
+      </button>
       <button
         type="button"
         onClick={(e) => { e.preventDefault(); e.stopPropagation(); onDelete(item.id); }}
@@ -203,7 +215,12 @@ const AdminUploadPage = () => {
     imageList: [],
     stockQuantity: 0,
     isManualSoldout: false,
+    cardMainImageId: null,
+    cardHoverImageId: null,
   });
+
+  const thumbnailInputRef = useRef(null);
+  const hoverInputRef = useRef(null);
 
   const [cropState, setCropState] = useState({
     open: false,
@@ -349,6 +366,14 @@ const AdminUploadPage = () => {
         isMain: item.id === id,
         priority: item.priority,
       })),
+      cardMainImageId: id,
+    }));
+  }, []);
+
+  const handleSetHover = useCallback((id) => {
+    setForm((prev) => ({
+      ...prev,
+      cardHoverImageId: id,
     }));
   }, []);
 
@@ -408,6 +433,59 @@ const AdminUploadPage = () => {
     const main = form.imageList.find((i) => i.isMain);
     return main?.url ?? form.imageList[0]?.url ?? null;
   }, [form.imageList]);
+
+  const addOrReplaceThumbnailFromFile = useCallback((file) => {
+    const newUrl = URL.createObjectURL(file);
+    setForm((prev) => {
+      const list = [...prev.imageList];
+      const currentMainId = prev.cardMainImageId || list.find((i) => i.isMain)?.id || null;
+      if (currentMainId) {
+        const idx = list.findIndex((i) => i.id === currentMainId);
+        if (idx !== -1) {
+          list[idx] = { ...list[idx], url: newUrl, file, progress: undefined };
+        }
+        return {
+          ...prev,
+          imageList: list.map((item) => ({ ...item, isMain: item.id === currentMainId })),
+          cardMainImageId: currentMainId,
+        };
+      }
+      const id = createImageId();
+      const newList = [
+        { id, url: newUrl, file, progress: undefined, isMain: true, priority: 0 },
+        ...list.map((item, idx) => ({ ...item, priority: idx + 1 })),
+      ];
+      return {
+        ...prev,
+        imageList: newList,
+        cardMainImageId: id,
+      };
+    });
+  }, []);
+
+  const addOrReplaceHoverFromFile = useCallback((file) => {
+    const newUrl = URL.createObjectURL(file);
+    setForm((prev) => {
+      const list = [...prev.imageList];
+      if (prev.cardHoverImageId) {
+        const idx = list.findIndex((i) => i.id === prev.cardHoverImageId);
+        if (idx !== -1) {
+          list[idx] = { ...list[idx], url: newUrl, file, progress: undefined };
+          return { ...prev, imageList: list };
+        }
+      }
+      const id = createImageId();
+      const newList = [
+        ...list,
+        { id, url: newUrl, file, progress: undefined, isMain: false, priority: list.length },
+      ];
+      return {
+        ...prev,
+        imageList: newList,
+        cardHoverImageId: id,
+      };
+    });
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -469,6 +547,9 @@ const AdminUploadPage = () => {
 
     setSubmitting(true);
     try {
+      const prevProduct = editingId
+        ? products.find((p) => p.id === editingId) || null
+        : null;
       const list = [...form.imageList];
       for (let i = 0; i < list.length; i++) {
         const item = list[i];
@@ -494,11 +575,26 @@ const AdminUploadPage = () => {
 
       const mainItem = list.find((i) => i.isMain);
       const mainUrl = mainItem?.url ?? list[0]?.url;
-      const finalList = list.map((item, idx) => ({
-        url: item.url,
-        priority: idx,
-        isMain: item.isMain,
-      }));
+      const cardMainItem = form.cardMainImageId
+        ? list.find((item) => item.id === form.cardMainImageId)
+        : mainItem;
+      const cardHoverItem = form.cardHoverImageId
+        ? list.find((item) => item.id === form.cardHoverImageId)
+        : null;
+      const cardImageUrl = cardMainItem?.url ?? null;
+      const cardHoverImageUrl = cardHoverItem?.url ?? null;
+      const finalList = list
+        .filter((item) => {
+          // 호버 전용 이미지(대표와 다른 경우)는 상세용 images 배열에서는 제외
+          if (!form.cardHoverImageId) return true;
+          if (form.cardHoverImageId === form.cardMainImageId) return true;
+          return item.id !== form.cardHoverImageId;
+        })
+        .map((item, idx) => ({
+          url: item.url,
+          priority: idx,
+          isMain: item.isMain,
+        }));
       const stockQty = Math.max(0, parseInt(String(form.stockQuantity || 0).replace(/\D/g, ''), 10) || 0);
 
       const row = {
@@ -514,6 +610,8 @@ const AdminUploadPage = () => {
         images: finalList,
         stock_quantity: stockQty,
         is_manual_soldout: form.isManualSoldout,
+        card_image: cardImageUrl,
+        card_hover_image: cardHoverImageUrl,
       };
 
       // insert/update 시 서버가 최신 세션으로 인식하도록 세션 갱신
@@ -522,6 +620,34 @@ const AdminUploadPage = () => {
       if (editingId) {
         const { error: err } = await publicTable('products').update(row).eq('id', editingId);
         if (err) throw err;
+
+        // 업데이트 후 더 이상 사용하지 않는 이전 이미지 정리
+        if (prevProduct) {
+          try {
+            const prevUrls = collectProductImageUrls(prevProduct);
+            const nextUrls = collectProductImageUrls({
+              image: row.image,
+              card_image: row.card_image,
+              card_hover_image: row.card_hover_image,
+              images: row.images,
+            });
+            const toDelete = [...prevUrls].filter((u) => u && !nextUrls.has(u));
+            const paths = toDelete
+              .map((u) => extractStoragePathFromUrl(u))
+              .filter((p) => p);
+            if (paths.length > 0) {
+              const { error: removeError } = await supabase.storage
+                .from(STORAGE_BUCKET)
+                .remove(paths);
+              if (removeError) {
+                console.error('[AdminUpload] 업데이트 시 오래된 이미지 삭제 실패:', removeError);
+              }
+            }
+          } catch (cleanErr) {
+            console.error('[AdminUpload] 업데이트 후 이미지 정리 중 오류:', cleanErr);
+          }
+        }
+
         setSuccess('상품이 수정되었습니다.');
       } else {
         const { error: err } = await publicTable('products').insert(row);
@@ -541,9 +667,31 @@ const AdminUploadPage = () => {
   const toArr = (v) => (Array.isArray(v) ? v : typeof v === 'string' ? (v ? [v] : []) : []);
   const handleEdit = (p) => {
     const { details, howToUse } = parseDescription(p.description);
-    const images = Array.isArray(p.images) && p.images.length > 0
+    let images = Array.isArray(p.images) && p.images.length > 0
       ? p.images
       : p.image ? [{ url: p.image, priority: 0, isMain: true }] : [];
+
+    // 카드 호버 이미지가 images 배열에 없다면, 편집 시 썸네일로 보여주기 위해 추가
+    if (p.card_hover_image && !images.some((img) => (typeof img === 'string' ? img === p.card_hover_image : img?.url === p.card_hover_image))) {
+      images = [
+        ...images,
+        { url: p.card_hover_image, priority: images.length, isMain: false },
+      ];
+    }
+    const imageList = images.map((img, i) => ({
+      id: createImageId(),
+      url: typeof img === 'string' ? img : img.url,
+      file: null,
+      progress: 100,
+      isMain: img.isMain === true || (i === 0 && !images.some((x) => x.isMain)),
+      priority: typeof img.priority === 'number' ? img.priority : i,
+    }));
+    const cardMainImageId = p.card_image
+      ? (imageList.find((it) => it.url === p.card_image)?.id ?? null)
+      : null;
+    const cardHoverImageId = p.card_hover_image
+      ? (imageList.find((it) => it.url === p.card_hover_image)?.id ?? null)
+      : null;
     setEditingId(p.id);
     setForm({
       name: p.name,
@@ -555,27 +703,105 @@ const AdminUploadPage = () => {
       skinType: toArr(p.skin_type || p.skinType),
       skinConcern: toArr(p.skin_concern || p.skinConcern),
       keyIngredients: Array.isArray(p.key_ingredients) ? p.key_ingredients.join(', ') : (p.key_ingredients || ''),
-      imageList: images.map((img, i) => ({
-        id: createImageId(),
-        url: typeof img === 'string' ? img : img.url,
-        file: null,
-        progress: 100,
-        isMain: img.isMain === true || (i === 0 && !images.some((x) => x.isMain)),
-        priority: typeof img.priority === 'number' ? img.priority : i,
-      })),
+      imageList,
       stockQuantity: p.stock_quantity ?? 0,
       isManualSoldout: p.is_manual_soldout === true,
+      cardMainImageId,
+      cardHoverImageId,
     });
     setSuccess('');
     setError('');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const extractStoragePathFromUrl = (url) => {
+    if (!url || typeof url !== 'string') return null;
+    const trimmed = url.trim();
+    // 이미 경로만 있는 경우
+    if (!trimmed.startsWith('http')) return trimmed;
+    try {
+      const u = new URL(trimmed);
+      const marker = `/object/public/${STORAGE_BUCKET}/`;
+      const idx = u.pathname.indexOf(marker);
+      if (idx === -1) return null;
+      const path = u.pathname.slice(idx + marker.length);
+      return decodeURIComponent(path);
+    } catch (e) {
+      console.error('[AdminUpload] URL 파싱 실패:', url, e);
+      return null;
+    }
+  };
+
+  const collectProductImageUrls = (product) => {
+    const urls = new Set();
+    if (!product) return urls;
+    const pushUrl = (u) => {
+      if (typeof u === 'string' && u.trim()) urls.add(u.trim());
+    };
+    pushUrl(product.image);
+    pushUrl(product.card_image);
+    pushUrl(product.card_hover_image);
+    const imgs = Array.isArray(product.images)
+      ? product.images
+      : typeof product.images === 'string'
+        ? (() => {
+            try {
+              const parsed = JSON.parse(product.images);
+              return Array.isArray(parsed) ? parsed : [];
+            } catch {
+              return [];
+            }
+          })()
+        : [];
+    imgs.forEach((img) => {
+      if (!img) return;
+      if (typeof img === 'string') {
+        pushUrl(img);
+      } else if (typeof img === 'object' && img.url) {
+        pushUrl(img.url);
+      }
+    });
+    return urls;
+  };
+
   const handleDelete = async (id) => {
     if (!confirm('이 상품을 삭제할까요?')) return;
     try {
+      // 삭제 전 기존 이미지 URL 수집
+      let prevProduct = null;
+      try {
+        const { data } = await publicTable('products')
+          .select('image, images, card_image, card_hover_image')
+          .eq('id', id)
+          .maybeSingle();
+        prevProduct = data || null;
+      } catch (e) {
+        console.error('[AdminUpload] 상품 조회 실패 (삭제 전 이미지 수집)', e);
+      }
+
       const { error: err } = await publicTable('products').delete().eq('id', id);
       if (err) throw err;
+
+      // Storage 이미지 정리
+      if (prevProduct) {
+        try {
+          const urls = collectProductImageUrls(prevProduct);
+          const paths = [...urls]
+            .map((u) => extractStoragePathFromUrl(u))
+            .filter((p) => p);
+          if (paths.length > 0) {
+            const { error: removeError } = await supabase.storage
+              .from(STORAGE_BUCKET)
+              .remove(paths);
+            if (removeError) {
+              console.error('[AdminUpload] Storage 이미지 삭제 실패:', removeError);
+            }
+          }
+        } catch (e) {
+          console.error('[AdminUpload] Storage 이미지 정리 중 오류:', e);
+        }
+      }
+
       setSuccess('상품이 삭제되었습니다.');
       fetchProducts();
     } catch (err) {
@@ -598,6 +824,8 @@ const AdminUploadPage = () => {
       imageList: [],
       stockQuantity: 0,
       isManualSoldout: false,
+      cardMainImageId: null,
+      cardHoverImageId: null,
     });
   };
 
@@ -638,6 +866,9 @@ const AdminUploadPage = () => {
           <div className="flex flex-wrap gap-6">
             <Link to="/admin/orders" className="text-[10px] font-medium tracking-[0.12em] uppercase text-[#666666] hover:text-[#000000] transition-colors">
               주문 관리 →
+            </Link>
+            <Link to="/admin/returns" className="text-[10px] font-medium tracking-[0.12em] uppercase text-[#666666] hover:text-[#000000] transition-colors">
+              반품/교환
             </Link>
             <Link to="/admin/users" className="text-[10px] font-medium tracking-[0.12em] uppercase text-[#666666] hover:text-[#000000] transition-colors">
               회원 관리
@@ -809,6 +1040,122 @@ const AdminUploadPage = () => {
               </div>
             </div>
 
+            {/* 목록용 썸네일 / 호버 이미지 간단 업로드 */}
+            <div className="pt-6 mt-6 border-t border-[#E8E8E8] space-y-3">
+              <p className="text-[10px] font-medium tracking-widest uppercase text-[#666666]">
+                상품 썸네일 및 호버 이미지 (목록용)
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* 대표 이미지 */}
+                <div>
+                  <p className="text-[10px] font-medium tracking-[0.12em] uppercase text-[#555555] mb-2">
+                    대표 이미지 <span className="text-red-500">*</span>
+                  </p>
+                  <div
+                    className="relative border border-[#E0E0E0] bg-[#FAFAFA] aspect-[3/4] flex items-center justify-center cursor-pointer group overflow-hidden"
+                    onClick={() => thumbnailInputRef.current?.click()}
+                  >
+                    {getMainImageUrl() ? (
+                      <>
+                        <img
+                          src={getMainImageUrl()}
+                          alt="대표 이미지 미리보기"
+                          className="w-full h-full object-cover"
+                        />
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setForm((prev) => ({
+                              ...prev,
+                              cardMainImageId: null,
+                              imageList: prev.imageList.map((item) => ({ ...item, isMain: false })),
+                            }));
+                          }}
+                          className="absolute top-2 right-2 w-6 h-6 rounded-full bg-black/60 text-white text-[11px] flex items-center justify-center hover:bg-black/80"
+                          aria-label="대표 이미지 제거"
+                        >
+                          ×
+                        </button>
+                      </>
+                    ) : (
+                      <span className="text-[10px] text-[#999999] tracking-[0.1em] uppercase">
+                        클릭하여 선택
+                      </span>
+                    )}
+                  </div>
+                  <input
+                    ref={thumbnailInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) addOrReplaceThumbnailFromFile(file);
+                      if (e.target) e.target.value = '';
+                    }}
+                  />
+                </div>
+
+                {/* 호버 이미지 */}
+                <div>
+                  <p className="text-[10px] font-medium tracking-[0.12em] uppercase text-[#555555] mb-2">
+                    호버 이미지 <span className="text-[#999999]">(선택)</span>
+                  </p>
+                  <div
+                    className="relative border border-dashed border-[#E0E0E0] bg-[#FAFAFA] aspect-[3/4] flex items-center justify-center cursor-pointer group overflow-hidden"
+                    onClick={() => hoverInputRef.current?.click()}
+                  >
+                    {form.cardHoverImageId &&
+                    form.imageList.find((i) => i.id === form.cardHoverImageId)?.url ? (
+                      <>
+                        <img
+                          src={form.imageList.find((i) => i.id === form.cardHoverImageId)?.url}
+                          alt="호버 이미지 미리보기"
+                          className="w-full h-full object-cover"
+                        />
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setForm((prev) => {
+                              const list = prev.imageList.filter(
+                                (item) => item.id !== prev.cardHoverImageId,
+                              );
+                              return {
+                                ...prev,
+                                cardHoverImageId: null,
+                                imageList: list.map((item, idx) => ({ ...item, priority: idx })),
+                              };
+                            });
+                          }}
+                          className="absolute top-2 right-2 w-6 h-6 rounded-full bg-black/60 text-white text-[11px] flex items-center justify-center hover:bg-black/80"
+                          aria-label="호버 이미지 제거"
+                        >
+                          ×
+                        </button>
+                      </>
+                    ) : (
+                      <span className="text-[10px] text-[#999999] tracking-[0.1em] uppercase">
+                        클릭하여 선택 (옵션)
+                      </span>
+                    )}
+                  </div>
+                  <input
+                    ref={hoverInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) addOrReplaceHoverFromFile(file);
+                      if (e.target) e.target.value = '';
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+
             {/* 이미지: 드롭존 + 썸네일 리스트 + DnD + 대표 + 편집 */}
             <div>
               <label className="block text-[10px] font-medium tracking-[0.12em] uppercase text-[#666666] mb-2">이미지 * (멀티 업로드)</label>
@@ -829,8 +1176,11 @@ const AdminUploadPage = () => {
 
               {form.imageList.length > 0 && (
                 <div className="mt-4">
-                  <p className="text-[9px] uppercase tracking-widest text-[#666666] mb-2">
-                    썸네일 순서 변경(드래그) · 클릭 시 대표 이미지 · 편집으로 자르기
+                  <p className="text-[9px] uppercase tracking-widest text-[#666666] mb-1">
+                    썸네일 순서 변경(드래그) · \'대표로\' 클릭 시 상세 대표 이미지 · \'호버로\' 클릭 시 카드 호버 이미지 · 편집으로 자르기
+                  </p>
+                  <p className="text-[9px] text-[#999999] mb-2">
+                    대표 이미지는 상품 상세와 카드 기본 이미지에 사용되며, \'호버\'로 표시된 이미지는 상품 카드에서 마우스 오버 시 노출됩니다.
                   </p>
                   <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
                     <SortableContext items={form.imageList.map((i) => i.id)}>
@@ -841,8 +1191,10 @@ const AdminUploadPage = () => {
                             item={item}
                             onDelete={handleDeleteImage}
                             onSetMain={handleSetMain}
+                            onSetHover={handleSetHover}
                             onCrop={handleCropOpen}
                             isMain={item.isMain}
+                            isHover={form.cardHoverImageId === item.id}
                           />
                         ))}
                       </div>

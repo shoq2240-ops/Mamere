@@ -32,6 +32,7 @@ const OrderLookupPage = lazy(() => import('./pages/OrderLookupPage'));
 const AdminUploadPage = lazy(() => import('./pages/AdminUploadPage'));
 const AdminOrdersPage = lazy(() => import('./pages/AdminOrdersPage'));
 const AdminUsersPage = lazy(() => import('./pages/AdminUsersPage'));
+const AdminReturnsPage = lazy(() => import('./pages/AdminReturnsPage'));
 const TermsPage = lazy(() => import('./pages/TermsPage'));
 const PrivacyPage = lazy(() => import('./pages/PrivacyPage'));
 const FAQPage = lazy(() => import('./pages/FAQPage'));
@@ -81,6 +82,7 @@ const AnimatedRoutes = () => {
         <Route path="/admin/upload" element={<PageWrapper><RequireAdmin><AdminUploadPage /></RequireAdmin></PageWrapper>} />
         <Route path="/admin/orders" element={<PageWrapper><RequireAdmin><AdminOrdersPage /></RequireAdmin></PageWrapper>} />
         <Route path="/admin/users" element={<PageWrapper><RequireAdmin><AdminUsersPage /></RequireAdmin></PageWrapper>} />
+        <Route path="/admin/returns" element={<PageWrapper><RequireAdmin><AdminReturnsPage /></RequireAdmin></PageWrapper>} />
         <Route path="/terms" element={<PageWrapper><TermsPage /></PageWrapper>} />
         <Route path="/privacy" element={<PageWrapper><PrivacyPage /></PageWrapper>} />
         <Route path="/faq" element={<PageWrapper><FAQPage /></PageWrapper>} />
