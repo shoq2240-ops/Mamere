@@ -320,8 +320,9 @@ const CheckoutPage = () => {
           }),
         });
         verifyJson = await verifyRes.json().catch(() => ({}));
-      } catch {
+      } catch (err) {
         setSubmitting(false);
+        console.error('서버 결제 검증 에러 상세:', err);
         const msg = '결제 검증 요청 중 오류가 발생했습니다. 네트워크를 확인한 뒤 다시 시도해 주세요.';
         setError(msg);
         toast.error(msg);
@@ -330,7 +331,16 @@ const CheckoutPage = () => {
 
         if (!verifyRes.ok || !verifyJson?.success) {
           setSubmitting(false);
-          const msg = verifyJson?.error || '결제 검증에 실패했습니다. 다시 시도해 주세요.';
+          console.error('서버 결제 검증 에러 상세:', verifyJson);
+          const detailStr =
+            typeof verifyJson?.details === 'object' && verifyJson?.details !== null
+              ? JSON.stringify(verifyJson.details)
+              : verifyJson?.details;
+          const msg =
+            verifyJson?.message ||
+            verifyJson?.error ||
+            (detailStr ? String(detailStr) : null) ||
+            '결제 검증에 실패했습니다. 다시 시도해 주세요.';
           setError(msg);
           toast.error(msg);
           return;

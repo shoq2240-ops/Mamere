@@ -28,7 +28,12 @@ export default async function handler(req, res) {
   }
 
   if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
+    return res.status(405).json({
+      success: false,
+      error: 'Method not allowed',
+      message: 'POST 요청만 허용됩니다.',
+      details: null,
+    });
   }
 
   const body = req.body || {};
@@ -47,7 +52,9 @@ export default async function handler(req, res) {
   if (!paymentId || !items?.length) {
     return res.status(400).json({
       success: false,
-      error: 'paymentId, cartItems(또는 orderPayload.items) 가 필요합니다.',
+      error: 'Bad Request',
+      message: 'paymentId, cartItems(또는 orderPayload.items) 가 필요합니다.',
+      details: { hasPaymentId: !!paymentId, hasItems: !!(items?.length) },
     });
   }
 
@@ -76,20 +83,40 @@ export default async function handler(req, res) {
     return { id, quantity: qty };
   }).filter((it) => it.id != null);
   if (sanitizedItems.length === 0) {
-    return res.status(400).json({ success: false, error: '유효한 상품이 없습니다.' });
+    return res.status(400).json({
+      success: false,
+      error: 'Invalid Cart Items',
+      message: '유효한 상품이 없습니다. 장바구니 상품 ID 형식(id 또는 product_id)을 확인하세요.',
+      details: { receivedCount: items?.length ?? 0, sanitizedCount: 0 },
+    });
   }
 
   const secret = process.env.PORTONE_API_SECRET;
   if (!secret) {
-    return res.status(500).json({ success: false, error: '결제 검증 설정이 없습니다.' });
+    return res.status(500).json({
+      success: false,
+      error: 'Server Configuration Error',
+      message: '결제 검증 설정이 없습니다.',
+      details: 'PORTONE_API_SECRET 환경변수가 서버에 설정되지 않았습니다.',
+    });
   }
 
+  // Supabase 클라이언트: Vite에서 쓰는 변수명과 동일하게 서버에서 읽음
   const supabaseUrl = process.env.VITE_SUPABASE_URL;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!supabaseUrl || !serviceRoleKey) {
-    return res.status(500).json({ success: false, error: 'DB 설정이 없습니다.' });
+  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!supabaseUrl || !supabaseServiceKey) {
+    const state = { hasUrl: !!supabaseUrl, hasKey: !!supabaseServiceKey };
+    console.error('환경변수 누락 상태:', state);
+    return res.status(500).json({
+      success: false,
+      error: 'Server Configuration Error',
+      message: 'Supabase API 키 또는 URL이 서버 환경변수에 설정되지 않았습니다.',
+      details: state,
+    });
   }
-  const supabase = createClient(supabaseUrl, serviceRoleKey, { db: { schema: 'public' } });
+
+  const supabase = createClient(supabaseUrl, supabaseServiceKey, { db: { schema: 'public' } });
 
   // 1) 서버에서 cartItems의 상품 ID 기준 DB 단가 조회 (products.id = UUID 또는 BIGINT, 컬럼 id, price, stock_quantity)
   const productIds = [...new Set(sanitizedItems.map((it) => it.id))];
@@ -102,7 +129,12 @@ export default async function handler(req, res) {
   console.log('DB에서 조회된 products:', dbProducts ? JSON.stringify(dbProducts.map((p) => ({ id: p?.id, price: p?.price, typeOfId: typeof p?.id }))) : dbProducts, 'productsError:', productsError?.message ?? productsError);
 
   if (productsError || !dbProducts?.length) {
-    return res.status(400).json({ success: false, error: '상품 정보를 확인할 수 없습니다.' });
+    return res.status(400).json({
+      success: false,
+      error: 'Supabase Query Error',
+      message: productsError?.message ?? '상품 정보를 확인할 수 없습니다.',
+      details: productsError ? { code: productsError.code, hint: productsError.hint, details: productsError.details } : { dbProductsLength: dbProducts?.length ?? 0 },
+    });
   }
 
   // id를 키로 사용 (UUID 문자열 또는 숫자 모두 매칭되도록 id 그대로 사용)
@@ -114,7 +146,12 @@ export default async function handler(req, res) {
   for (const it of sanitizedItems) {
     const unitPrice = priceById[it.id] ?? priceById[String(it.id)];
     if (unitPrice == null) {
-      return res.status(400).json({ success: false, error: '존재하지 않는 상품이 포함되어 있습니다.' });
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid Product',
+        message: '존재하지 않는 상품이 포함되어 있습니다.',
+        details: { productId: it.id },
+      });
     }
     serverTotal += unitPrice * it.quantity;
     const orig = items.find((i) => {
@@ -141,7 +178,13 @@ export default async function handler(req, res) {
       },
     });
   } catch (e) {
-    return res.status(502).json({ success: false, error: '결제 조회 요청 실패' });
+    console.error('PortOne fetch error:', e);
+    return res.status(502).json({
+      success: false,
+      error: 'PortOne Request Failed',
+      message: e?.message ?? '결제 조회 요청 실패',
+      details: String(e),
+    });
   }
 
   const portOneData = await portOneRes.json().catch(() => ({}));
@@ -152,14 +195,18 @@ export default async function handler(req, res) {
   if (portOneRes.status !== 200 || !portOneData) {
     return res.status(400).json({
       success: false,
-      error: '결제 정보를 가져올 수 없습니다.',
+      error: 'PortOne Validation Error',
+      message: '결제 정보를 가져올 수 없습니다.',
+      details: { portOneStatus: portOneRes.status, portOneData: portOneData ?? null },
     });
   }
 
   if (status !== 'PAID') {
     return res.status(400).json({
       success: false,
-      error: '결제가 완료된 건이 아닙니다.',
+      error: 'PortOne Validation Error',
+      message: '결제가 완료된 건이 아닙니다.',
+      details: { status },
     });
   }
 
@@ -172,7 +219,9 @@ export default async function handler(req, res) {
   if (actual !== expectedTotal) {
     return res.status(400).json({
       success: false,
-      error: '결제 금액이 일치하지 않습니다.',
+      error: 'Amount Mismatch',
+      message: '결제 금액이 일치하지 않습니다.',
+      details: { expectedTotal, actual, serverTotal, serverShippingFee },
     });
   }
 
@@ -204,7 +253,13 @@ export default async function handler(req, res) {
     .single();
 
   if (orderError) {
-    return res.status(500).json({ success: false, error: '주문 저장에 실패했습니다.' });
+    console.error('Supabase orders insert error:', orderError);
+    return res.status(500).json({
+      success: false,
+      error: 'Supabase Query Error',
+      message: orderError?.message ?? '주문 저장에 실패했습니다.',
+      details: { code: orderError.code, hint: orderError.hint, details: orderError.details },
+    });
   }
 
   // 4) 재고 차감 (deduct_stock RPC: UUID/BIGINT 공통으로 TEXT 인자 전달)
@@ -216,11 +271,13 @@ export default async function handler(req, res) {
 
     if (stockError) {
       await supabase.from('orders').update({ status: '취소됨' }).eq('id', inserted?.id);
-      const msg =
-        (stockError.message || '').toUpperCase().includes('INSUFFICIENT_STOCK')
-          ? '재고가 부족하여 주문이 취소되었습니다.'
-          : '재고 반영 중 오류가 발생하여 주문이 취소되었습니다.';
-      return res.status(500).json({ success: false, error: msg });
+      const isStock = (stockError.message || '').toUpperCase().includes('INSUFFICIENT_STOCK');
+      return res.status(500).json({
+        success: false,
+        error: isStock ? 'Insufficient Stock' : 'Supabase RPC Error',
+        message: isStock ? '재고가 부족하여 주문이 취소되었습니다.' : (stockError?.message ?? '재고 반영 중 오류가 발생하여 주문이 취소되었습니다.'),
+        details: { code: stockError.code, hint: stockError.hint, productId: item.id },
+      });
     }
   }
 
