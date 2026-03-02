@@ -31,7 +31,7 @@ const Marquee = ({
 
   return (
     <section
-      className={`relative w-full flex-none overflow-hidden bg-transparent py-[10px] ${className}`}
+      className={`relative w-full flex-none overflow-hidden bg-transparent py-1.5 ${className}`}
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
     >

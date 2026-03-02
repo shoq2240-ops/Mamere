@@ -13,6 +13,7 @@ const isValidProductId = (id) => {
 
 const sanitizeProduct = (product) => {
   if (!product || typeof product !== 'object' || !isValidProductId(product.id)) return null;
+  const stock = Math.max(0, Math.floor(Number(product.stock_quantity ?? product.stock ?? 0)));
   return {
     id: product.id,
     name: typeof product.name === 'string' ? product.name.slice(0, 200) : String(product.name ?? '').slice(0, 200),
@@ -20,6 +21,7 @@ const sanitizeProduct = (product) => {
     image: typeof product.image === 'string' ? product.image.slice(0, 2048) : null,
     category: typeof product.category === 'string' ? product.category.slice(0, 50) : null,
     volume: typeof product.volume === 'string' ? product.volume.slice(0, 30) : null,
+    stock_quantity: stock,
   };
 };
 
@@ -40,7 +42,8 @@ export const CartProvider = ({ children }) => {
         .map((item) => {
           const safe = sanitizeProduct(item);
           if (!safe || typeof item?.quantity !== 'number' || item.quantity < 1) return null;
-          return { ...safe, quantity: Math.min(Math.max(1, Math.floor(item.quantity)), MAX_QUANTITY) };
+          const maxQty = typeof safe.stock_quantity === 'number' && safe.stock_quantity >= 0 ? Math.min(safe.stock_quantity, MAX_QUANTITY) : MAX_QUANTITY;
+          return { ...safe, quantity: Math.min(Math.max(1, Math.floor(item.quantity)), maxQty) };
         })
         .filter(Boolean)
         .slice(0, MAX_CART_ITEMS);
@@ -57,35 +60,42 @@ export const CartProvider = ({ children }) => {
     }
   }, [cart]);
 
-  const addToCart = (product) => {
+  const addToCart = (product, quantity = 1) => {
     const safe = sanitizeProduct(product);
-    if (!safe) return;
+    if (!safe) return false;
 
+    const stock = safe.stock_quantity ?? 0;
+    const qty = Math.max(1, Math.min(Math.floor(Number(quantity) || 1), MAX_QUANTITY));
+
+    let added = false;
     setCart((prevCart) => {
       if (prevCart.length >= MAX_CART_ITEMS && !prevCart.find((i) => i.id === safe.id)) return prevCart;
-      const isExist = prevCart.find((item) => item.id === safe.id);
-      if (isExist) {
+      const existing = prevCart.find((item) => item.id === safe.id);
+      const currentQty = existing ? existing.quantity : 0;
+      if (currentQty + qty > stock) return prevCart;
+      added = true;
+      if (existing) {
         return prevCart.map((item) =>
-          item.id === safe.id
-            ? { ...item, quantity: Math.min(item.quantity + 1, MAX_QUANTITY) }
-            : item
+          item.id === safe.id ? { ...item, quantity: item.quantity + qty, stock_quantity: stock } : item
         );
       }
-      return [...prevCart, { ...safe, quantity: 1 }];
+      return [...prevCart, { ...safe, quantity: qty }];
     });
+    return added;
   };
 
   const removeFromCart = (productId) => {
     setCart((prevCart) => prevCart.filter((item) => item.id !== productId));
   };
 
-  const updateQuantity = (productId, amount) => {
+  const updateQuantity = (productId, amount, maxQty = null) => {
     setCart((prevCart) =>
-      prevCart.map((item) =>
-        item.id === productId
-          ? { ...item, quantity: Math.max(1, Math.min(MAX_QUANTITY, item.quantity + amount)) }
-          : item
-      )
+      prevCart.map((item) => {
+        if (item.id !== productId) return item;
+        const cap = maxQty != null ? Math.min(maxQty, MAX_QUANTITY) : MAX_QUANTITY;
+        const next = Math.max(1, Math.min(cap, item.quantity + amount));
+        return { ...item, quantity: next };
+      })
     );
   };
 

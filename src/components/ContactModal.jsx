@@ -3,7 +3,10 @@ import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../store/AuthContext';
+import { useLanguage } from '../store/LanguageContext';
 import { toast } from 'react-hot-toast';
+
+const MESSAGE_MAX_LENGTH = 1000;
 
 const SUBJECT_OPTIONS = [
   { value: '', label: '주제 선택' },
@@ -17,6 +20,7 @@ const SUBJECT_OPTIONS = [
 
 const ContactModal = ({ isOpen, onClose }) => {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [form, setForm] = useState({
     firstName: '',
     lastName: '',
@@ -39,6 +43,8 @@ const ContactModal = ({ isOpen, onClose }) => {
     if (!form.lastName?.trim()) next.lastName = '성을 입력해 주세요.';
     if (!form.email?.trim()) next.email = '이메일 주소를 입력해 주세요.';
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) next.email = '올바른 이메일 형식이 아닙니다.';
+    const messageLen = (form.message ?? '').length;
+    if (messageLen > MESSAGE_MAX_LENGTH) next.message = `메시지는 ${MESSAGE_MAX_LENGTH}자 이내로 입력해 주세요. (현재 ${messageLen}자)`;
     setErrors(next);
     return Object.keys(next).length === 0;
   };
@@ -50,13 +56,15 @@ const ContactModal = ({ isOpen, onClose }) => {
     setErrors({});
 
     try {
-      const payload = {
+      const rawMessage = (form.message ?? '').trim();
+    const message = rawMessage.length > MESSAGE_MAX_LENGTH ? rawMessage.slice(0, MESSAGE_MAX_LENGTH) : rawMessage || null;
+    const payload = {
         first_name: form.firstName.trim(),
         last_name: form.lastName.trim(),
         phone: form.phone?.trim() || null,
         email: form.email.trim(),
         subject: form.subject || null,
-        message: form.message?.trim() || null,
+        message,
       };
       if (user?.id) payload.user_id = user.id;
 
@@ -183,7 +191,7 @@ const ContactModal = ({ isOpen, onClose }) => {
                 value={form.email}
                 onChange={(e) => handleChange('email', e.target.value)}
                 className="w-full bg-transparent border-0 border-b border-[#E0E0E0] py-2 text-[13px] text-[#000000] placeholder:text-[#CCCCCC] focus:outline-none focus:border-[#000000] transition-colors"
-                placeholder=""
+                placeholder={t('footer.emailPlaceholder')}
               />
               {errors.email && <p className="mt-1 text-[11px] text-red-600">{errors.email}</p>}
             </div>
@@ -205,14 +213,17 @@ const ContactModal = ({ isOpen, onClose }) => {
             </div>
 
             <div>
-              <label className="block text-[11px] font-light tracking-[0.06em] text-[#000000] mb-1">고객님의 메시지</label>
+              <label className="block text-[11px] font-light tracking-[0.06em] text-[#000000] mb-1">고객님의 메시지 (최대 {MESSAGE_MAX_LENGTH}자)</label>
               <textarea
                 value={form.message}
-                onChange={(e) => handleChange('message', e.target.value)}
+                onChange={(e) => handleChange('message', e.target.value.slice(0, MESSAGE_MAX_LENGTH))}
+                maxLength={MESSAGE_MAX_LENGTH}
                 rows={5}
                 className="w-full resize-y min-h-[100px] bg-transparent border border-[#E0E0E0] py-3 px-3 text-[13px] text-[#000000] placeholder:text-[#CCCCCC] focus:outline-none focus:border-[#000000] transition-colors"
                 placeholder=""
               />
+              <p className="mt-1 text-[10px] text-[#999999] text-right">{(form.message ?? '').length}/{MESSAGE_MAX_LENGTH}</p>
+              {errors.message && <p className="mt-1 text-[11px] text-red-600">{errors.message}</p>}
             </div>
 
             {errors.submit && <p className="text-[11px] text-red-600">{errors.submit}</p>}

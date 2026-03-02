@@ -3,6 +3,8 @@ import { useCart } from '../store/CartContext';
 import { useLanguage } from '../store/LanguageContext';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { getShippingFee, getRemainingForFreeShipping } from '../lib/shipping';
+import { useProducts } from '../hooks/useProducts';
+import { getStockQuantity } from '../lib/productStock';
 
 const parsePrice = (price) => {
   if (typeof price === 'number') return price;
@@ -17,7 +19,8 @@ const CartPage = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [showOrderSuccess, setShowOrderSuccess] = useState(false);
-  const { cart, removeFromCart, updateQuantity, cartCount } = useCart();
+  const { cart, removeFromCart, updateQuantity } = useCart();
+  const { products } = useProducts();
   const { t, locale } = useLanguage();
   const subtotal = cart.reduce((sum, item) => sum + parsePrice(item.price) * item.quantity, 0);
   const shippingFee = getShippingFee(subtotal);
@@ -31,10 +34,23 @@ const CartPage = () => {
     }
   }, [searchParams, setSearchParams]);
 
+  // 재고 초과 분은 재고 수량으로 자동 보정 (products 로드 시 1회)
+  useEffect(() => {
+    if (!products || products.length === 0) return;
+    cart.forEach((item) => {
+      const product = products.find((p) => String(p.id) === String(item.id));
+      const stock = product != null ? getStockQuantity(product) : item.stock_quantity;
+      if (stock != null && item.quantity > stock) {
+        updateQuantity(item.id, stock - item.quantity, stock);
+      }
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- clamp only when products load
+  }, [products]);
+
   return (
     <div className="pt-32 pb-20 px-6 min-h-screen bg-[#F9F7F2] text-[#3E2F28] antialiased">
       <div className="max-w-3xl mx-auto">
-        <h1 className="text-4xl font-display tracking-tighter uppercase mb-12 text-[#3E2F28]">
+        <h1 className="text-4xl font-semibold tracking-tight uppercase mb-12 text-[#3E2F28]">
           {t('cart.title')}
         </h1>
 
@@ -56,27 +72,39 @@ const CartPage = () => {
           </div>
         ) : (
           <div className="space-y-10">
-            {cart.map((item) => (
-              <div key={item.id} className="flex gap-6 border-b border-[#F0F0F0] pb-10">
-                <div className="w-24 h-32 bg-[#EDEAE4] overflow-hidden">
-                  {item.image && <img src={item.image} alt={item.name} className="w-full h-full object-cover opacity-80" loading="lazy" decoding="async" />}
-                </div>
-                <div className="flex-1 flex flex-col justify-between">
-                  <div>
-                    <div className="flex justify-between items-start">
-                      <h3 className="text-lg font-heading tracking-tight uppercase">{item.name}</h3>
-                      <button onClick={() => removeFromCart(item.id)} className="text-[10px] font-light uppercase text-[#7A6B63] hover:text-[#3E2F28]">{t('common.remove')}</button>
+            {cart.map((item) => {
+              const product = products?.find((p) => String(p.id) === String(item.id));
+              const stock = product != null ? getStockQuantity(product) : (item.stock_quantity ?? 99);
+              const maxQty = Math.max(0, stock);
+              const atMax = item.quantity >= maxQty;
+              return (
+                <div key={item.id} className="flex gap-6 border-b border-[#F0F0F0] pb-10">
+                  <div className="w-24 h-32 bg-[#EDEAE4] overflow-hidden">
+                    {item.image && <img src={item.image} alt={item.name} className="w-full h-full object-cover opacity-80" loading="lazy" decoding="async" />}
+                  </div>
+                  <div className="flex-1 flex flex-col justify-between">
+                    <div>
+                      <div className="flex justify-between items-start">
+                        <h3 className="text-lg font-heading tracking-tight uppercase">{item.name}</h3>
+                        <button onClick={() => removeFromCart(item.id)} className="text-[10px] font-light uppercase text-[#7A6B63] hover:text-[#3E2F28]">{t('common.remove')}</button>
+                      </div>
+                      <p className="text-[#3E2F28] text-sm mt-1">₩{parsePrice(item.price).toLocaleString()}</p>
                     </div>
-                    <p className="text-[#3E2F28] text-sm mt-1">₩{parsePrice(item.price).toLocaleString()}</p>
-                  </div>
-                  <div className="flex items-center gap-4 mt-4">
-                    <button onClick={() => updateQuantity(item.id, -1)} className="w-6 h-6 border border-[#A8B894]/50 flex items-center justify-center text-xs text-[#3E2F28]">-</button>
-                    <span className="text-sm font-light">{item.quantity}</span>
-                    <button onClick={() => updateQuantity(item.id, 1)} className="w-6 h-6 border border-[#A8B894]/50 flex items-center justify-center text-xs text-[#3E2F28]">+</button>
+                    <div className="flex items-center gap-4 mt-4">
+                      <button onClick={() => updateQuantity(item.id, -1)} className="w-6 h-6 border border-[#A8B894]/50 flex items-center justify-center text-xs text-[#3E2F28]">-</button>
+                      <span className="text-sm font-light min-w-[1.5rem] text-center">{item.quantity}</span>
+                      <button
+                        onClick={() => updateQuantity(item.id, 1, maxQty)}
+                        disabled={atMax}
+                        className="w-6 h-6 border border-[#A8B894]/50 flex items-center justify-center text-xs text-[#3E2F28] disabled:opacity-40 disabled:cursor-not-allowed"
+                      >
+                        +
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
             <div className="pt-10 space-y-6 text-right">
               <div className="space-y-2 border-t border-[#A8B894]/40 pt-6">
                 <div className="flex justify-between text-[10px] font-light uppercase tracking-widest text-[#7A6B63]">
@@ -97,7 +125,7 @@ const CartPage = () => {
               </div>
               <div className="flex justify-between items-end pt-2">
                 <span className="text-[10px] font-light uppercase tracking-widest text-[#7A6B63]">{t('cart.totalAmount')}</span>
-                <span className="text-2xl font-display text-[#3E2F28]">₩{totalPrice.toLocaleString()}</span>
+                <span className="text-2xl font-semibold text-[#3E2F28]">₩{totalPrice.toLocaleString()}</span>
               </div>
               <button
                 type="button"

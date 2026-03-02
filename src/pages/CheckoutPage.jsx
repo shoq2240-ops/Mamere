@@ -9,6 +9,7 @@ import { supabase, publicTable } from '../lib/supabase';
 import AddressInput, { combineAddress, splitAddress } from '../components/AddressInput';
 import { isSoldOut } from '../lib/productStock';
 import { getShippingFee } from '../lib/shipping';
+import { formatPhoneDisplay } from '../lib/formatPhone';
 
 // 포트원 결제 설정 (.env의 VITE_PORTONE_* 사용)
 const PORTONE_STORE_ID = import.meta.env.VITE_PORTONE_STORE_ID;
@@ -86,7 +87,7 @@ const CheckoutPage = () => {
         setShippingName(name);
         setShippingAddress(base);
         setShippingAddressDetail(detail);
-        setShippingPhone(phone);
+        setShippingPhone(formatPhoneDisplay(phone) || '');
         setInitialProfile({ name, address: base, addressDetail: detail, phone });
       } else {
         setInitialProfile({ name: '', address: '', addressDetail: '', phone: '' });
@@ -217,7 +218,7 @@ const CheckoutPage = () => {
           id: user.id,
           full_name: name || null,
           address: addressFull || null,
-          phone: shippingPhone.trim() || null,
+          phone: shippingPhone.replace(/\D/g, '').trim() || null,
         },
         { onConflict: 'id' }
       );
@@ -392,7 +393,7 @@ const CheckoutPage = () => {
     return (
       <div className="pt-32 pb-20 px-6 min-h-screen bg-[#FFFFFF] text-[#000000] antialiased">
         <div className="max-w-2xl mx-auto text-center">
-          <h1 className="text-4xl font-black italic tracking-tighter uppercase mb-2">
+          <h1 className="text-4xl font-semibold tracking-tight uppercase mb-2">
             주문 완료
           </h1>
           <p className="text-[10px] text-[#999999] tracking-widest uppercase mb-10">
@@ -406,7 +407,7 @@ const CheckoutPage = () => {
             <p className="text-[10px] font-bold tracking-widest uppercase text-[#666666] mb-2">
               주문 번호
             </p>
-            <p className="text-3xl font-black italic tracking-tight text-[#000000] mb-6 break-all">
+            <p className="text-3xl font-semibold tracking-tight text-[#000000] mb-6 break-all">
               {orderSuccessData.orderNumber}
             </p>
             <p className="text-[11px] text-[#666666] leading-relaxed">
@@ -427,14 +428,14 @@ const CheckoutPage = () => {
             {isGuestSuccess ? (
               <Link
                 to="/order-lookup"
-                className="bg-[#000000] text-[#FFFFFF] px-6 py-3 text-[11px] font-black tracking-widest uppercase hover:opacity-90 transition-colors"
+                className="bg-[#000000] text-[#FFFFFF] px-6 py-3 text-[11px] font-medium tracking-widest uppercase hover:opacity-90 transition-colors"
               >
                 주문 조회
               </Link>
             ) : (
               <Link
                 to="/orders"
-                className="bg-[#000000] text-[#FFFFFF] px-6 py-3 text-[11px] font-black tracking-widest uppercase hover:opacity-90 transition-colors"
+                className="bg-[#000000] text-[#FFFFFF] px-6 py-3 text-[11px] font-medium tracking-widest uppercase hover:opacity-90 transition-colors"
               >
                 주문 내역
               </Link>
@@ -462,7 +463,7 @@ const CheckoutPage = () => {
   return (
     <div className="pt-32 pb-20 px-6 min-h-screen bg-[#FFFFFF] text-[#000000] antialiased">
       <div className="max-w-2xl mx-auto">
-        <h1 className="text-4xl font-black italic tracking-tighter uppercase mb-2">
+        <h1 className="text-4xl font-semibold tracking-tight uppercase mb-2">
           Checkout
         </h1>
         <p className="text-[10px] text-[#999999] tracking-widest uppercase mb-10">
@@ -535,7 +536,7 @@ const CheckoutPage = () => {
                   <input
                     type="tel"
                     value={shippingPhone}
-                    onChange={(e) => setShippingPhone(e.target.value.replace(/[^\d\-]/g, '').slice(0, 13))}
+                    onChange={(e) => setShippingPhone(formatPhoneDisplay(e.target.value))}
                     placeholder="010-0000-0000"
                     className="w-full bg-[#F9F9F9] px-4 py-3 text-[11px] text-[#000000] outline-none focus:bg-[#F5F5F5] placeholder:text-[#999999]"
                   />
@@ -582,7 +583,7 @@ const CheckoutPage = () => {
             </div>
             <div className="flex justify-between items-center border-t border-[#F0F0F0] pt-4 mt-4">
               <span className="text-[11px] font-bold tracking-widest uppercase text-[#666666]">총 결제 금액</span>
-              <span className="text-xl font-black italic text-[#000000]">₩{displayTotal.toLocaleString()}</span>
+              <span className="text-xl font-semibold text-[#000000]">₩{displayTotal.toLocaleString()}</span>
             </div>
           </section>
 
@@ -600,7 +601,7 @@ const CheckoutPage = () => {
             <button
               type="submit"
               disabled={submitting || (!isGuest && profileLoading)}
-              className="flex-1 bg-[#000000] text-[#FFFFFF] py-4 text-[11px] font-black tracking-widest uppercase hover:opacity-90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 bg-[#000000] text-[#FFFFFF] py-4 text-[11px] font-medium tracking-widest uppercase hover:opacity-90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {submitting ? '처리 중...' : '결제하기'}
             </button>

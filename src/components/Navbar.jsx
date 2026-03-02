@@ -124,9 +124,9 @@ const Navbar = ({ isScrolled = false, isMobileMenuOpen = false, onMobileMenuChan
     return (
       <div className="antialiased">
         <nav className="relative w-full z-[150] bg-[#000000] text-[#FDFDFB] border-b border-white/10 transition-all duration-300">
-          <div className="max-w-[1800px] mx-auto h-14 flex items-center justify-between px-6 md:px-10">
+          <div className="max-w-[1800px] mx-auto h-20 flex items-center justify-between px-6 md:px-10">
             {/* [이미지 교체] 관리자용 로고: 상단 import brandLogo 경로를 실제 로고 파일로 변경 */}
-            <Link to="/" className="flex items-center opacity-90 hover:opacity-100 transition-opacity" style={{ height: '38px' }}>
+            <Link to="/" className="flex items-center opacity-90 hover:opacity-100 transition-opacity" style={{ height: '76px' }}>
               <img src={brandLogo} alt="Mamère" className="h-full w-auto object-contain invert" decoding="async" />
             </Link>
             <div className="flex items-center gap-6 md:gap-8 text-[10px] font-light tracking-[0.12em] uppercase">
@@ -153,7 +153,7 @@ const Navbar = ({ isScrolled = false, isMobileMenuOpen = false, onMobileMenuChan
   return (
     <div className="antialiased" onMouseLeave={() => setHoveredMenu(null)}>
       <nav className="relative w-full z-[150] bg-[#2D3A2D] text-[#F9F7F2] transition-all duration-300 overflow-x-hidden">
-        <div className="max-w-[1800px] mx-auto h-20 md:h-28 flex items-center justify-between px-4 md:px-6 relative">
+        <div className="max-w-[1800px] mx-auto h-14 md:h-16 flex items-center justify-between px-4 md:px-6 py-2 relative">
 
           <div className="absolute inset-0 pointer-events-none z-0" aria-hidden>
             <div className="absolute left-[8%] top-1/2 -translate-y-1/2 text-[#F9F7F2]/15 animate-leaf-float">
@@ -189,12 +189,12 @@ const Navbar = ({ isScrolled = false, isMobileMenuOpen = false, onMobileMenuChan
             to="/"
             onClick={handleLogoClick}
             className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-auto cursor-pointer opacity-95 hover:opacity-100 transition-opacity z-20 flex items-center justify-center border-0 outline-none shadow-none ring-0 focus:ring-0 focus:outline-none bg-transparent"
-            style={{ height: '72px' }}
+            style={{ height: '88px' }}
           >
             <img
               src={brandLogo}
               alt="Mamère"
-              className="h-full w-auto object-contain max-h-[72px] md:max-h-[100px] block bg-transparent mix-blend-multiply"
+              className="h-full w-auto object-contain max-h-[88px] md:max-h-[96px] block bg-transparent mix-blend-multiply"
               decoding="async"
             />
           </Link>
@@ -302,7 +302,7 @@ const Navbar = ({ isScrolled = false, isMobileMenuOpen = false, onMobileMenuChan
                 animate={{ x: 0 }}
                 exit={{ x: "-100%" }}
                 transition={{ type: "spring", damping: 25, stiffness: 200 }}
-                className="fixed inset-0 flex flex-col pt-20 pb-12 px-8 text-[#3E2F28] md:hidden"
+                className="fixed inset-0 flex flex-col pt-16 pb-12 px-8 text-[#3E2F28] md:hidden"
                 style={{ zIndex: 9999, backgroundColor: '#F9F7F2' }}
               >
                 <div className="mb-8 text-left">

@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import ContactModal from './ContactModal';
 import { useLanguage } from '../store/LanguageContext';
 
-const FOOTER_LINK_CLASS = "text-[12px] font-light tracking-[0.08em] text-[#F9F7F2] hover:underline hover:opacity-90 transition-all duration-200";
+const FOOTER_LINK_CLASS = "text-[11px] font-light tracking-[0.06em] text-[#F9F7F2]/90 hover:text-[#F9F7F2] transition-colors duration-200";
 
 const FooterLink = ({ to, href, onClick, children }) => {
   if (onClick) {
@@ -25,8 +25,8 @@ const FooterLink = ({ to, href, onClick, children }) => {
 
 const FooterSection = ({ title, items }) => (
   <div>
-    <h3 className="text-[11px] font-medium tracking-[0.15em] uppercase text-[#F9F7F2] mb-4">{title}</h3>
-    <ul className="space-y-3">
+    <h3 className="text-[10px] font-medium tracking-[0.12em] uppercase text-[#F9F7F2]/70 mb-3">{title}</h3>
+    <ul className="space-y-2">
       {items.map(({ label, to, href, onClick }) => (
         <li key={label}>
           <FooterLink to={to} href={href} onClick={onClick}>{label}</FooterLink>
@@ -40,8 +40,8 @@ const Footer = () => {
   const [isContactOpen, setIsContactOpen] = useState(false);
   const { t } = useLanguage();
   const customerService = [
-    { label: t('footer.contactForm'), onClick: () => setIsContactOpen(true) },
     { label: t('footer.faq'), to: '/faq' },
+    { label: t('footer.contactForm'), onClick: () => setIsContactOpen(true) },
   ];
   const shoppingGuide = [
     { label: t('footer.shippingInfo'), to: '/shipping' },
@@ -55,45 +55,41 @@ const Footer = () => {
   return (
     <>
       <ContactModal isOpen={isContactOpen} onClose={() => setIsContactOpen(false)} />
-      <footer className="bg-[#2D3A2D] text-[#F9F7F2] py-16 md:py-20 px-6 md:px-8 mt-20">
+      <footer className="bg-[#2D3A2D] text-[#F9F7F2] py-12 md:py-14 px-6 md:px-8 mt-16">
       <div className="max-w-7xl mx-auto">
-        {/* 고객 서비스 / 쇼핑 가이드 / 법적 고지 */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-10 md:gap-16 mb-14">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 md:gap-12 mb-10">
           <FooterSection title={t('footer.customerService')} items={customerService} />
           <FooterSection title={t('footer.shoppingGuide')} items={shoppingGuide} />
           <FooterSection title={t('footer.legal')} items={legal} />
         </div>
 
-        {/* 기업 정보 */}
-        <div className="space-y-2">
-          <div className="flex flex-wrap gap-x-4 gap-y-1 text-[10px] font-light tracking-[0.12em] leading-relaxed text-[#F9F7F2]/90">
+        <div className="space-y-1.5">
+          <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-[9px] font-light tracking-[0.08em] leading-relaxed text-[#F9F7F2]/80">
             <span>COMPANY : Dr.Care</span>
-            <span className="text-[#F9F7F2]/40">|</span>
+            <span className="text-[#F9F7F2]/30">|</span>
             <span>CEO : 신천영</span>
-            <span className="text-[#F9F7F2]/40">|</span>
+            <span className="text-[#F9F7F2]/30">|</span>
             <span>ADDRESS : 경기도 용인시 기흥구 흥덕중앙로 120 유타워 3208호</span>
           </div>
-          <div className="flex flex-wrap gap-x-4 gap-y-1 text-[10px] font-light tracking-[0.12em] leading-relaxed text-[#F9F7F2]">
+          <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-[9px] font-light tracking-[0.08em] leading-relaxed text-[#F9F7F2]/90">
             <span>EMAIL : pjk6412@naver.com</span>
-            <span className="text-[#F9F7F2]/40">|</span>
+            <span className="text-[#F9F7F2]/30">|</span>
             <span>TEL : 010-3126-6701</span>
-            <span className="text-[#F9F7F2]/40">|</span>
+            <span className="text-[#F9F7F2]/30">|</span>
             <span>BUSINESS LICENSE : 241-14-00646</span>
-            <span className="text-[#F9F7F2]/40">|</span>
+            <span className="text-[#F9F7F2]/30">|</span>
             <span>ONLINE LICENSE : 2019-용인기흥-0330</span>
           </div>
-          <p className="text-[10px] font-light tracking-[0.1em] mt-6 text-[#F9F7F2]/80 leading-relaxed">
+          <p className="text-[9px] font-light tracking-[0.06em] mt-4 text-[#F9F7F2]/60 leading-relaxed">
             {t('footer.escrowNotice')}
           </p>
         </div>
 
-        <div className="mt-12 pt-8 border-t border-[#F9F7F2]/20 flex flex-col sm:flex-row justify-between items-center gap-4">
-          <p className="text-[10px] font-light tracking-[0.15em] uppercase text-[#F9F7F2]/70">
+        <div className="mt-8 pt-6 border-t border-[#F9F7F2]/15 flex flex-col sm:flex-row justify-between items-center gap-3">
+          <p className="text-[9px] font-light tracking-[0.1em] uppercase text-[#F9F7F2]/60">
             {t('footer.allRightsReserved')}
           </p>
-          <div className="flex items-center opacity-80">
-            <span className="text-[9px] font-light tracking-[0.1em] border border-[#F9F7F2]/30 px-2 py-1 text-[#F9F7F2]/80">{t('footer.escrowSafe')}</span>
-          </div>
+          <span className="text-[8px] font-light tracking-[0.08em] text-[#F9F7F2]/50">{t('footer.escrowSafe')}</span>
         </div>
       </div>
     </footer>

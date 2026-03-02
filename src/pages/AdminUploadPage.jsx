@@ -31,6 +31,17 @@ const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp
 const MAX_IMAGE_SIZE_MB = 5;
 const MAX_IMAGE_BYTES = MAX_IMAGE_SIZE_MB * 1024 * 1024;
 
+/** 폼 검증 한계 (관리자 상품 등록) */
+const FORM_LIMITS = {
+  nameMaxLength: 200,
+  priceMax: 99_999_999,
+  descDetailsMaxLength: 5000,
+  descHowToUseMaxLength: 3000,
+  volumeMaxLength: 50,
+  keyIngredientsMaxLength: 500,
+  categoryValues: ['best', 'skincare', 'makeup', 'body_hair'],
+};
+
 /** products 관련 Supabase 에러 → 사용자 안내 메시지 */
 const productErrorMessage = (err) => {
   const msg = err?.message || '';
@@ -404,10 +415,44 @@ const AdminUploadPage = () => {
     setSuccess('');
     const name = form.name.trim();
     const price = parseInt(String(form.price).replace(/\D/g, ''), 10);
+
     if (!name || !price || price <= 0) {
       setError('상품명과 가격(숫자)을 입력해주세요.');
       return;
     }
+    if (name.length > FORM_LIMITS.nameMaxLength) {
+      setError(`상품명은 ${FORM_LIMITS.nameMaxLength}자 이내로 입력해 주세요.`);
+      return;
+    }
+    if (price > FORM_LIMITS.priceMax) {
+      setError(`가격은 ${FORM_LIMITS.priceMax.toLocaleString()}원 이하로 입력해 주세요.`);
+      return;
+    }
+    if (!FORM_LIMITS.categoryValues.includes(form.category)) {
+      setError('유효한 카테고리를 선택해 주세요. (Best, Skincare, Makeup, Body & Hair 중 하나)');
+      return;
+    }
+    const descDetailsLen = (form.descDetails ?? '').length;
+    const descHowToUseLen = (form.descHowToUse ?? '').length;
+    if (descDetailsLen > FORM_LIMITS.descDetailsMaxLength) {
+      setError(`상품 상세 설명은 ${FORM_LIMITS.descDetailsMaxLength}자 이내로 입력해 주세요. (현재 ${descDetailsLen}자)`);
+      return;
+    }
+    if (descHowToUseLen > FORM_LIMITS.descHowToUseMaxLength) {
+      setError(`사용 방법은 ${FORM_LIMITS.descHowToUseMaxLength}자 이내로 입력해 주세요. (현재 ${descHowToUseLen}자)`);
+      return;
+    }
+    const volume = (form.volume ?? '').trim();
+    if (volume.length > FORM_LIMITS.volumeMaxLength) {
+      setError(`용량/규격은 ${FORM_LIMITS.volumeMaxLength}자 이내로 입력해 주세요.`);
+      return;
+    }
+    const keyIngredientsLen = (form.keyIngredients ?? '').length;
+    if (keyIngredientsLen > FORM_LIMITS.keyIngredientsMaxLength) {
+      setError(`주요 성분은 ${FORM_LIMITS.keyIngredientsMaxLength}자 이내로 입력해 주세요. (현재 ${keyIngredientsLen}자)`);
+      return;
+    }
+
     if (form.imageList.length === 0) {
       setError('이미지를 1장 이상 추가해주세요.');
       return;

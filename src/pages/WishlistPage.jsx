@@ -48,7 +48,12 @@ const WishlistPage = () => {
   }, [wishlist]);
 
   const handleAddToCart = (product) => {
-    addToCart({ ...product, price: formatPrice(product.price) });
+    const added = addToCart(product, 1);
+    if (!added) {
+      const stock = product?.stock_quantity ?? product?.stock ?? 0;
+      toast.error(`최대 구매 가능 수량은 ${stock}개입니다.`);
+      return;
+    }
     toast.success(t('common.addToCartDone'));
   };
 

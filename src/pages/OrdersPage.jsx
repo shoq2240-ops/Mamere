@@ -75,7 +75,7 @@ const OrdersPage = () => {
   return (
     <div className="pt-32 pb-20 px-6 min-h-screen bg-[#FFFFFF] text-[#000000] antialiased">
       <div className="max-w-3xl mx-auto">
-        <h1 className="text-4xl font-black italic tracking-tighter uppercase mb-2">
+        <h1 className="text-4xl font-semibold tracking-tight uppercase mb-2">
           주문 내역
         </h1>
         <p className="text-[10px] text-[#999999] tracking-widest uppercase mb-12">
@@ -157,7 +157,7 @@ const OrdersPage = () => {
                   )}
 
                   <div className="flex justify-end pt-2">
-                    <span className="text-lg font-black italic text-[#000000]">
+                    <span className="text-lg font-semibold text-[#000000]">
                       ₩{(order.total_amount ?? order.total_price ?? 0).toLocaleString()}
                     </span>
                   </div>

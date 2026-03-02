@@ -8,7 +8,6 @@ import { useRecentlyViewed } from '../hooks/useRecentlyViewed';
 import { useLanguage } from '../store/LanguageContext';
 import { ProductCarouselSkeleton, LoadingMessage } from '../components/ProductSkeleton';
 import ProductCard from '../components/ProductCard';
-import FAQ from '../components/FAQ';
 import flower3 from '../asset/flower3.png';
 
 const LandingPage = () => {
@@ -32,7 +31,12 @@ const LandingPage = () => {
   const handleAddToCart = (product, e) => {
     e?.preventDefault?.();
     e?.stopPropagation?.();
-    addToCart(product);
+    const added = addToCart(product, 1);
+    if (!added) {
+      const stock = product?.stock_quantity ?? product?.stock ?? 0;
+      toast.error(`최대 구매 가능 수량은 ${stock}개입니다.`);
+      return;
+    }
     toast.success(t('common.addToCartDone'));
   };
 
@@ -47,7 +51,7 @@ const LandingPage = () => {
   };
 
   return (
-    <div className="bg-[#F9F7F2] text-[#3E2F28] antialiased overflow-x-hidden relative font-sans">
+    <div className="bg-[#F9F7F2] text-[#3E2F28] antialiased overflow-x-hidden relative font-sans pb-20 md:pb-24">
       {/* 1. 히어로: 그라데이션 오버레이로 천연 원료 톤과 조화 */}
       <section className="relative w-[100vw] h-[85vh] min-h-[400px] m-0 overflow-hidden bg-[#EDEAE4]">
         <div className="absolute inset-0 w-full h-full">
@@ -71,6 +75,12 @@ const LandingPage = () => {
           <p className="mt-3 text-sm md:text-base font-light text-[#3E2F28]/90 max-w-md">
             {t('landing.heroSub')}
           </p>
+          <Link
+            to="/shop"
+            className="mt-6 md:mt-8 inline-block px-6 py-3 text-[10px] md:text-[11px] font-medium tracking-[0.15em] uppercase bg-[#A8B894] text-[#2D3A2D] hover:bg-[#9AAA82] transition-colors"
+          >
+            {t('landing.heroCta')}
+          </Link>
         </div>
       </section>
 
@@ -90,7 +100,7 @@ const LandingPage = () => {
                     categoryTab === key ? 'text-[#3E2F28] border-b-2 border-[#A8B894] -mb-[2px]' : 'text-[#7A6B63] hover:text-[#3E2F28]'
                   }`}
                 >
-                  {t(`landing.${key}`)}
+                  {t(key === 'body_hair' ? 'landing.bodyHair' : `landing.${key}`)}
                 </button>
               ))}
             </div>
@@ -98,6 +108,9 @@ const LandingPage = () => {
               {t('landing.moreProducts')}
             </Link>
           </div>
+          <p className="mt-3 text-[11px] font-light text-[#7A6B63] tracking-[0.04em] leading-relaxed max-w-xl">
+            {categoryTab === 'best' ? t('shop.categorySubBest') : categoryTab === 'skincare' ? t('shop.categorySubSkincare') : categoryTab === 'makeup' ? t('shop.categorySubMakeup') : t('shop.categorySubBodyHair')}
+          </p>
         </div>
 
         {loading && (
@@ -238,25 +251,6 @@ const LandingPage = () => {
         </section>
       )}
 
-      <section className="py-16 md:py-24 border-t border-[#A8B894]/30 bg-[#F9F7F2]">
-        <div className="px-6 md:px-12 mb-8">
-          <p className="text-[#7A6B63] text-[8pt] md:text-[9pt] font-medium tracking-[0.2em] uppercase mb-2">{t('landing.customerService')}</p>
-          <h2 className="text-lg md:text-2xl font-semibold tracking-tight leading-none text-[#3E2F28]">{t('landing.faq')}</h2>
-        </div>
-        <FAQ showTitle={false} className="pt-0 pb-0" />
-        <div className="max-w-2xl mx-auto px-6 md:px-8 mt-8 text-center">
-          <Link
-            to="/faq"
-            className="inline-block text-[10px] font-light tracking-[0.15em] uppercase text-[#5C4A42] hover:text-[#3E2F28] border-b border-[#A8B894] pb-1 transition-colors"
-          >
-            {t('landing.faqViewAll')}
-          </Link>
-        </div>
-      </section>
-
-      <footer className="py-20 text-center bg-[#2D3A2D]">
-        <p className="text-[10px] font-light tracking-[0.2em] uppercase text-[#F9F7F2]/80">{t('footer.allRightsReserved')}</p>
-      </footer>
     </div>
   );
 };

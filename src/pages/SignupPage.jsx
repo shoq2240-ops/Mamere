@@ -4,6 +4,27 @@ import { Link, useNavigate } from 'react-router-dom';
 import { supabase, fetchClientIp, logUserConsent, getAuthRedirectUrl } from '../lib/supabase';
 import { useLanguage } from '../store/LanguageContext';
 
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+function isDuplicateEmailError(err) {
+  if (!err?.message) return false;
+  const msg = String(err.message).toLowerCase();
+  return (
+    msg.includes('already registered') ||
+    msg.includes('user already exists') ||
+    msg.includes('already been registered') ||
+    msg.includes('email already') ||
+    msg.includes('duplicate') ||
+    err.code === 'user_already_exists'
+  );
+}
+
+function isDuplicateUserResponse(data) {
+  if (!data?.user) return false;
+  const identities = data.user.identities;
+  return Array.isArray(identities) && identities.length === 0;
+}
+
 const SignupPage = () => {
   const navigate = useNavigate();
   const { t, locale } = useLanguage();
@@ -19,60 +40,85 @@ const SignupPage = () => {
   const handleOAuthSignIn = async (provider) => {
     setError('');
     setLoading(true);
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider,
-      options: { redirectTo: getAuthRedirectUrl('/') },
-    });
-    setLoading(false);
-    if (error) setError(error.message);
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider,
+        options: { redirectTo: getAuthRedirectUrl('/') },
+      });
+      if (error) setError(error.message);
+    } catch (err) {
+      setError(err?.message || 'OAuth 로그인에 실패했습니다.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setMessage('');
+
     if (!agreeTerms || !agreePrivacy) {
       setError('이용약관과 개인정보 처리방침에 동의해 주세요.');
       return;
     }
+
+    const trimmedEmail = email.trim();
+    if (!EMAIL_REGEX.test(trimmedEmail)) {
+      setError(t('signup.emailInvalid'));
+      return;
+    }
+
     setLoading(true);
-
-    // options.data는 handle_new_user 트리거에서 profiles.full_name으로 사용됨 (full_name, name, 없으면 email)
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          full_name: email.split('@')[0] || '',
-          name: email.split('@')[0] || '',
-        },
-      },
-    });
-
-    if (error) {
-      setLoading(false);
-      setError(error.message);
-      return;
-    }
-
-    // 세션 있으면 동의 로그 기록 (IP, 동의 시점)
-    if (data?.user && data?.session) {
-      const ip = await fetchClientIp();
-      await logUserConsent({
-        userId: data.user.id,
-        ipAddress: ip,
-        termsAgreedAt: new Date().toISOString(),
-        privacyAgreedAt: new Date().toISOString(),
-        marketingAgreed: agreeMarketing,
+    try {
+      const { data, error: signUpError } = await supabase.auth.signUp({
+        email: trimmedEmail,
+        password,
+        options: { data: {} },
       });
-    }
 
-    setLoading(false);
-    if (data?.user && !data?.session) {
-      setMessage(t('signup.messageSent'));
-      return;
+      if (signUpError) {
+        if (isDuplicateEmailError(signUpError)) {
+          setError(t('signup.emailAlreadyRegistered'));
+          return;
+        }
+        setError(signUpError.message || '가입에 실패했습니다. 잠시 후 다시 시도해 주세요.');
+        return;
+      }
+
+      if (data?.user && isDuplicateUserResponse(data)) {
+        setError(t('signup.emailAlreadyRegistered'));
+        return;
+      }
+
+      if (data?.user && data?.session) {
+        try {
+          const ip = await fetchClientIp();
+          await logUserConsent({
+            userId: data.user.id,
+            ipAddress: ip,
+            termsAgreedAt: new Date().toISOString(),
+            privacyAgreedAt: new Date().toISOString(),
+            marketingAgreed: agreeMarketing,
+          });
+        } catch {
+          // 동의 로그 실패해도 가입 성공은 유지
+        }
+        navigate('/', { replace: true });
+        return;
+      }
+
+      if (data?.user && !data?.session) {
+        setMessage(t('signup.messageSent'));
+        return;
+      }
+
+      navigate('/', { replace: true });
+    } catch (err) {
+      setError(err?.message || '가입 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.');
+    } finally {
+      setLoading(false);
     }
-    navigate('/', { replace: true });
   };
 
   return (
@@ -84,13 +130,13 @@ const SignupPage = () => {
         className="max-w-md w-full space-y-12"
       >
         <div className="text-center space-y-4">
-          <h1 className="text-5xl font-black italic uppercase tracking-tighter text-[#3E2F28]">{t('signup.title')}</h1>
+          <h1 className="text-4xl font-semibold uppercase tracking-tight text-[#3E2F28]">{t('signup.title')}</h1>
           <p className="text-[10px] font-light text-[#7A6B63] tracking-mega-wide uppercase">{t('signup.subtitle')}</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {error && (
-            <p className="text-red-500 text-[11px] text-center">{error}</p>
+            <p className="text-red-500 text-[11px] text-center" role="alert">{error}</p>
           )}
           {message && (
             <p className="text-[#666666] text-[11px] text-center">{message}</p>
@@ -99,9 +145,11 @@ const SignupPage = () => {
             type="email"
             placeholder={t('signup.email').toUpperCase()}
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={(e) => { setEmail(e.target.value); setError(''); }}
             required
-            className="w-full bg-[#F9F9F9] px-6 py-4 text-[11px] text-[#000000] outline-none focus:bg-[#F5F5F5] transition-all font-light placeholder:text-[#999999]"
+            disabled={loading}
+            autoComplete="email"
+            className="w-full bg-[#F9F9F9] px-6 py-4 text-[11px] text-[#000000] outline-none focus:bg-[#F5F5F5] transition-all font-light placeholder:text-[#999999] disabled:opacity-70 disabled:cursor-not-allowed"
           />
           <input
             type="password"
@@ -110,7 +158,9 @@ const SignupPage = () => {
             onChange={(e) => setPassword(e.target.value)}
             required
             minLength={6}
-            className="w-full bg-[#F9F9F9] px-6 py-4 text-[11px] text-[#000000] outline-none focus:bg-[#F5F5F5] transition-all font-light placeholder:text-[#999999]"
+            disabled={loading}
+            autoComplete="new-password"
+            className="w-full bg-[#F9F9F9] px-6 py-4 text-[11px] text-[#000000] outline-none focus:bg-[#F5F5F5] transition-all font-light placeholder:text-[#999999] disabled:opacity-70 disabled:cursor-not-allowed"
           />
 
           <div className="space-y-3 py-2">
@@ -152,9 +202,12 @@ const SignupPage = () => {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-[#A8B894] text-[#2D3A2D] py-5 text-[11px] font-black uppercase tracking-extra-wide hover:opacity-90 transition-all duration-500 disabled:opacity-50"
+            className="w-full bg-[#A8B894] text-[#2D3A2D] py-5 text-[11px] font-medium uppercase tracking-widest hover:opacity-90 transition-all duration-500 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
-            {loading ? (locale === 'ko' ? '가입 중...' : 'Creating...') : t('signup.submit')}
+            {loading && (
+              <span className="inline-block w-4 h-4 border-2 border-[#2D3A2D]/40 border-t-[#2D3A2D] rounded-full animate-spin" aria-hidden />
+            )}
+            {loading ? (locale === 'ko' ? '처리 중...' : 'Processing...') : t('signup.submit')}
           </button>
 
           <div className="relative py-4">

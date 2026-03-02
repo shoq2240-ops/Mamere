@@ -54,6 +54,21 @@ const ShopPage = ({ category }) => {
   }, [skinConcernParam]);
 
   const categoryNorm = normalizeCategory(category);
+
+  const showSkinFilters =
+    !categoryNorm || categoryNorm === 'best' || categoryNorm === 'skincare';
+
+  useEffect(() => {
+    if (categoryNorm === 'makeup' || categoryNorm === 'body_hair') {
+      setSkinType('');
+      setSkinConcern('');
+      const next = new URLSearchParams(searchParams);
+      next.delete('skinType');
+      next.delete('skinConcern');
+      setSearchParams(next);
+    }
+  }, [categoryNorm]);
+
   const filteredProducts = products
     .filter((product) => {
       if (!categoryNorm) return true;
@@ -62,12 +77,12 @@ const ShopPage = ({ category }) => {
       return pCat === categoryNorm;
     })
     .filter((product) => {
-      if (!skinType) return true;
+      if (!showSkinFilters || !skinType) return true;
       const types = toArray(product.skin_type || product.skinType);
-      return types.some((t) => String(t).trim() === skinType);
+      return types.some((ty) => String(ty).trim() === skinType);
     })
     .filter((product) => {
-      if (!skinConcern) return true;
+      if (!showSkinFilters || !skinConcern) return true;
       const concerns = toArray(product.skin_concern || product.skinConcern);
       return concerns.some((c) => String(c).trim() === skinConcern);
     })
@@ -78,7 +93,12 @@ const ShopPage = ({ category }) => {
       setShowLoginModal(true);
       return;
     }
-    addToCart(product);
+    const added = addToCart(product, 1);
+    if (!added) {
+      const stock = product?.stock_quantity ?? product?.stock ?? 0;
+      toast.error(`최대 구매 가능 수량은 ${stock}개입니다.`);
+      return;
+    }
     toast.success(t('common.addToCartDone'));
   };
 
@@ -100,6 +120,17 @@ const ShopPage = ({ category }) => {
             ? t('shop.makeup')
             : t('shop.all');
 
+  const categorySubCopy =
+    !categoryNorm || categoryNorm === 'best'
+      ? t('shop.categorySubBest')
+      : categoryNorm === 'skincare'
+        ? t('shop.categorySubSkincare')
+        : categoryNorm === 'makeup'
+          ? t('shop.categorySubMakeup')
+          : categoryNorm === 'body_hair'
+            ? t('shop.categorySubBodyHair')
+            : null;
+
   return (
     <div className="bg-[#F9F7F2] min-h-screen pt-20 md:pt-24 pb-16 md:pb-20 antialiased relative text-[#3E2F28]">
       <div className="max-w-[1800px] mx-auto px-6 md:px-8">
@@ -118,67 +149,74 @@ const ShopPage = ({ category }) => {
           />
         </div>
 
-        {/* 필터: 피부 타입, 피부 고민 */}
-        <div className="mb-10 md:mb-12 flex flex-col gap-6">
-          <div>
-            <p className="text-[9px] md:text-[10px] tracking-[0.15em] uppercase text-[#7A6B63] mb-2">{t('shop.skinType')}</p>
-            <div className="flex flex-wrap gap-2">
-              <button
-                type="button"
-                onClick={() => updateFilter('skinType', '')}
-                className={`px-4 py-2 text-[10px] font-light tracking-[0.08em] uppercase transition-colors ${
-                  !skinType ? 'bg-[#A8B894] text-[#2D3A2D]' : 'bg-[#F9F7F2] border border-[#A8B894]/50 text-[#3E2F28] hover:border-[#A8B894]'
-                }`}
-              >
-                {t('shop.all')}
-              </button>
-              {SKIN_TYPES.map((t) => (
+        {/* 필터: 피부 타입, 피부 고민 — 스킨케어·전체(Best)일 때만 노출 */}
+        {showSkinFilters && (
+          <div className="mb-10 md:mb-12 flex flex-col gap-6">
+            <div>
+              <p className="text-[9px] md:text-[10px] tracking-[0.15em] uppercase text-[#7A6B63] mb-2">{t('shop.skinType')}</p>
+              <div className="flex flex-wrap gap-2">
                 <button
-                  key={t}
                   type="button"
-                  onClick={() => updateFilter('skinType', skinType === t ? '' : t)}
+                  onClick={() => updateFilter('skinType', '')}
                   className={`px-4 py-2 text-[10px] font-light tracking-[0.08em] uppercase transition-colors ${
-                    skinType === t ? 'bg-[#A8B894] text-[#2D3A2D]' : 'bg-[#F9F7F2] border border-[#A8B894]/50 text-[#3E2F28] hover:border-[#A8B894]'
+                    !skinType ? 'bg-[#A8B894] text-[#2D3A2D]' : 'bg-[#F9F7F2] border border-[#A8B894]/50 text-[#3E2F28] hover:border-[#A8B894]'
                   }`}
                 >
-                  {t}
+                  {t('shop.all')}
                 </button>
-              ))}
+                {SKIN_TYPES.map((typeLabel) => (
+                  <button
+                    key={typeLabel}
+                    type="button"
+                    onClick={() => updateFilter('skinType', skinType === typeLabel ? '' : typeLabel)}
+                    className={`px-4 py-2 text-[10px] font-light tracking-[0.08em] uppercase transition-colors ${
+                      skinType === typeLabel ? 'bg-[#A8B894] text-[#2D3A2D]' : 'bg-[#F9F7F2] border border-[#A8B894]/50 text-[#3E2F28] hover:border-[#A8B894]'
+                    }`}
+                  >
+                    {typeLabel}
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
-          <div>
-            <p className="text-[9px] md:text-[10px] tracking-[0.15em] uppercase text-[#7A6B63] mb-2">{t('shop.skinConcern')}</p>
-            <div className="flex flex-wrap gap-2">
-              <button
-                type="button"
-                onClick={() => updateFilter('skinConcern', '')}
-                className={`px-4 py-2 text-[10px] font-light tracking-[0.08em] uppercase transition-colors ${
-                  !skinConcern ? 'bg-[#A8B894] text-[#2D3A2D]' : 'bg-[#F9F7F2] border border-[#A8B894]/50 text-[#3E2F28] hover:border-[#A8B894]'
-                }`}
-              >
-                {t('shop.all')}
-              </button>
-              {SKIN_CONCERNS.map((c) => (
+            <div>
+              <p className="text-[9px] md:text-[10px] tracking-[0.15em] uppercase text-[#7A6B63] mb-2">{t('shop.skinConcern')}</p>
+              <div className="flex flex-wrap gap-2">
                 <button
-                  key={c}
                   type="button"
-                  onClick={() => updateFilter('skinConcern', skinConcern === c ? '' : c)}
+                  onClick={() => updateFilter('skinConcern', '')}
                   className={`px-4 py-2 text-[10px] font-light tracking-[0.08em] uppercase transition-colors ${
-                    skinConcern === c ? 'bg-[#A8B894] text-[#2D3A2D]' : 'bg-[#F9F7F2] border border-[#A8B894]/50 text-[#3E2F28] hover:border-[#A8B894]'
+                    !skinConcern ? 'bg-[#A8B894] text-[#2D3A2D]' : 'bg-[#F9F7F2] border border-[#A8B894]/50 text-[#3E2F28] hover:border-[#A8B894]'
                   }`}
                 >
-                  {c}
+                  {t('shop.all')}
                 </button>
-              ))}
+                {SKIN_CONCERNS.map((c) => (
+                  <button
+                    key={c}
+                    type="button"
+                    onClick={() => updateFilter('skinConcern', skinConcern === c ? '' : c)}
+                    className={`px-4 py-2 text-[10px] font-light tracking-[0.08em] uppercase transition-colors ${
+                      skinConcern === c ? 'bg-[#A8B894] text-[#2D3A2D]' : 'bg-[#F9F7F2] border border-[#A8B894]/50 text-[#3E2F28] hover:border-[#A8B894]'
+                    }`}
+                  >
+                    {c}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
         {/* 헤더 */}
         <div className="mb-12 md:mb-16 flex justify-between items-end">
           <div>
             <h1 className="text-[9px] md:text-[10px] tracking-[0.2em] uppercase text-[#7A6B63] font-medium mb-2 md:mb-3">{t('shop.title')}</h1>
             <h2 className="text-lg md:text-2xl font-semibold tracking-tight leading-none text-[#3E2F28]">{categoryLabel}</h2>
+            {categorySubCopy && (
+              <p className="mt-2 md:mt-3 text-[11px] md:text-[12px] font-light text-[#7A6B63] tracking-[0.04em] leading-relaxed max-w-xl">
+                {categorySubCopy}
+              </p>
+            )}
           </div>
           <span className="text-[9px] md:text-[10px] font-light text-[#7A6B63] tracking-[0.15em] uppercase mb-2">
             {loading ? '...' : `${filteredProducts.length}${t('shop.productsCount')}`}

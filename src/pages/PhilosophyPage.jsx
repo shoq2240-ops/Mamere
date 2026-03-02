@@ -15,7 +15,7 @@ const PhilosophyPage = () => {
           <h1 className="text-[10px] tracking-mega-wide uppercase text-[#666666] font-bold mb-4">
             Philosophy
           </h1>
-          <h2 className="text-3xl md:text-5xl font-black italic tracking-tighter uppercase leading-tight">
+          <h2 className="text-3xl md:text-5xl font-semibold tracking-tight uppercase leading-tight">
 
           </h2>
         </motion.div>

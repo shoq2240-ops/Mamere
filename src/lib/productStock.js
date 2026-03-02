@@ -32,5 +32,6 @@ export function isSoldOut(product) {
  */
 export function getStockQuantity(product) {
   if (!product) return 0;
-  return product.stock_quantity ?? 0;
+  const qty = product.stock_quantity ?? product.stock ?? 0;
+  return Math.max(0, Math.floor(Number(qty)) || 0);
 }

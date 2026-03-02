@@ -15,7 +15,7 @@ const BrandStoryPage = () => {
             Brand Story
           </h1>
           <h2 className="text-3xl md:text-5xl font-light tracking-tight leading-tight text-[#1a1a1a]">
-            Mamère
+            다정한 손길로 완성하는 맑은 피부, 마메르
           </h2>
         </motion.div>
 
@@ -25,25 +25,9 @@ const BrandStoryPage = () => {
           transition={{ delay: 0.4, duration: 1 }}
           className="space-y-12 md:space-y-16"
         >
-          <div className="border-l-2 border-[#1A1A1A] pl-6 md:pl-12">
-            <p className="text-lg md:text-2xl font-light leading-relaxed md:leading-loose text-[#2C2C2C] break-keep">
-              당신의 피부에 진심을 더합니다.
-              <br className="hidden md:block" />
-              <span className="font-medium text-[#1a1a1a]">
-                믿을 수 있는 성분과 투명한 제조로, 건강한 아름다움을 제안합니다.
-              </span>
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-24 items-start">
-            <p className="text-sm md:text-base font-light leading-7 text-[#5C5C5C] break-keep">
-              시카, 히알루론산, 나이아신아마이드 등 검증된 성분을 바탕으로
-              피부 타입과 고민에 맞는 제품을 선별합니다.
-              불필요한 첨가를 줄이고, 피부가 숨 쉬는 케어를 지향합니다.
-            </p>
-            <p className="text-sm md:text-base font-light leading-7 text-[#5C5C5C] break-keep">
-              우리의 모든 제품은 민감한 피부도 고려한 포뮬레이션으로,
-              일상에서 꾸준히 쓰일 수 있는 신뢰감 있는 뷰티를 목표로 합니다.
+          <div className="border-l-2 border-[#94a3b8] pl-8 md:pl-14 py-2 md:py-4">
+            <p className="text-base md:text-xl font-light leading-loose md:leading-loose text-slate-700 break-keep max-w-2xl">
+              마메르는 불어로 &apos;나의 어머니&apos;를 뜻합니다. 어머니의 따뜻한 품처럼, 지치고 예민해진 당신의 피부를 가장 순수한 자연의 성분으로 어루만집니다. 불필요한 것은 비워내고, 피부가 진정으로 필요로 하는 것만 담았습니다. 자연이 주는 맑은 에너지로 피부 본연의 건강한 빛을 되찾아 드립니다.
             </p>
           </div>
         </motion.div>

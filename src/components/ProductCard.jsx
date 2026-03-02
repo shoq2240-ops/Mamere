@@ -80,7 +80,7 @@ const ProductCard = ({ product, onAddToCart, variant = 'grid', grayscale = false
               e.stopPropagation();
               onAddToCart?.(product, e);
             }}
-            className={`absolute bottom-0 left-0 right-0 text-center font-black tracking-widest transition-all duration-400 z-30 hidden md:block ${
+            className={`absolute bottom-0 left-0 right-0 text-center font-medium tracking-widest transition-all duration-400 z-30 hidden md:block ${
               soldOut
                 ? 'bg-[#EDEAE4] text-[#7A6B63] cursor-not-allowed py-2.5 text-[9pt] opacity-80'
                 : variant === 'carousel'

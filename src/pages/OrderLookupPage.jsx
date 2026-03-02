@@ -76,7 +76,7 @@ const OrderLookupPage = () => {
   return (
     <div className="pt-32 pb-20 px-6 min-h-screen bg-[#FFFFFF] text-[#000000] antialiased">
       <div className="max-w-2xl mx-auto">
-        <h1 className="text-4xl font-black italic tracking-tighter uppercase mb-2">
+        <h1 className="text-4xl font-semibold tracking-tight uppercase mb-2">
           비회원 주문 조회
         </h1>
         <p className="text-[10px] text-[#999999] tracking-widest uppercase mb-10">
@@ -120,7 +120,7 @@ const OrderLookupPage = () => {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-[#000000] text-[#FFFFFF] py-4 text-[11px] font-black tracking-widest uppercase hover:opacity-90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full bg-[#000000] text-[#FFFFFF] py-4 text-[11px] font-medium tracking-widest uppercase hover:opacity-90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? '조회 중...' : '조회하기'}
           </button>
@@ -177,7 +177,7 @@ const OrderLookupPage = () => {
             )}
 
             <div className="flex justify-end pt-2">
-              <span className="text-lg font-black italic text-[#000000]">
+              <span className="text-lg font-semibold text-[#000000]">
                 ₩{(order.total_amount ?? order.total_price ?? 0).toLocaleString()}
               </span>
             </div>

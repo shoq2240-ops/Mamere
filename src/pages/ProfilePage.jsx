@@ -5,6 +5,7 @@ import { useAuth } from '../store/AuthContext';
 import { publicTable, checkSupabaseConnection, withdrawUser } from '../lib/supabase';
 import { supabase } from '../lib/supabase';
 import AddressInput, { combineAddress, splitAddress } from '../components/AddressInput';
+import { formatPhoneDisplay } from '../lib/formatPhone';
 
 const ProfilePage = () => {
   const navigate = useNavigate();
@@ -13,7 +14,6 @@ const ProfilePage = () => {
   const [address, setAddress] = useState('');
   const [addressDetail, setAddressDetail] = useState('');
   const [phone, setPhone] = useState('');
-  const [birthdate, setBirthdate] = useState('');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -43,7 +43,7 @@ const ProfilePage = () => {
         return;
       }
       const { data, error } = await publicTable('profiles')
-        .select('full_name, address, phone, birth_date')
+        .select('full_name, address, phone')
         .eq('id', user.id)
         .maybeSingle();
 
@@ -57,8 +57,7 @@ const ProfilePage = () => {
         const { base, detail } = splitAddress(data.address ?? '');
         setAddress(base);
         setAddressDetail(detail);
-        setPhone(data.phone ?? '');
-        setBirthdate(data.birth_date ? data.birth_date.slice(0, 10) : '');
+        setPhone(formatPhoneDisplay(data.phone ?? '') || '');
       }
     };
 
@@ -80,8 +79,7 @@ const ProfilePage = () => {
           id: user.id,
           full_name: name.trim() || null,
           address: fullAddress || null,
-          phone: phone.trim() || null,
-          birth_date: birthdate || null,
+          phone: phone.replace(/\D/g, '').trim() || null,
         },
         { onConflict: 'id' }
       );
@@ -120,13 +118,10 @@ const ProfilePage = () => {
         transition={{ duration: 0.4 }}
         className="w-full max-w-md"
       >
-        <div className="text-center space-y-2 mb-10">
-          <h1 className="text-4xl font-black italic uppercase tracking-tighter text-[#000000]">
+        <div className="text-center mb-10">
+          <h1 className="text-4xl font-semibold uppercase tracking-tight text-[#000000]">
             Profile
           </h1>
-          <p className="text-[10px] text-neutral-500 tracking-mega-wide uppercase font-mono">
-            이름, 주소, 전화번호를 입력하세요
-          </p>
         </div>
 
         {loading ? (
@@ -151,7 +146,7 @@ const ProfilePage = () => {
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="이름"
+                placeholder="이름을 설정해주세요"
                 className="w-full bg-[#F9F9F9] px-6 py-4 text-[11px] text-[#000000] outline-none focus:bg-[#F5F5F5] transition-all placeholder:text-[#999999]"
               />
             </div>
@@ -173,25 +168,14 @@ const ProfilePage = () => {
 
             <div>
               <label className="block text-[10px] font-bold tracking-widest uppercase text-[#000000]/50 mb-2">
-                생년월일
-              </label>
-              <input
-                type="date"
-                value={birthdate}
-                onChange={(e) => setBirthdate(e.target.value)}
-                className="w-full bg-[#F9F9F9] px-6 py-4 text-[11px] text-[#000000] outline-none focus:bg-[#F5F5F5] transition-all"
-              />
-            </div>
-
-            <div>
-              <label className="block text-[10px] font-bold tracking-widest uppercase text-[#000000]/50 mb-2">
                 전화번호
               </label>
               <input
                 type="tel"
                 value={phone}
-                onChange={(e) => setPhone(e.target.value.replace(/[^\d\-]/g, '').slice(0, 13))}
+                onChange={(e) => setPhone(formatPhoneDisplay(e.target.value))}
                 placeholder="010-0000-0000"
+                maxLength={13}
                 className="w-full bg-[#F9F9F9] px-6 py-4 text-[11px] text-[#000000] outline-none focus:bg-[#F5F5F5] transition-all placeholder:text-[#999999]"
               />
             </div>
@@ -199,7 +183,7 @@ const ProfilePage = () => {
             <button
               type="submit"
               disabled={saving}
-              className="w-full bg-[#000000] text-[#FFFFFF] py-5 text-[11px] font-black uppercase tracking-extra-wide hover:bg-neutral-100 transition-all duration-500 disabled:opacity-50"
+              className="w-full bg-[#000000] text-[#FFFFFF] py-5 text-[11px] font-medium uppercase tracking-widest hover:bg-neutral-100 transition-all duration-500 disabled:opacity-50"
             >
               {saving ? '저장 중...' : '저장'}
             </button>
