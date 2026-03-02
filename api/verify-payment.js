@@ -41,10 +41,20 @@ export default async function handler(req, res) {
     paymentId,
     cartItems,
     orderPayload,
+    shippingAddress: shippingAddressFromBody,
     isGuest,
     guestEmail,
     userId,
   } = body;
+
+  // 배송지: shippingAddress 객체 우선, 없으면 orderPayload에서 복원
+  const shippingAddress = shippingAddressFromBody ?? (orderPayload && {
+    name: orderPayload.customer_name ?? orderPayload.shipping_name,
+    phone: orderPayload.phone ?? orderPayload.shipping_phone,
+    address: orderPayload.address ?? orderPayload.shipping_address,
+    detailAddress: orderPayload.detail_address ?? '',
+    zipCode: orderPayload.zip_code ?? '',
+  });
 
   const items = Array.isArray(cartItems) && cartItems.length > 0
     ? cartItems
@@ -225,8 +235,9 @@ export default async function handler(req, res) {
     });
   }
 
-  // 3) 주문 INSERT (서버 계산 총액만 사용)
+  // 3) 주문 INSERT — Supabase orders 컬럼: customer_name, phone, address, detail_address, zip_code, payment_id, total_amount, status, items
   const orderNumber = `DN-${Date.now().toString().slice(-10)}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
+  const totalAmountToStore = serverTotal + serverShippingFee;
 
   const orderRow = {
     payment_id: paymentId,
@@ -235,15 +246,13 @@ export default async function handler(req, res) {
     guest_email: isGuest ? guestEmail || null : null,
     order_number: orderNumber,
     items: orderItemsForDb,
-    status: '결제완료',
-    customer_name: (orderPayload?.customer_name ?? '').slice(0, 100) || null,
-    shipping_name: (orderPayload?.shipping_name ?? '').slice(0, 100) || null,
-    phone: (orderPayload?.phone ?? '').slice(0, 20) || null,
-    shipping_phone: (orderPayload?.shipping_phone ?? '').slice(0, 20) || null,
-    total_price: serverTotal,
-    total_amount: serverTotal,
-    address: (orderPayload?.address ?? '').slice(0, 500) || null,
-    shipping_address: (orderPayload?.shipping_address ?? '').slice(0, 500) || null,
+    status: 'PAID',
+    customer_name: (shippingAddress?.name ?? orderPayload?.customer_name ?? '').toString().trim().slice(0, 100) || null,
+    phone: (shippingAddress?.phone ?? orderPayload?.phone ?? '').toString().trim().slice(0, 20) || null,
+    address: (shippingAddress?.address ?? orderPayload?.address ?? '').toString().trim().slice(0, 500) || null,
+    detail_address: (shippingAddress?.detailAddress ?? orderPayload?.detail_address ?? '').toString().trim().slice(0, 300) || null,
+    zip_code: (shippingAddress?.zipCode ?? orderPayload?.zip_code ?? '').toString().trim().slice(0, 20) || null,
+    total_amount: totalAmountToStore,
   };
 
   const { data: inserted, error: orderError } = await supabase

@@ -50,6 +50,7 @@ const CheckoutPage = () => {
   const [shippingName, setShippingName] = useState('');
   const [shippingAddress, setShippingAddress] = useState('');
   const [shippingAddressDetail, setShippingAddressDetail] = useState('');
+  const [shippingZipCode, setShippingZipCode] = useState('');
   const [shippingPhone, setShippingPhone] = useState('');
   const [initialProfile, setInitialProfile] = useState(null);
   const [saveAsDefault, setSaveAsDefault] = useState(false);
@@ -303,6 +304,15 @@ const CheckoutPage = () => {
         shipping_address: addressFull,
       };
 
+      // Supabase orders 테이블용 배송지 객체 (customer_name, phone, address, detail_address, zip_code)
+      const shippingAddressPayload = {
+        name,
+        phone,
+        address: (shippingAddress ?? '').trim().slice(0, 500),
+        detailAddress: (shippingAddressDetail ?? '').trim().slice(0, 300),
+        zipCode: (shippingZipCode ?? '').trim().slice(0, 20) || '',
+      };
+
       let verifyRes;
       let verifyJson = {};
       try {
@@ -314,6 +324,7 @@ const CheckoutPage = () => {
             expectedAmount: totalAmount,
             cartItems: items,
             orderPayload: orderPayloadForVerify,
+            shippingAddress: shippingAddressPayload,
             isGuest,
             guestEmail: isGuest ? (guestEmail ?? '').trim() : null,
             userId: user?.id ?? null,
