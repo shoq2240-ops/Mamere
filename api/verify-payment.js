@@ -235,24 +235,25 @@ export default async function handler(req, res) {
     });
   }
 
-  // 3) 주문 INSERT — Supabase orders 컬럼: customer_name, phone, address, detail_address, zip_code, payment_id, total_amount, status, items
+  // 3) 주문 INSERT — Supabase orders 테이블 컬럼과 1:1 매칭
+  // [체크리스트] payment_id: 포트원 paymentId | total_amount: 결제 금액 | items: 장바구니 JSON | address/detail_address: 배송지
   const orderNumber = `DN-${Date.now().toString().slice(-10)}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
   const totalAmountToStore = serverTotal + serverShippingFee;
 
   const orderRow = {
     payment_id: paymentId,
-    user_id: userId || null,
-    is_guest: !!isGuest,
-    guest_email: isGuest ? guestEmail || null : null,
-    order_number: orderNumber,
-    items: orderItemsForDb,
+    total_amount: totalAmountToStore,
     status: 'PAID',
+    items: orderItemsForDb,
     customer_name: (shippingAddress?.name ?? orderPayload?.customer_name ?? '').toString().trim().slice(0, 100) || null,
     phone: (shippingAddress?.phone ?? orderPayload?.phone ?? '').toString().trim().slice(0, 20) || null,
     address: (shippingAddress?.address ?? orderPayload?.address ?? '').toString().trim().slice(0, 500) || null,
     detail_address: (shippingAddress?.detailAddress ?? orderPayload?.detail_address ?? '').toString().trim().slice(0, 300) || null,
     zip_code: (shippingAddress?.zipCode ?? orderPayload?.zip_code ?? '').toString().trim().slice(0, 20) || null,
-    total_amount: totalAmountToStore,
+    user_id: userId || null,
+    is_guest: !!isGuest,
+    guest_email: isGuest ? guestEmail || null : null,
+    order_number: orderNumber,
   };
 
   const { data: inserted, error: orderError } = await supabase
