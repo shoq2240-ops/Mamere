@@ -272,20 +272,32 @@ export default async function handler(req, res) {
     });
   }
 
-  // 4) 재고 차감 (deduct_stock RPC: UUID/BIGINT 공통으로 TEXT 인자 전달)
+  // 4) 재고 차감 — 주문 INSERT 성공 후에만 실행 (순서 보장). deduct_stock_by_id(TEXT, INTEGER) 단일 시그니처로 후보 충돌 방지
   for (const item of sanitizedItems) {
-    const { error: stockError } = await supabase.rpc('deduct_stock', {
-      p_product_id: String(item.id),
-      p_quantity: item.quantity,
+    const p_product_id = item.id != null ? String(item.id) : '';
+    const p_quantity = Math.max(1, Math.min(99, Math.floor(Number(item.quantity) || 1)));
+    const { error: stockError } = await supabase.rpc('deduct_stock_by_id', {
+      p_product_id,
+      p_quantity,
     });
 
     if (stockError) {
       await supabase.from('orders').update({ status: '취소됨' }).eq('id', inserted?.id);
       const isStock = (stockError.message || '').toUpperCase().includes('INSUFFICIENT_STOCK');
+      const userMessage = isStock
+        ? '재고가 부족하여 주문이 취소되었습니다.'
+        : '주문은 기록되었으나 재고 업데이트에 문제가 발생했습니다. 고객센터로 문의해 주세요.';
+      console.error('재고 차감 실패:', {
+        message: stockError?.message,
+        code: stockError?.code,
+        productId: item.id,
+        orderId: inserted?.id,
+        note: '주문은 취소됨으로 업데이트됨',
+      });
       return res.status(500).json({
         success: false,
         error: isStock ? 'Insufficient Stock' : 'Supabase RPC Error',
-        message: isStock ? '재고가 부족하여 주문이 취소되었습니다.' : (stockError?.message ?? '재고 반영 중 오류가 발생하여 주문이 취소되었습니다.'),
+        message: userMessage,
         details: { code: stockError.code, hint: stockError.hint, productId: item.id },
       });
     }
