@@ -13,7 +13,7 @@ ALTER TABLE products ADD COLUMN IF NOT EXISTS skin_type JSONB DEFAULT '[]';
 -- 피부 고민 (JSONB 배열, 예: ["보습", "진정"])
 ALTER TABLE products ADD COLUMN IF NOT EXISTS skin_concern JSONB DEFAULT '[]';
 
--- 주요 성분 (JSONB 배열, 예: ["시카", "히알루론산"])
+-- 주요 성분 (JSONB 배열, 예: ["시나몬", "히알루론산", "티트리"])
 ALTER TABLE products ADD COLUMN IF NOT EXISTS key_ingredients JSONB DEFAULT '[]';
 
 COMMENT ON COLUMN products.volume IS '용량 표기 (예: 50ml, 30g)';

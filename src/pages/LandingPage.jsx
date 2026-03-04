@@ -5,7 +5,6 @@ import { Helmet } from 'react-helmet-async';
 import toast from 'react-hot-toast';
 import { useCart } from '../store/CartContext';
 import { useProducts } from '../hooks/useProducts';
-import { useRecentlyViewed } from '../hooks/useRecentlyViewed';
 import { useLanguage } from '../store/LanguageContext';
 import { ProductCarouselSkeleton, LoadingMessage } from '../components/ProductSkeleton';
 import ProductCard from '../components/ProductCard';
@@ -95,7 +94,6 @@ const HeroCarousel = () => {
 
 const LandingPage = () => {
   const { addToCart } = useCart();
-  const { items: recentlyViewedItems } = useRecentlyViewed();
   const { t } = useLanguage();
   const [categoryTab, setCategoryTab] = useState('best');
 
@@ -304,38 +302,6 @@ const LandingPage = () => {
           </div>
         </div>
       </section>
-
-      {recentlyViewedItems.length > 0 && (
-        <section className="py-12 md:py-16 border-t border-[#A8B894]/30 bg-[#F9F7F2]">
-          <div className="px-6 md:px-12 mb-4">
-            <p className="text-[9px] font-light tracking-[0.2em] uppercase text-[#7A6B63]">{t('landing.recentlyViewed')}</p>
-          </div>
-          <div className="flex gap-4 overflow-x-auto scrollbar-hide px-6 md:px-12 pb-2">
-            {recentlyViewedItems.slice(0, 5).map((p) => (
-              <Link
-                key={p.id}
-                to={`/product/${p.id}`}
-                className="flex-shrink-0 w-20 md:w-24 group"
-              >
-                <div className="aspect-[3/4] overflow-hidden bg-[#EDEAE4] mb-1.5">
-                  {p.image && (
-                    <img
-                      src={p.image}
-                      alt={p.name}
-                      loading="lazy"
-                      decoding="async"
-                      className="w-full h-full object-cover opacity-70 group-hover:opacity-100 transition-opacity duration-300"
-                    />
-                  )}
-                </div>
-                <p className="text-[8px] md:text-[9px] font-light tracking-widest text-[#5C4A42] group-hover:text-[#3E2F28] truncate transition-colors">
-                  {p.name}
-                </p>
-              </Link>
-            ))}
-          </div>
-        </section>
-      )}
 
     </div>
   );

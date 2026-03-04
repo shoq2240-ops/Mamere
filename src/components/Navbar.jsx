@@ -154,7 +154,7 @@ const Navbar = ({ isScrolled = false, isMobileMenuOpen = false, onMobileMenuChan
   return (
     <div className="antialiased" onMouseLeave={() => setHoveredMenu(null)}>
       <nav className="relative w-full z-[150] bg-[#2D3A2D] text-[#F9F7F2] transition-all duration-300 overflow-x-hidden">
-        <div className="max-w-[1800px] mx-auto h-14 md:h-16 flex items-center justify-between px-4 md:px-6 py-2 relative">
+        <div className="max-w-[1800px] mx-auto h-12 md:h-16 flex items-center justify-between px-5 md:px-6 py-0 relative w-full">
 
           <div className="absolute inset-0 pointer-events-none z-0" aria-hidden>
             <div className="absolute left-[8%] top-1/2 -translate-y-1/2 text-[#F9F7F2]/15 animate-leaf-float">
@@ -171,7 +171,8 @@ const Navbar = ({ isScrolled = false, isMobileMenuOpen = false, onMobileMenuChan
             </div>
           </div>
 
-          <div className="flex-1 flex items-center justify-start min-w-0 z-10">
+          {/* 좌측: 햄버거 + 데스크톱 GNB (flex-1, 좌측 정렬) */}
+          <div className="flex-1 flex items-center justify-start min-w-0 z-10 mt-1">
             <div className="hidden md:flex items-center gap-6 lg:gap-8 text-sm font-medium tracking-[0.12em] uppercase h-full">
               {navLinks.map((link) => (
                 <Link key={link.key} to={link.path} className="hover:opacity-80 transition-all text-[#F9F7F2] whitespace-nowrap">
@@ -190,7 +191,7 @@ const Navbar = ({ isScrolled = false, isMobileMenuOpen = false, onMobileMenuChan
             to="/"
             onClick={handleLogoClick}
             className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-auto cursor-pointer opacity-95 hover:opacity-100 transition-opacity z-20 flex items-center justify-center border-0 outline-none shadow-none ring-0 focus:ring-0 focus:outline-none bg-transparent"
-            style={{ height: '88px' }}
+        style={{ height: '72px' }}
           >
             <img
               src={brandLogo}
@@ -200,7 +201,8 @@ const Navbar = ({ isScrolled = false, isMobileMenuOpen = false, onMobileMenuChan
             />
           </Link>
 
-          <div className="flex-1 flex items-center justify-end gap-1 md:gap-2 min-w-0 z-10">
+          {/* 우측: 언어/계정/검색/장바구니 (flex-1, 우측 정렬, 여유 있는 간격) */}
+          <div className="flex-1 flex items-center justify-end gap-4 md:gap-4 min-w-0 z-10 mt-1">
             <button
               type="button"
               onClick={toggleLocale}
@@ -253,26 +255,16 @@ const Navbar = ({ isScrolled = false, isMobileMenuOpen = false, onMobileMenuChan
                 </Link>
               )}
             </div>
-            <button onClick={() => { setIsSearchOpen(true); handleMenuToggle(false); }} className="w-9 h-9 md:w-10 md:h-10 flex items-center justify-center hover:opacity-80 transition-colors text-[#F9F7F2]">
+            <button onClick={() => { setIsSearchOpen(true); handleMenuToggle(false); }} className="w-7 h-7 md:w-9 md:h-9 flex items-center justify-center hover:opacity-80 transition-colors text-[#F9F7F2]">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" /></svg>
             </button>
-            <Link to="/wishlist" className="w-9 h-9 md:w-10 md:h-10 flex items-center justify-center relative hover:opacity-80 transition-colors text-[#F9F7F2]" aria-label={t('nav.wishlistAria')}>
-              <svg className="w-5 h-5" fill={wishlistCount > 0 ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
-              </svg>
-              {wishlistCount > 0 && (
-                <span className="absolute top-2 right-1.5 bg-[#A8B894] text-[8px] min-w-[14px] h-3.5 px-1 rounded-full flex items-center justify-center font-bold text-[#2D3A2D]">
-                  {wishlistCount}
-                </span>
-              )}
-            </Link>
-            <Link to="/cart" className="w-9 h-9 md:w-10 md:h-10 flex items-center justify-center relative hover:opacity-80 transition-colors text-[#F9F7F2]">
+            <Link to="/cart" className="w-7 h-7 md:w-9 md:h-9 flex items-center justify-center relative hover:opacity-80 transition-colors text-[#F9F7F2]">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" /><path d="M3 6h18" /><path d="M16 10a4 4 0 0 1-8 0" /></svg>
               <AnimatePresence mode="popLayout">
                 {cartCount > 0 && (
                   <motion.span 
                     key={cartCount} initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 1.5, opacity: 0 }}
-                    className="absolute top-2 right-1.5 bg-[#A8B894] text-[8px] w-4 h-4 rounded-full flex items-center justify-center font-bold text-[#2D3A2D]"
+                    className="absolute -top-1 -right-1 bg-[#A8B894] text-[8px] w-4 h-4 rounded-full flex items-center justify-center font-bold text-[#2D3A2D]"
                   >
                     {cartCount}
                   </motion.span>

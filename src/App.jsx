@@ -12,6 +12,7 @@ import ScrollToTop from "./components/ScrollToTop";
 import Navbar from "./components/Navbar";
 import Marquee from "./components/Marquee";
 import Footer from './components/Footer';
+import FloatingRecentlyViewed from './components/FloatingRecentlyViewed';
 import RequireAdmin from './components/RequireAdmin';
 import RequireAuth from './components/RequireAuth';
 import CookieBanner from './components/CookieBanner';
@@ -100,22 +101,15 @@ const AnimatedRoutes = () => {
   );
 };
 
-// 노이즈 레이어 및 페이지 전환 애니메이션
+// 페이지 전환 애니메이션 (미니멀 페이드인)
 const PageWrapper = ({ children }) => (
   <motion.div
-    initial={{ opacity: 0 }}
+    initial={{ opacity: 0.4 }}
     animate={{ opacity: 1 }}
-    exit={{ opacity: 0 }}
-    transition={{ duration: 0.4 }}
+    exit={{ opacity: 0.4 }}
+    transition={{ duration: 0.25, ease: 'easeOut' }}
     className="relative"
   >
-    <motion.div
-      initial={{ opacity: 1 }}
-      animate={{ opacity: 0 }}
-      exit={{ opacity: 1 }}
-      transition={{ duration: 0.4, ease: "easeInOut" }}
-      className="fixed inset-0 z-[9999] pointer-events-none opacity-0"
-    />
     {children}
   </motion.div>
 );
@@ -167,6 +161,7 @@ function AppContent() {
       >
         <AnimatedRoutes />
         <Footer />
+        {!isAdmin && <FloatingRecentlyViewed />}
       </main>
     </>
   );
