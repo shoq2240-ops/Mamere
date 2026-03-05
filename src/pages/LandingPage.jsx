@@ -19,11 +19,11 @@ const HERO_SLIDES = [
     alt: '마메르 메인 배너, 깊은 숲에서 찾은 순수한 휴식',
   },
   {
-    src: flower3,
+    src: '/flower1.png',
     alt: '피부를 감싸는 자연 유래 성분의 편안한 질감',
   },
   {
-    src: flower3,
+    src: '/flower2.png',
     alt: '마메르의 차분한 톤온톤 패키지와 자연광',
   },
 ];

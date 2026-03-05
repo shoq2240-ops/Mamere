@@ -13,6 +13,7 @@ import Navbar from "./components/Navbar";
 import Marquee from "./components/Marquee";
 import Footer from './components/Footer';
 import FloatingRecentlyViewed from './components/FloatingRecentlyViewed';
+import ScrollToTopButton from './components/ScrollToTopButton';
 import RequireAdmin from './components/RequireAdmin';
 import RequireAuth from './components/RequireAuth';
 import CookieBanner from './components/CookieBanner';
@@ -161,7 +162,12 @@ function AppContent() {
       >
         <AnimatedRoutes />
         <Footer />
-        {!isAdmin && <FloatingRecentlyViewed />}
+        {!isAdmin && (
+          <div className="fixed bottom-8 right-8 z-50 flex flex-col items-end gap-3">
+            <ScrollToTopButton />
+            <FloatingRecentlyViewed />
+          </div>
+        )}
       </main>
     </>
   );

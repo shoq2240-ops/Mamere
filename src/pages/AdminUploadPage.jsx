@@ -1002,7 +1002,7 @@ const AdminUploadPage = () => {
                 type="text"
                 value={form.keyIngredients}
                 onChange={(e) => setForm((f) => ({ ...f, keyIngredients: e.target.value }))}
-                placeholder="예: 시카, 히알루론산, 나이아신아마이드"
+                placeholder="예: 시나몬, 히알루론산, 티트리"
                 className={inputClass}
               />
             </div>

@@ -23,19 +23,11 @@ const FloatingRecentlyViewed = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [open]);
 
-  const handleMouseEnter = () => setOpen(true);
-  const handleMouseLeave = () => setOpen(false);
-
   return (
-    <div
-      ref={containerRef}
-      className="fixed bottom-4 right-4 z-[180]"
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
-    >
-      {/* 썸네일 전용 초미니 팝업 카드 */}
+    <div ref={containerRef} className="relative">
+      {/* 썸네일 전용 초미니 팝업 카드 (버튼 왼쪽으로 열림) */}
       <div
-        className={`mb-2 rounded-md border border-[#EAE5DD] bg-[#FAF9F6] shadow transition-all duration-300 origin-bottom-right px-2.5 py-2 ${
+        className={`absolute bottom-0 right-[calc(100%+16px)] w-max rounded-md border border-[#EAE5DD] bg-[#FAF9F6] shadow transition-all duration-300 origin-bottom-right px-2.5 py-2 ${
           open ? 'opacity-100 translate-y-0 pointer-events-auto' : 'opacity-0 translate-y-1 pointer-events-none'
         }`}
       >
@@ -47,8 +39,8 @@ const FloatingRecentlyViewed = () => {
               className="block"
               onClick={() => setOpen(false)}
             >
-              <div className="w-9 h-9 md:w-10 md:h-10 rounded-md overflow-hidden bg-[#EDEAE4]">
-                {p.image && (
+              <div className="w-12 h-12 rounded-md overflow-hidden bg-gray-100">
+                {typeof p.image === 'string' && p.image.trim() && (
                   <img
                     src={p.image}
                     alt=""

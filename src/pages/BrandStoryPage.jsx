@@ -35,7 +35,7 @@ const BrandStoryPage = () => {
                 자연이 건네는 다정한 위로,
                 <br className="hidden md:block" /> 마메르
               </h1>
-              <p className="mt-4 max-w-xl text-[11px] md:text-sm font-light tracking-[0.08em] leading-relaxed text-[#F5F3EE]/80">
+              <p className="mt-4 max-w-xl text-[11px] md:text-sm font-light tracking-[0.08em] leading-relaxed text-[#FDFBF5]">
                 깊은 숲과 깨끗한 물, 고요한 공기에서 영감을 받은 마메르는
                 <br className="hidden md:block" /> 피부가 숨 쉬는 시간을 위한 작은 여백을 만듭니다.
               </p>
@@ -72,11 +72,11 @@ const BrandStoryPage = () => {
                 불필요한 것들을 비워내고,
                 <br /> 피부가 진짜로 원하는 것만.
               </h2>
-              <p className="text-[13px] md:text-[14px] leading-relaxed tracking-[0.03em] text-[#4B453F]">
-                마메르는 가장 단순한 루틴 안에서 가장 깊은 위로가 시작된다고 믿습니다.
+              <p className="text-[13px] md:text-[14px] leading-relaxed tracking-[0.06em] text-[#4B453F]">
+                우리는 가장 단순한 루틴 안에서 가장 깊은 위로가 시작된다고 믿습니다.
                 기능과 성분을 끝없이 쌓기보다, 피부가 편안함을 느끼는 최소한의 조합만을 남깁니다.
                 세안 후에도 당기지 않는 촉감, 자극 없이 하루를 마무리할 수 있는 평온함.
-                그 조용한 안심을 위해 마메르는 오늘도 성분 하나, 제형 하나를 다시 들여다봅니다.
+                그 안심을 위해 오늘도 성분 하나, 제형 하나를 다시 들여다봅니다.
               </p>
             </div>
           </motion.div>
@@ -108,8 +108,8 @@ const BrandStoryPage = () => {
                 바쁜 하루와 하루 사이,
                 <br /> 잠깐의 숲을 건너는 시간.
               </h2>
-              <p className="text-[13px] md:text-[14px] leading-relaxed tracking-[0.03em] text-[#4B453F]">
-                마메르의 제품들은 욕실의 작은 선반 위에 놓인 한 장의 풍경처럼,
+              <p className="text-[13px] md:text-[14px] leading-relaxed tracking-[0.01em] text-[#4B453F]">
+                욕실의 작은 선반 위에 놓인 한 장의 풍경처럼,
                 하루의 시작과 끝을 부드럽게 이어주는 의식을 위해 탄생했습니다.
                 향이 지나치게 과하지 않도록, 제형이 과하게 화려하지 않도록
                 피부가 먼저 숨을 고를 수 있는 리듬에 맞춰 농도와 질감을 설계합니다.
@@ -153,10 +153,10 @@ const BrandStoryPage = () => {
                   decoding="async"
                 />
               </div>
-              <h4 className="text-[13px] md:text-sm font-medium tracking-[0.1em] uppercase text-[#3E382F] mb-2">
+              <h4 className="text-[16px] md:text-sm font-medium tracking-[0.1em] uppercase text-[#3E382F] mb-2">
                 순한 성분
               </h4>
-              <p className="text-[12px] leading-relaxed tracking-[0.03em] text-[#5B5249] max-w-xs">
+              <p className="text-[16px] leading-relaxed tracking-[0.02em] text-[#5B5249] max-w-xs">
                 예민한 피부도 안심하고 쓸 수 있도록, 꼭 필요한 최소한의 성분만 조합합니다.
               </p>
             </div>
@@ -175,7 +175,7 @@ const BrandStoryPage = () => {
               <h4 className="text-[13px] md:text-sm font-medium tracking-[0.1em] uppercase text-[#3E382F] mb-2">
                 깊은 보습
               </h4>
-              <p className="text-[12px] leading-relaxed tracking-[0.03em] text-[#5B5249] max-w-xs">
+              <p className="text-[16px] leading-relaxed tracking-[0.05em] text-[#5B5249] max-w-xs">
                 피부 안쪽까지 천천히 스며드는 보습감을 연구하여, 하루 종일 촉촉한 상태를 유지합니다.
               </p>
             </div>
@@ -194,7 +194,7 @@ const BrandStoryPage = () => {
               <h4 className="text-[13px] md:text-sm font-medium tracking-[0.1em] uppercase text-[#3E382F] mb-2">
                 지속 가능성
               </h4>
-              <p className="text-[12px] leading-relaxed tracking-[0.03em] text-[#5B5249] max-w-xs">
+              <p className="text-[16px] leading-relaxed tracking-[0.03em] text-[#5B5249] max-w-xs">
                 불필요한 포장을 줄이고, 재활용 가능한 소재를 우선 사용해 오래도록 지구와 함께합니다.
               </p>
             </div>

@@ -70,7 +70,7 @@ export const translations = {
       bestSellers: '가장 주목 받는 상품',
       bestSellersSub: '베스트셀러와 고객이 많이 찾는 제품을 만나보세요.',
       keyIngredients: 'Key Ingredients',
-      keyIngredientsTitle: '시카 · 히알루론산 · 나이아신아마이드',
+      keyIngredientsTitle: '시나몬 · 히알루론산 · 티트리',
       keyIngredientsSub: '검증된 성분을 바탕으로 피부에 맞는 케어를 제안합니다.',
       shopBySkinType: 'Shop by Skin Type',
       shopBySkinTypeTitle: '피부 타입별 추천',
