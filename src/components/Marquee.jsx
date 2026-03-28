@@ -4,7 +4,7 @@ const MARQUEE_COPIES = 40;
 
 const MarqueeItem = ({ text, textClassName }) => (
   <span
-    className={`whitespace-nowrap text-[9pt] font-medium tracking-[0.2em] uppercase text-[#7A6B63] antialiased select-none ${textClassName}`}
+    className={`whitespace-nowrap text-[9pt] font-medium tracking-[0.2em] text-[#7A6B63] antialiased select-none ${textClassName}`}
   >
     {text}
   </span>
@@ -15,7 +15,7 @@ const MarqueeItem = ({ text, textClassName }) => (
  * 두 개의 동일한 스트립을 0 → -50% 이동 시킨 뒤 루프 → 시각적으로 끊김 없음
  */
 const Marquee = ({
-  text = 'FREE SHIPPING OVER 30,000KRW',
+  text = 'free shipping over ₩30,000',
   speed = 100,
   className = '',
   textClassName = '',

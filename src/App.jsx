@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef, lazy, Suspense } from "react";
 import { Toaster, toast } from "react-hot-toast";
-import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { HelmetProvider, Helmet } from "react-helmet-async";
-import { CartProvider, useCart } from "./store/CartContext";
+import { CartProvider } from "./store/CartContext";
 import { WishlistProvider } from "./store/WishlistContext";
 import { AuthProvider, useAuth } from "./store/AuthContext";
 import { LanguageProvider, useLanguage } from "./store/LanguageContext";
@@ -42,7 +42,7 @@ const ShippingPage = lazy(() => import('./pages/ShippingPage'));
 const ReturnsPage = lazy(() => import('./pages/ReturnsPage'));
 
 const PageLoadFallback = () => (
-  <div className="min-h-[60vh] flex items-center justify-center bg-[#F9F7F2]" aria-hidden="true">
+  <div className="min-h-[60vh] flex items-center justify-center bg-[#FAF9F6] text-[#333333]" aria-hidden="true">
     <div className="w-8 h-8 border-2 border-[#A8B894]/40 border-t-[#3E2F28] rounded-full animate-spin" />
   </div>
 );
@@ -60,14 +60,13 @@ const WithdrawnToast = () => {
 
 const AnimatedRoutes = () => {
   const location = useLocation();
-  const { addToCart } = useCart(); // 👈 Context에서 함수를 직접 가져옵니다.
 
   return (
-    <Suspense fallback={<PageLoadFallback />}>
-      <AnimatePresence mode="wait">
-        <Routes location={location} key={location.pathname}>
-        {/* LandingPage에 Context의 addToCart 함수를 전달합니다. */}
-        <Route path="/" element={<PageWrapper><LandingPage addToCart={addToCart} /></PageWrapper>} />
+    <div className="flex min-h-0 w-full min-w-0 flex-1 flex-col">
+      <Suspense fallback={<PageLoadFallback />}>
+        <AnimatePresence mode="wait">
+          <Routes location={location} key={location.pathname}>
+        <Route path="/" element={<PageWrapper><LandingPage /></PageWrapper>} />
         
         <Route path="/brand-story" element={<PageWrapper><BrandStoryPage /></PageWrapper>} />
         <Route path="/shop" element={<PageWrapper><ShopPage /></PageWrapper>} />
@@ -91,14 +90,15 @@ const AnimatedRoutes = () => {
         <Route path="/shipping" element={<PageWrapper><ShippingPage /></PageWrapper>} />
         <Route path="/returns" element={<PageWrapper><ReturnsPage /></PageWrapper>} />
         
-        {/* 카테고리별 쇼핑 페이지 (화장품: Best, Skincare, Makeup, Body & Hair) */}
-        <Route path="/shop/best" element={<PageWrapper><ShopPage category="best" /></PageWrapper>} />
+        {/* 카테고리별 쇼핑: 스킨케어, 바디 & 헤어 (구 URL은 /shop 으로 리다이렉트) */}
+        <Route path="/shop/best" element={<Navigate to="/shop" replace />} />
+        <Route path="/shop/makeup" element={<Navigate to="/shop" replace />} />
         <Route path="/shop/skincare" element={<PageWrapper><ShopPage category="skincare" /></PageWrapper>} />
-        <Route path="/shop/makeup" element={<PageWrapper><ShopPage category="makeup" /></PageWrapper>} />
         <Route path="/shop/body-hair" element={<PageWrapper><ShopPage category="body_hair" /></PageWrapper>} />
         </Routes>
-      </AnimatePresence>
-    </Suspense>
+        </AnimatePresence>
+      </Suspense>
+    </div>
   );
 };
 
@@ -109,7 +109,7 @@ const PageWrapper = ({ children }) => (
     animate={{ opacity: 1 }}
     exit={{ opacity: 0.4 }}
     transition={{ duration: 0.25, ease: 'easeOut' }}
-    className="relative"
+    className="relative flex min-h-0 w-full flex-1 flex-col"
   >
     {children}
   </motion.div>
@@ -158,14 +158,14 @@ function AppContent() {
         ref={mainScrollRef}
         onScroll={handleScroll}
         id="main-scroll"
-        className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden"
+        className="flex min-h-0 flex-1 flex-col overflow-y-auto overflow-x-hidden bg-[#FAF9F6] text-[#333333]"
       >
         <AnimatedRoutes />
         <Footer />
         {!isAdmin && (
           <div className="fixed bottom-8 right-8 z-50 flex flex-col items-end gap-3">
             <ScrollToTopButton />
-            <FloatingRecentlyViewed />
+            {pathname !== '/' && <FloatingRecentlyViewed />}
           </div>
         )}
       </main>
@@ -174,7 +174,7 @@ function AppContent() {
 }
 
 const DEFAULT_META = {
-  title: '마메르(Mamère) | 다정한 위로, 순수한 자연',
+  title: '마메르(mamère) | 다정한 위로, 순수한 자연',
   description: '깊은 숲에서 찾은 순수한 휴식. 마메르와 함께 피부가 편안하게 숨 쉬는 시간을 경험해 보세요.',
 };
 
@@ -189,14 +189,14 @@ function App() {
         <Router>
           <WithdrawnToast />
           <ScrollToTop />
-          <div className="flex flex-col h-screen max-h-[100dvh] bg-[#F9F7F2] text-[#3E2F28] antialiased overflow-hidden flex font-sans">
+          <div className="flex flex-col h-screen max-h-[100dvh] bg-[#FAF9F6] text-[#333333] antialiased overflow-hidden flex font-sans tracking-wide leading-loose">
             <Toaster
               position="top-center"
               toastOptions={{
                 duration: 2500,
                 style: {
-                  background: '#F9F7F2',
-                  color: '#3E2F28',
+                  background: '#FAF9F6',
+                  color: '#333333',
                   border: '1px solid #A8B894',
                   borderRadius: 0,
                 },

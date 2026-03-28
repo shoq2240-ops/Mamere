@@ -5,6 +5,7 @@ import { useRecentlyViewed } from '../hooks/useRecentlyViewed';
 const FloatingRecentlyViewed = () => {
   const { items } = useRecentlyViewed();
   const [open, setOpen] = useState(false);
+  const [brokenThumb, setBrokenThumb] = useState({});
   const containerRef = useRef(null);
   const { pathname } = useLocation();
 
@@ -27,8 +28,8 @@ const FloatingRecentlyViewed = () => {
     <div ref={containerRef} className="relative">
       {/* 썸네일 전용 초미니 팝업 카드 (버튼 왼쪽으로 열림) */}
       <div
-        className={`absolute bottom-0 right-[calc(100%+16px)] w-max rounded-md border border-[#EAE5DD] bg-[#FAF9F6] shadow transition-all duration-300 origin-bottom-right px-2.5 py-2 ${
-          open ? 'opacity-100 translate-y-0 pointer-events-auto' : 'opacity-0 translate-y-1 pointer-events-none'
+        className={`absolute bottom-0 right-[calc(100%+16px)] w-max origin-bottom-right rounded-md border border-[#EAE5DD] bg-[#FAF9F6] px-2.5 py-2 shadow transition-all duration-300 ease-out ${
+          open ? 'pointer-events-auto translate-y-0 opacity-100' : 'pointer-events-none translate-y-1 opacity-0'
         }`}
       >
         <div className="grid grid-cols-3 gap-1.5">
@@ -39,16 +40,17 @@ const FloatingRecentlyViewed = () => {
               className="block"
               onClick={() => setOpen(false)}
             >
-              <div className="w-12 h-12 rounded-md overflow-hidden bg-gray-100">
-                {typeof p.image === 'string' && p.image.trim() && (
+              <div className="h-12 w-12 shrink-0 overflow-hidden rounded-md bg-gray-100">
+                {typeof p.image === 'string' && p.image.trim() && !brokenThumb[p.id] ? (
                   <img
                     src={p.image}
                     alt=""
                     loading="lazy"
                     decoding="async"
-                    className="w-full h-full object-cover"
+                    className="h-full w-full object-cover"
+                    onError={() => setBrokenThumb((prev) => ({ ...prev, [p.id]: true }))}
                   />
-                )}
+                ) : null}
               </div>
             </Link>
           ))}
@@ -60,16 +62,16 @@ const FloatingRecentlyViewed = () => {
         type="button"
         onClick={() => setOpen((prev) => !prev)}
         aria-label="최근 본 상품 열기"
-        className="w-10 h-10 rounded-full bg-[#FAF9F6] border border-[#EAE5DD] shadow-sm flex items-center justify-center text-[#8C857B] hover:shadow-md transition-all duration-200"
+        className="w-10 h-10 rounded-full bg-[#FAF9F6] border border-[#EAE5DD] shadow-sm flex items-center justify-center hover:shadow-md transition-all duration-200 p-2"
       >
-        <span className="relative inline-block w-4 h-3" aria-hidden>
-          {/* 눈 윤곽선 */}
-          <span className="absolute inset-0 rounded-full border border-[#C5BEB2]" />
-          {/* 홍채 */}
-          <span className="absolute inset-x-[5px] inset-y-[3px] rounded-full border border-[#8C857B]/70" />
-          {/* 동공 */}
-          <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-[#8C857B]" />
-        </span>
+        <img
+          src="/recently-viewed-mark.png"
+          alt=""
+          width={20}
+          height={20}
+          className="w-5 h-5 block object-contain [image-rendering:-webkit-optimize-contrast] [image-rendering:crisp-edges]"
+          aria-hidden
+        />
       </button>
     </div>
   );

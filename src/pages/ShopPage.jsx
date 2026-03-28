@@ -63,11 +63,10 @@ const ShopPage = ({ category }) => {
 
   const categoryNorm = normalizeCategory(category);
 
-  const showSkinFilters =
-    !categoryNorm || categoryNorm === 'best' || categoryNorm === 'skincare';
+  const showSkinFilters = !categoryNorm || categoryNorm === 'skincare';
 
   useEffect(() => {
-    if (categoryNorm === 'makeup' || categoryNorm === 'body_hair') {
+    if (categoryNorm === 'body_hair') {
       setSkinType('');
       setSkinConcern('');
       const next = new URLSearchParams(searchParams);
@@ -81,7 +80,6 @@ const ShopPage = ({ category }) => {
     .filter((product) => {
       if (!categoryNorm) return true;
       const pCat = normalizeCategory(product.category);
-      if (categoryNorm === 'best') return true;
       return pCat === categoryNorm;
     })
     .filter((product) => {
@@ -118,26 +116,20 @@ const ShopPage = ({ category }) => {
   };
 
   const categoryLabel =
-    category === 'best'
-      ? t('shop.best')
-      : category === 'body_hair'
-        ? t('shop.bodyHair')
-        : category === 'skincare'
-          ? t('shop.skincare')
-          : category === 'makeup'
-            ? t('shop.makeup')
-            : t('shop.all');
+    category === 'body_hair'
+      ? t('shop.bodyHair')
+      : category === 'skincare'
+        ? t('shop.skincare')
+        : t('shop.all');
 
   const categorySubCopy =
-    !categoryNorm || categoryNorm === 'best'
-      ? t('shop.categorySubBest')
+    !categoryNorm
+      ? t('shop.categorySubAll')
       : categoryNorm === 'skincare'
         ? t('shop.categorySubSkincare')
-        : categoryNorm === 'makeup'
-          ? t('shop.categorySubMakeup')
-          : categoryNorm === 'body_hair'
-            ? t('shop.categorySubBodyHair')
-            : null;
+        : categoryNorm === 'body_hair'
+          ? t('shop.categorySubBodyHair')
+          : null;
 
   return (
     <div className="bg-[#F9F7F2] min-h-screen pt-20 md:pt-24 pb-16 md:pb-20 antialiased relative text-[#3E2F28]">
@@ -157,7 +149,7 @@ const ShopPage = ({ category }) => {
           />
         </div>
 
-        {/* 필터: 피부 타입, 피부 고민 — 스킨케어·전체(Best)일 때만 노출 */}
+        {/* 필터: 피부 타입, 피부 고민 — 전체 쇼핑·스킨케어일 때만 노출 */}
         {showSkinFilters && (
           <div className="mb-10 md:mb-12 flex flex-col gap-6">
             <div className="relative">

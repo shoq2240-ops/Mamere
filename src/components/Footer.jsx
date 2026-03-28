@@ -1,100 +1,96 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import ContactModal from './ContactModal';
 import { useLanguage } from '../store/LanguageContext';
 
-const FOOTER_LINK_CLASS = "text-[11px] font-light tracking-[0.06em] text-[#F9F7F2]/90 hover:text-[#F9F7F2] transition-colors duration-200";
-
-const FooterLink = ({ to, href, onClick, children }) => {
-  if (onClick) {
-    return (
-      <button type="button" onClick={onClick} className={`${FOOTER_LINK_CLASS} text-left bg-transparent border-0 p-0 cursor-pointer`}>
-        {children}
-      </button>
-    );
-  }
-  if (href) {
-    return (
-      <a href={href} className={FOOTER_LINK_CLASS}>
-        {children}
-      </a>
-    );
-  }
-  return <Link to={to} className={FOOTER_LINK_CLASS}>{children}</Link>;
-};
-
-const FooterSection = ({ title, items }) => (
-  <div>
-    <h3 className="text-[10px] font-medium tracking-[0.12em] uppercase text-[#F9F7F2]/70 mb-3">{title}</h3>
-    <ul className="space-y-2">
-      {items.map(({ label, to, href, onClick }) => (
-        <li key={label}>
-          <FooterLink to={to} href={href} onClick={onClick}>{label}</FooterLink>
-        </li>
-      ))}
-    </ul>
-  </div>
-);
-
-const Footer = () => {
+/** 메인 랜딩: fixed bottom 전체화면 미니멀 플로팅 푸터 */
+const LandingFloatingFooter = () => {
   const [isContactOpen, setIsContactOpen] = useState(false);
   const { t } = useLanguage();
-  const customerService = [
-    { label: t('footer.faq'), to: '/faq' },
-    { label: t('footer.contactForm'), onClick: () => setIsContactOpen(true) },
-  ];
-  const shoppingGuide = [
-    { label: t('footer.shippingInfo'), to: '/shipping' },
-    { label: t('footer.returns'), to: '/returns' },
-  ];
-  const legal = [
-    { label: t('footer.terms'), to: '/terms' },
-    { label: t('footer.privacy'), to: '/privacy' },
-  ];
 
   return (
     <>
       <ContactModal isOpen={isContactOpen} onClose={() => setIsContactOpen(false)} />
-      <footer className="bg-[#2D3A2D] text-[#F9F7F2] py-12 md:py-14 px-6 md:px-8 mt-16">
-      <div className="max-w-7xl mx-auto">
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 md:gap-12 mb-10">
-          <FooterSection title={t('footer.customerService')} items={customerService} />
-          <FooterSection title={t('footer.shoppingGuide')} items={shoppingGuide} />
-          <FooterSection title={t('footer.legal')} items={legal} />
+
+      <footer
+        className="fixed bottom-0 left-0 w-full z-[100] pointer-events-none text-white mix-blend-difference"
+        aria-label="Footer"
+      >
+        <div className="absolute bottom-16 left-4 md:bottom-8 md:left-8 flex flex-col gap-1.5 text-[10px] md:text-[11px] lowercase leading-relaxed pointer-events-auto text-left">
+          <Link to="/terms" className="hover:opacity-70 transition-opacity">
+            {t('footer.terms', 'terms')}
+          </Link>
+          <Link to="/privacy" className="hover:opacity-70 transition-opacity">
+            {t('footer.privacy', 'privacy policy')}
+          </Link>
+          <Link to="/faq" className="hover:opacity-70 transition-opacity">
+            {t('footer.faq', 'faq')}
+          </Link>
         </div>
 
-        <div className="space-y-1.5">
-          <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-[9px] font-light tracking-[0.08em] leading-relaxed text-[#F9F7F2]/80">
-            <span>COMPANY : Dr.Care</span>
-            <span className="text-[#F9F7F2]/30">|</span>
-            <span>CEO : 신천영</span>
-            <span className="text-[#F9F7F2]/30">|</span>
-            <span>ADDRESS : 경기도 용인시 기흥구 흥덕중앙로 120 유타워 3208호</span>
+        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 w-[90%] md:bottom-8 md:w-auto flex flex-col items-center gap-1 text-center text-[8px] md:text-[9px] font-light tracking-[0.05em] leading-relaxed pointer-events-auto opacity-70">
+          <p className="whitespace-nowrap font-medium text-[9px] md:text-[10px] mb-1">© 2026 dr.care. all rights reserved.</p>
+
+          <div className="hidden md:flex flex-col items-center gap-0.5">
+            <p>ceo : 신천영 | tel : 010-3126-6701 | email : pjk6412@naver.com</p>
+            <p>address : 경기도 용인시 기흥구 흥덕중앙로 120 유타워 3208호</p>
+            <p className="opacity-60 text-[7px] md:text-[8px] mt-1">
+              business license : 241-14-00646 | online license : 2019-용인기흥-0330
+            </p>
           </div>
-          <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-[9px] font-light tracking-[0.08em] leading-relaxed text-[#F9F7F2]/90">
-            <span>EMAIL : pjk6412@naver.com</span>
-            <span className="text-[#F9F7F2]/30">|</span>
-            <span>TEL : 010-3126-6701</span>
-            <span className="text-[#F9F7F2]/30">|</span>
-            <span>BUSINESS LICENSE : 241-14-00646</span>
-            <span className="text-[#F9F7F2]/30">|</span>
-            <span>ONLINE LICENSE : 2019-용인기흥-0330</span>
+
+          <div className="md:hidden flex flex-col items-center gap-0.5">
+            <p>ceo : 신천영 | tel : 010-3126-6701</p>
+            <p className="text-center break-keep">address : 경기도 용인시 기흥구 흥덕중앙로 120</p>
           </div>
-          <p className="text-[9px] font-light tracking-[0.06em] mt-4 text-[#F9F7F2]/60 leading-relaxed">
-            {t('footer.escrowNotice')}
-          </p>
         </div>
 
-        <div className="mt-8 pt-6 border-t border-[#F9F7F2]/15 flex flex-col sm:flex-row justify-between items-center gap-3">
-          <p className="text-[9px] font-light tracking-[0.1em] uppercase text-[#F9F7F2]/60">
-            {t('footer.allRightsReserved')}
-          </p>
-          <span className="text-[8px] font-light tracking-[0.08em] text-[#F9F7F2]/50">{t('footer.escrowSafe')}</span>
+        <div className="absolute bottom-16 right-4 md:bottom-8 md:right-8 flex flex-col gap-1.5 text-[10px] md:text-[11px] lowercase leading-relaxed pointer-events-auto text-right">
+          <Link to="/shipping" className="hover:opacity-70 transition-opacity">
+            {t('footer.shippingInfo', 'shipping')}
+          </Link>
+          <Link to="/returns" className="hover:opacity-70 transition-opacity">
+            {t('footer.returns', 'returns')}
+          </Link>
+          <button
+            type="button"
+            onClick={() => setIsContactOpen(true)}
+            className="text-right hover:opacity-70 transition-opacity bg-transparent border-0 p-0 cursor-pointer w-full lowercase"
+          >
+            {t('footer.contactForm', 'contact')}
+          </button>
         </div>
-      </div>
-    </footer>
+      </footer>
     </>
   );
+};
+
+/** 브랜드 스토리: 문서 하단 상대 배치, 사업자 정보만 */
+const BrandStoryFooter = () => (
+  <footer
+    className="relative w-full bg-transparent py-12 md:py-14 px-6 text-center"
+    aria-label="사업자 정보"
+  >
+    <div className="max-w-3xl mx-auto space-y-2 text-[9px] md:text-[10px] font-light leading-relaxed text-[#8C857B]">
+      <p>ceo : 신천영 | tel : 010-3126-6701 | email : pjk6412@naver.com</p>
+      <p>address : 경기도 용인시 기흥구 흥덕중앙로 120 유타워 3208호</p>
+      <p>business license : 241-14-00646 | online license : 2019-용인기흥-0330</p>
+    </div>
+  </footer>
+);
+
+const Footer = () => {
+  const { pathname } = useLocation();
+
+  if (pathname === '/') {
+    return <LandingFloatingFooter />;
+  }
+
+  if (pathname === '/brand-story') {
+    return <BrandStoryFooter />;
+  }
+
+  return null;
 };
 
 export default Footer;

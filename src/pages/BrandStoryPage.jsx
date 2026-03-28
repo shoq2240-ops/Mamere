@@ -33,10 +33,10 @@ const BrandStoryPage = () => {
               </p>
               <h1 className="text-2xl md:text-4xl lg:text-[40px] font-light tracking-[0.06em] leading-tight text-[#FDFBF5]">
                 자연이 건네는 다정한 위로,
-                <br className="hidden md:block" /> 마메르
+                <br className="hidden md:block" />
               </h1>
               <p className="mt-4 max-w-xl text-[11px] md:text-sm font-light tracking-[0.08em] leading-relaxed text-[#FDFBF5]">
-                깊은 숲과 깨끗한 물, 고요한 공기에서 영감을 받은 마메르는
+                깊은 숲과 깨끗한 물, 고요한 공기에서 영감을 받아
                 <br className="hidden md:block" /> 피부가 숨 쉬는 시간을 위한 작은 여백을 만듭니다.
               </p>
             </div>

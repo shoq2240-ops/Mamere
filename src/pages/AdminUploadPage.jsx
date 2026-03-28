@@ -39,7 +39,7 @@ const FORM_LIMITS = {
   descHowToUseMaxLength: 3000,
   volumeMaxLength: 50,
   keyIngredientsMaxLength: 500,
-  categoryValues: ['best', 'skincare', 'makeup', 'body_hair'],
+  categoryValues: ['skincare', 'body_hair'],
 };
 
 /** products 관련 Supabase 에러 → 사용자 안내 메시지 */
@@ -62,17 +62,23 @@ const productErrorMessage = (err) => {
 };
 
 const CATEGORIES = [
-  { value: 'best', label: 'Best' },
   { value: 'skincare', label: 'Skincare' },
-  { value: 'makeup', label: 'Makeup' },
   { value: 'body_hair', label: 'Body & Hair' },
 ];
 
 const SKIN_TYPES = ['건성', '지성', '복합성', '민감성'];
 const SKIN_CONCERNS = ['보습', '진정', '트러블', '미백', '탄력'];
 
+/** DB에 best / makeup가 남아 있으면 폼에서는 스킨케어로 표시·저장 유도 */
+const normalizeCategoryForForm = (c) => {
+  if (!c || c === 'best' || c === 'makeup') return 'skincare';
+  return FORM_LIMITS.categoryValues.includes(c) ? c : 'skincare';
+};
+
 const getCategoryLabel = (val) => {
   if (!val || val.trim() === '') return '—';
+  if (val === 'best') return 'Best (레거시)';
+  if (val === 'makeup') return 'Makeup (레거시)';
   const found = CATEGORIES.find((c) => c.value === val);
   return found ? found.label : val;
 };
@@ -207,7 +213,7 @@ const AdminUploadPage = () => {
     price: '',
     descDetails: '',
     descHowToUse: '',
-    category: 'best',
+    category: 'skincare',
     volume: '',
     skinType: [],
     skinConcern: [],
@@ -507,7 +513,7 @@ const AdminUploadPage = () => {
       return;
     }
     if (!FORM_LIMITS.categoryValues.includes(form.category)) {
-      setError('유효한 카테고리를 선택해 주세요. (Best, Skincare, Makeup, Body & Hair 중 하나)');
+      setError('유효한 카테고리를 선택해 주세요. (Skincare, Body & Hair 중 하나)');
       return;
     }
     const descDetailsLen = (form.descDetails ?? '').length;
@@ -698,7 +704,7 @@ const AdminUploadPage = () => {
       price: p.price,
       descDetails: details,
       descHowToUse: howToUse,
-      category: p.category || 'best',
+      category: normalizeCategoryForForm(p.category),
       volume: p.volume || '',
       skinType: toArr(p.skin_type || p.skinType),
       skinConcern: toArr(p.skin_concern || p.skinConcern),
@@ -816,7 +822,7 @@ const AdminUploadPage = () => {
       price: '',
       descDetails: '',
       descHowToUse: '',
-      category: 'best',
+      category: 'skincare',
       volume: '',
       skinType: [],
       skinConcern: [],

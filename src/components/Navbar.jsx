@@ -116,7 +116,7 @@ const Navbar = ({ isScrolled = false, isMobileMenuOpen = false, onMobileMenuChan
     };
   }, [accountOpen]);
 
-  // GNB: Best, Skincare, Makeup, Body & Hair, Brand Story (Mamère 화장품)
+  // GNB: Skincare, Body & Hair, Brand Story
   const isAdmin = pathname.startsWith('/admin');
 
   /** 관리자 페이지 전용 헤더: Mamère 로고 + 다크 테마 */
@@ -144,9 +144,7 @@ const Navbar = ({ isScrolled = false, isMobileMenuOpen = false, onMobileMenuChan
   }
 
   const navLinks = [
-    { key: 'nav.best', path: '/shop/best' },
     { key: 'nav.skincare', path: '/shop/skincare' },
-    { key: 'nav.makeup', path: '/shop/makeup' },
     { key: 'nav.bodyHair', path: '/shop/body-hair' },
     { key: 'nav.brandStory', path: '/brand-story' },
   ];
@@ -154,9 +152,9 @@ const Navbar = ({ isScrolled = false, isMobileMenuOpen = false, onMobileMenuChan
   return (
     <div className="antialiased" onMouseLeave={() => setHoveredMenu(null)}>
       <nav className="relative w-full z-[150] bg-[#2D3A2D] text-[#F9F7F2] transition-all duration-300 overflow-x-hidden">
-        <div className="max-w-[1800px] mx-auto h-12 md:h-16 flex items-center justify-between px-5 md:px-6 py-0 relative w-full">
+        <div className="relative mx-auto grid h-12 w-full max-w-[1800px] grid-cols-[minmax(5.5rem,1fr)_auto_minmax(5.5rem,1fr)] items-center gap-2 px-5 py-0 md:h-16 md:px-6">
 
-          <div className="absolute inset-0 pointer-events-none z-0" aria-hidden>
+          <div className="pointer-events-none absolute inset-0 z-0" aria-hidden>
             <div className="absolute left-[8%] top-1/2 -translate-y-1/2 text-[#F9F7F2]/15 animate-leaf-float">
               <LeafIcon1 className="w-5 h-8 md:w-4 md:h-7" />
             </div>
@@ -171,38 +169,45 @@ const Navbar = ({ isScrolled = false, isMobileMenuOpen = false, onMobileMenuChan
             </div>
           </div>
 
-          {/* 좌측: 햄버거 + 데스크톱 GNB (flex-1, 좌측 정렬) */}
-          <div className="flex-1 flex items-center justify-start min-w-0 z-10 mt-1">
-            <div className="hidden md:flex items-center gap-6 lg:gap-8 text-sm font-medium tracking-[0.12em] uppercase h-full">
+          {/* 좌: 햄버거(모바일) / GNB(데스크톱) — 우측과 동일 최소폭으로 로고 기하학적 중앙 */}
+          <div className="z-10 flex min-w-0 items-center justify-start">
+            <div className="hidden h-full items-center gap-6 text-sm font-medium uppercase tracking-[0.12em] md:flex lg:gap-8">
               {navLinks.map((link) => (
-                <Link key={link.key} to={link.path} className="hover:opacity-80 transition-all text-[#F9F7F2] whitespace-nowrap">
+                <Link key={link.key} to={link.path} className="whitespace-nowrap text-[#F9F7F2] transition-all hover:opacity-80">
                   {t(link.key)}
                 </Link>
               ))}
             </div>
-            <button type="button" onClick={toggleMenu} className="md:hidden w-9 h-9 flex flex-col justify-center items-center gap-[5px] shrink-0" aria-label={t(activeMenuOpen ? 'nav.menuClose' : 'nav.menuOpen')}>
-              <motion.span animate={activeMenuOpen ? { rotate: 45, y: 5.5, backgroundColor: '#F9F7F2' } : { rotate: 0, y: 0, backgroundColor: '#F9F7F2' }} className="w-4 h-[1px] block" />
-              <motion.span animate={activeMenuOpen ? { opacity: 0 } : { opacity: 1 }} className="w-4 h-[1px] bg-[#F9F7F2] block" />
-              <motion.span animate={activeMenuOpen ? { rotate: -45, y: -5.5, backgroundColor: '#F9F7F2' } : { rotate: 0, y: 0, backgroundColor: '#F9F7F2' }} className="w-4 h-[1px] block" />
+            <button
+              type="button"
+              onClick={toggleMenu}
+              className="flex h-9 w-9 shrink-0 flex-col items-center justify-center gap-[5px] md:hidden"
+              aria-label={t(activeMenuOpen ? 'nav.menuClose' : 'nav.menuOpen')}
+            >
+              <motion.span animate={activeMenuOpen ? { rotate: 45, y: 5.5, backgroundColor: '#F9F7F2' } : { rotate: 0, y: 0, backgroundColor: '#F9F7F2' }} className="block h-px w-4" />
+              <motion.span animate={activeMenuOpen ? { opacity: 0 } : { opacity: 1 }} className="block h-px w-4 bg-[#F9F7F2]" />
+              <motion.span animate={activeMenuOpen ? { rotate: -45, y: -5.5, backgroundColor: '#F9F7F2' } : { rotate: 0, y: 0, backgroundColor: '#F9F7F2' }} className="block h-px w-4" />
             </button>
           </div>
 
-          <Link
-            to="/"
-            onClick={handleLogoClick}
-            className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-auto cursor-pointer opacity-95 hover:opacity-100 transition-opacity z-20 flex items-center justify-center border-0 outline-none shadow-none ring-0 focus:ring-0 focus:outline-none bg-transparent"
-        style={{ height: '72px' }}
-          >
-            <img
-              src={brandLogo}
-              alt="마메르 로고"
-              className="h-full w-auto object-contain max-h-[88px] md:max-h-[96px] block bg-transparent mix-blend-multiply"
-              decoding="async"
-            />
-          </Link>
+          <div className="z-20 flex items-center justify-center">
+            <Link
+              to="/"
+              onClick={handleLogoClick}
+              className="flex cursor-pointer items-center justify-center border-0 bg-transparent opacity-95 outline-none ring-0 transition-opacity hover:opacity-100 focus:outline-none focus:ring-0"
+              style={{ height: '56px' }}
+            >
+              <img
+                src={brandLogo}
+                alt="마메르 로고"
+                className="block h-full max-h-[72px] w-auto bg-transparent object-contain mix-blend-multiply md:max-h-[80px]"
+                decoding="async"
+              />
+            </Link>
+          </div>
 
-          {/* 우측: 언어/계정/검색/장바구니 (flex-1, 우측 정렬, 여유 있는 간격) */}
-          <div className="flex-1 flex items-center justify-end gap-4 md:gap-4 min-w-0 z-10 mt-1">
+          {/* 우: 언어 / 계정 / 검색 / 장바구니 — gap-4 균형 */}
+          <div className="z-10 flex min-w-0 items-center justify-end gap-4">
             <button
               type="button"
               onClick={toggleLocale}
@@ -295,38 +300,106 @@ const Navbar = ({ isScrolled = false, isMobileMenuOpen = false, onMobileMenuChan
                 animate={{ x: 0 }}
                 exit={{ x: "-100%" }}
                 transition={{ type: "spring", damping: 25, stiffness: 200 }}
-                className="fixed inset-0 flex flex-col pt-16 pb-12 px-8 text-[#3E2F28] md:hidden"
-                style={{ zIndex: 9999, backgroundColor: '#F9F7F2' }}
+                className="fixed inset-0 flex flex-col px-6 pb-10 tracking-wide leading-loose text-[#333333] md:hidden"
+                style={{
+                  zIndex: 9999,
+                  backgroundColor: '#FAF9F6',
+                  paddingTop: 'max(0.75rem, env(safe-area-inset-top, 0px))',
+                }}
               >
-                <div className="mb-8 text-left">
-                  <button onClick={() => handleMenuToggle(false)} className="flex items-center gap-2 text-[12px] font-light tracking-[0.15em] uppercase text-[#7A6B63]">
-                    <span className="text-xl">←</span> {t('common.back')}
+                <div
+                  className="mb-6 flex h-12 shrink-0 items-center"
+                  style={{ minHeight: '3rem' }}
+                >
+                  <button
+                    type="button"
+                    onClick={() => handleMenuToggle(false)}
+                    className="flex items-center gap-2.5 text-[#7A6B63] transition-opacity hover:opacity-80"
+                  >
+                    <svg className="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.15} aria-hidden>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 18l-6-6 6-6" />
+                    </svg>
+                    <span className="text-[10px] font-light uppercase tracking-[0.2em]">{t('common.back')}</span>
                   </button>
                 </div>
-                <div className="flex-1 flex flex-col justify-between min-h-0">
-                  <div className="flex flex-col space-y-2 overflow-y-auto">
-                    {navLinks.map((item) => (
-                      <button key={item.key} onClick={() => handleMenuClick(item.path)} className="text-xl font-medium tracking-tight text-left hover:opacity-70 py-2 text-[#3E2F28]">
-                        {t(item.key)}
+
+                <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain">
+                  {/* 매거진형 Z: 카테고리 ↔ 소형 비주얼 교차 */}
+                  <div className="pb-4">
+                    <section className="relative mb-12">
+                      <button
+                        type="button"
+                        onClick={() => handleMenuClick('/shop/skincare')}
+                        className="block w-full text-left text-2xl font-light tracking-[0.08em] text-[#333333] transition-opacity hover:opacity-75"
+                      >
+                        {t('nav.skincare')}
                       </button>
-                    ))}
+                      <div className="mt-5 flex justify-end pr-1">
+                        <img
+                          src="/flower1.png"
+                          alt=""
+                          className="h-[5.25rem] w-[5.25rem] rounded-sm object-cover shadow-[0_4px_20px_rgba(62,47,40,0.08)]"
+                          loading="lazy"
+                          decoding="async"
+                        />
+                      </div>
+                    </section>
+
+                    <section className="relative mb-12 flex flex-row items-start justify-between gap-6">
+                      <div className="shrink-0 pt-1">
+                        <img
+                          src="/flower2.png"
+                          alt=""
+                          className="h-16 w-16 rounded-sm object-cover opacity-95 shadow-sm"
+                          loading="lazy"
+                          decoding="async"
+                        />
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleMenuClick('/shop/body-hair')}
+                        className="min-w-0 flex-1 pt-1 text-right text-2xl font-light tracking-[0.08em] text-[#333333] transition-opacity hover:opacity-75"
+                      >
+                        {t('nav.bodyHair')}
+                      </button>
+                    </section>
+
+                    <section className="mb-10">
+                      <button
+                        type="button"
+                        onClick={() => handleMenuClick('/brand-story')}
+                        className="block w-full text-left text-2xl font-light tracking-[0.08em] text-[#333333] transition-opacity hover:opacity-75"
+                      >
+                        {t('nav.brandStory')}
+                      </button>
+                      <p className="mt-5 max-w-[19rem] text-[13px] font-light leading-relaxed text-[#8A8278]">
+                        {t('nav.brandStoryTagline')}
+                      </p>
+                    </section>
                   </div>
-                  <div className="flex-shrink-0 pt-8 mt-6 border-t border-[#A8B894]/30 flex flex-col space-y-4 text-[12px]">
-                    <button onClick={() => handleMenuClick('/cart')} className="font-bold tracking-[0.12em] uppercase text-[#3E2F28] flex justify-between py-1">{t('nav.shoppingBag')} <span>[{cartCount}]</span></button>
-                    <button onClick={() => handleMenuClick('/wishlist')} className="font-light tracking-[0.12em] uppercase text-[#5C4A42] text-left py-1 flex justify-between">{t('nav.wishlist')} {wishlistCount > 0 ? <span>[{wishlistCount}]</span> : null}</button>
+
+                  <div className="mt-auto flex shrink-0 flex-col space-y-3 border-t border-[#EAE5DD] pt-6 text-[11px]">
+                    <button type="button" onClick={() => handleMenuClick('/cart')} className="flex justify-between font-medium uppercase tracking-[0.12em] text-[#333333] py-1.5">
+                      <span>{t('nav.shoppingBag')}</span>
+                      <span>[{cartCount}]</span>
+                    </button>
+                    <button type="button" onClick={() => handleMenuClick('/wishlist')} className="flex justify-between py-1.5 text-left font-light uppercase tracking-[0.12em] text-[#5C4A42]">
+                      <span>{t('nav.wishlist')}</span>
+                      {wishlistCount > 0 ? <span>[{wishlistCount}]</span> : null}
+                    </button>
                     {isLoggedIn ? (
                       <>
-                        <button onClick={() => handleMenuClick('/orders')} className="font-light tracking-[0.12em] uppercase text-[#5C4A42] text-left py-1">{t('nav.orders')}</button>
-                        <button onClick={() => handleMenuClick('/profile')} className="font-light tracking-[0.12em] uppercase text-[#5C4A42] text-left py-1">{t('nav.profile')}</button>
-                        <button onClick={handleLogout} className="font-light tracking-[0.12em] uppercase text-[#7A6B63] text-left py-1">{t('nav.logout')}</button>
+                        <button type="button" onClick={() => handleMenuClick('/orders')} className="py-1.5 text-left font-light uppercase tracking-[0.12em] text-[#5C4A42]">{t('nav.orders')}</button>
+                        <button type="button" onClick={() => handleMenuClick('/profile')} className="py-1.5 text-left font-light uppercase tracking-[0.12em] text-[#5C4A42]">{t('nav.profile')}</button>
+                        <button type="button" onClick={handleLogout} className="py-1.5 text-left font-light uppercase tracking-[0.12em] text-[#7A6B63]">{t('nav.logout')}</button>
                       </>
                     ) : (
                       <>
-                        <button onClick={() => handleMenuClick('/login')} className="font-light tracking-[0.12em] uppercase text-[#7A6B63] text-left py-1">{t('nav.login')}</button>
-                        <button onClick={() => handleMenuClick('/signup')} className="font-light tracking-[0.12em] uppercase text-[#7A6B63] text-left py-1">{t('nav.joinNow')}</button>
+                        <button type="button" onClick={() => handleMenuClick('/login')} className="py-1.5 text-left font-light uppercase tracking-[0.12em] text-[#7A6B63]">{t('nav.login')}</button>
+                        <button type="button" onClick={() => handleMenuClick('/signup')} className="py-1.5 text-left font-light uppercase tracking-[0.12em] text-[#7A6B63]">{t('nav.joinNow')}</button>
                       </>
                     )}
-                    <button type="button" onClick={toggleLocale} className="mt-4 pt-4 border-t border-[#A8B894]/20 font-light tracking-[0.1em] uppercase text-[#7A6B63] text-[9px] text-left py-0.5 flex items-center gap-1.5">
+                    <button type="button" onClick={toggleLocale} className="mt-2 flex items-center gap-1.5 border-t border-[#EAE5DD]/80 pt-4 text-left text-[9px] font-light uppercase tracking-[0.12em] text-[#7A6B63]">
                       <span className={locale === 'ko' ? 'opacity-50' : 'font-medium text-[#5C4A42]'}>EN</span>
                       <span className="text-[#A8B894]/60">/</span>
                       <span className={locale === 'en' ? 'opacity-50' : 'font-medium text-[#5C4A42]'}>KO</span>
@@ -343,9 +416,9 @@ const Navbar = ({ isScrolled = false, isMobileMenuOpen = false, onMobileMenuChan
       {/* 검색 모달 (기존 로직 유지) */}
       <AnimatePresence>
         {isSearchOpen && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-[#F9F7F2] z-[300] flex flex-col items-center pt-40 px-6">
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[300] flex flex-col items-center bg-[#FAF9F6] px-6 pt-40">
             <form onSubmit={handleSearch} className="w-full max-w-2xl relative">
-              <input autoFocus type="text" value={searchInput} onChange={(e) => setSearchInput(e.target.value)} placeholder="SEARCH" className="w-full bg-transparent border-b border-[#3E2F28] py-4 text-3xl md:text-5xl font-medium uppercase outline-none text-[#3E2F28] placeholder:text-[#A8B894]/70" />
+              <input autoFocus type="text" value={searchInput} onChange={(e) => setSearchInput(e.target.value)} placeholder="search" className="w-full bg-transparent border-b border-[#3E2F28] py-4 text-3xl md:text-5xl font-medium lowercase outline-none text-[#3E2F28] placeholder:text-[#A8B894]/70" />
               <button type="submit" className="hidden">Search</button>
               <button onClick={() => setIsSearchOpen(false)} className="absolute right-0 top-1/2 -translate-y-1/2 text-[#3E2F28] font-medium text-[10px] uppercase tracking-widest">{t('common.close')}</button>
             </form>

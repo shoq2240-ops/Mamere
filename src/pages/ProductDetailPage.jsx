@@ -29,16 +29,20 @@ const toArray = (v) => {
 
 function AccordionItem({ id, title, isOpen, onToggle, children }) {
   return (
-    <div className="border-t border-gray-100" role="region" aria-labelledby={`accordion-${id}-head`}>
+    <div
+      className="border-b border-[#EAE5DD] bg-[#FAF9F6]/50 first:border-t first:border-[#EAE5DD]"
+      role="region"
+      aria-labelledby={`accordion-${id}-head`}
+    >
       <button
         id={`accordion-${id}-head`}
         type="button"
         onClick={onToggle}
-        className="w-full py-6 flex items-center justify-between text-left"
+        className="flex w-full items-center justify-between py-5 text-left"
         aria-expanded={isOpen}
         aria-controls={`accordion-${id}-panel`}
       >
-        <span className="text-[10px] font-medium tracking-[0.12em] uppercase text-[#3E2F28]">{title}</span>
+        <span className="text-[10px] font-medium tracking-[0.14em] uppercase text-[#333333]">{title}</span>
         <span className="flex-shrink-0 ml-3 text-gray-400" aria-hidden>
           {isOpen ? (
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M20 12H4" /></svg>
@@ -57,7 +61,7 @@ function AccordionItem({ id, title, isOpen, onToggle, children }) {
             transition={{ duration: 0.25, ease: [0.25, 0.1, 0.25, 1] }}
             className="overflow-hidden"
           >
-            <div className="pb-6 pr-2">
+            <div className="pb-5 pr-2">
               {children}
             </div>
           </motion.div>
@@ -547,15 +551,15 @@ const ProductDetailPage = () => {
           </div>
 
           {/* 오른쪽: 구매 정보 박스 (이미지 두 번째 조각쯤·약 200px 아래부터 시작, 스티키로 스크롤 시 따라옴) */}
-          <div className="flex flex-col w-full max-w-[380px] mx-auto md:mx-0 md:pt-16 md:sticky md:top-[50px] md:h-fit md:max-h-[calc(100vh-100px)] md:overflow-y-auto md:overscroll-contain md:pb-20 md:scrollbar-hide px-5 py-5 md:px-6 md:py-6 border border-[#E8E4DF] rounded-sm shadow-[0_2px_12px_rgba(62,47,40,0.06)] bg-[#F9F7F2]">
-            <h1 className="text-[11px] md:text-xs font-medium tracking-[0.1em] uppercase text-[#3E2F28] leading-tight">
+          <div className="flex flex-col w-full max-w-[380px] mx-auto md:mx-0 md:pt-16 md:sticky md:top-[50px] md:h-fit md:max-h-[calc(100vh-100px)] md:overflow-y-auto md:overscroll-contain md:pb-20 md:scrollbar-hide px-5 py-5 md:px-6 md:py-6 border border-[#E8E4DF] rounded-sm shadow-[0_2px_12px_rgba(62,47,40,0.06)] bg-[#FAF9F6]">
+            <h1 className="font-serif text-2xl font-normal leading-snug tracking-[0.06em] text-[#333333] md:text-[1.65rem]">
               {product.name}
             </h1>
             {volume && (
-              <p className="mt-1 text-[10px] font-light tracking-[0.08em] text-[#5C4A42]">{volume}</p>
+              <p className="mt-2 text-[10px] font-light tracking-[0.1em] text-[#5C4A42]">{volume}</p>
             )}
-            <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1">
-              <p className="text-[10px] md:text-xs font-light tracking-[0.08em] text-[#3E2F28]">
+            <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1">
+              <p className="font-serif text-2xl font-normal tracking-[0.06em] text-[#333333]">
                 {formatPrice(product.price)}
               </p>
               {reviewStats.total > 0 && (
@@ -571,7 +575,7 @@ const ProductDetailPage = () => {
               )}
             </div>
             {!soldOut && maxQty > 0 && (
-              <div className="mt-4 flex items-center gap-3">
+              <div className="mt-8 flex items-center gap-3">
                 <span className="text-[10px] font-medium tracking-widest uppercase text-[#5C4A42]">수량</span>
                 <div className="flex items-center border border-[#E8E4DF]">
                   <button
@@ -605,7 +609,7 @@ const ProductDetailPage = () => {
                 </div>
               </div>
             )}
-            <div className="mt-6">
+            <div className="mt-10">
               <button
                 type="button"
                 onClick={handleAddToCart}

@@ -8,6 +8,7 @@ export default {
     extend: {
       fontFamily: {
         sans: ['Helvetica Neue', 'Helvetica', 'Arial', 'sans-serif'],
+        serif: ['Georgia', 'Cambria', 'Times New Roman', 'Times', 'serif'],
         mono: ['Helvetica Neue', 'Helvetica', 'Arial', 'sans-serif'],
       },
       fontWeight: {

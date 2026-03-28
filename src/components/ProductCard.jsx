@@ -4,8 +4,6 @@ import { useWishlist } from '../store/WishlistContext';
 import { useLanguage } from '../store/LanguageContext';
 import { formatPrice } from '../lib/formatPrice';
 import { isSoldOut } from '../lib/productStock';
-import TiltCard from './TiltCard';
-
 const resolveProductImages = (product) => {
   if (!product) return [];
   const urls = [];
@@ -156,28 +154,6 @@ const ProductCard = ({ product, onAddToCart, variant = 'grid', grayscale = false
         <p className={`font-light tracking-widest text-[#5C4A42] ${variant === 'carousel' ? 'text-[10px] font-medium' : 'text-[10px] md:text-xs'}`}>
           {formatPrice(product.price)}
         </p>
-        {/* Add to Archive (grid 전용) */}
-        {variant === 'grid' && (onAddToCart || soldOut) && (
-          <div className={`pt-3 hidden md:block ${soldOut ? '' : 'opacity-0 group-hover:opacity-100 transition-all duration-500 transform translate-y-2 group-hover:translate-y-0'}`}>
-            <button
-              type="button"
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                if (soldOut) return;
-                onAddToCart?.(product);
-              }}
-              disabled={soldOut}
-              className={`w-full border py-4 text-[9px] font-bold tracking-ultra-wide uppercase transition-all duration-300 ${
-                soldOut
-                  ? 'border-[#A8B894]/40 text-[#7A6B63] bg-[#EDEAE4] cursor-not-allowed'
-                  : 'border-[#A8B894] text-[#3E2F28] hover:bg-[#A8B894] hover:text-[#2D3A2D] hover:border-[#A8B894]'
-              }`}
-            >
-              {soldOut ? t('product.soldOut') : t('product.addToArchive')}
-            </button>
-          </div>
-        )}
       </div>
     </div>
   );
@@ -189,14 +165,7 @@ const ProductCard = ({ product, onAddToCart, variant = 'grid', grayscale = false
 
   return (
     <Link to={`/product/${product.id}`} className={baseClass}>
-      <TiltCard
-        className="flex flex-col flex-1 min-w-0"
-        maxTilt={10}
-        shadowOffset={14}
-        enableTouchAnimation={true}
-      >
-        {cardContent}
-      </TiltCard>
+      <div className="flex flex-col flex-1 min-w-0">{cardContent}</div>
     </Link>
   );
 };
