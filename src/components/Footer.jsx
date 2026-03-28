@@ -65,29 +65,11 @@ const LandingFloatingFooter = () => {
   );
 };
 
-/** 브랜드 스토리: 문서 하단 상대 배치, 사업자 정보만 */
-const BrandStoryFooter = () => (
-  <footer
-    className="relative w-full bg-transparent py-12 md:py-14 px-6 text-center"
-    aria-label="사업자 정보"
-  >
-    <div className="max-w-3xl mx-auto space-y-2 text-[9px] md:text-[10px] font-light leading-relaxed text-[#8C857B]">
-      <p>ceo : 신천영 | tel : 010-3126-6701 | email : pjk6412@naver.com</p>
-      <p>address : 경기도 용인시 기흥구 흥덕중앙로 120 유타워 3208호</p>
-      <p>business license : 241-14-00646 | online license : 2019-용인기흥-0330</p>
-    </div>
-  </footer>
-);
-
 const Footer = () => {
   const { pathname } = useLocation();
 
   if (pathname === '/') {
     return <LandingFloatingFooter />;
-  }
-
-  if (pathname === '/brand-story') {
-    return <BrandStoryFooter />;
   }
 
   return null;

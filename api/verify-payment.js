@@ -4,9 +4,9 @@
  * POST body: paymentId, cartItems(또는 orderPayload.items), orderPayload(선택). 서버에서 cartItems 기준 DB 단가로 총액 계산 후 포트원 실제 결제 금액과 비교.
  *
  * [Vercel 환경 변수]
- * - PORTONE_API_SECRET: 포트원 V2 API Secret
- * - VITE_SUPABASE_URL: Supabase Project URL (https://xxx.supabase.co)
- * - SUPABASE_SERVICE_ROLE_KEY: Supabase service_role 키 (RLS 우회)
+ * - IAMPORT_API_KEY / IAMPORT_API_SECRET: 아임포트(V1) REST API — body에 imp_uid + merchant_uid 만 올 때 결제 조회
+ * - PORTONE_API_SECRET: 포트원 V2 API Secret (paymentId + 장바구니 검증 분기)
+ * - VITE_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY: V2 분기에서 주문 저장 시 필요
  *
  * [orders.payment_id] Supabase에서 supabase-orders-payment-id.sql 실행 후 사용 가능
  */
@@ -14,6 +14,8 @@
 import { createClient } from '@supabase/supabase-js';
 
 const PORTONE_PAYMENTS_URL = 'https://api.portone.io/payments';
+const IAMPORT_GET_TOKEN_URL = 'https://api.iamport.kr/users/getToken';
+const IAMPORT_PAYMENT_URL = 'https://api.iamport.kr/payments';
 
 function allowCors(res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -38,6 +40,8 @@ export default async function handler(req, res) {
 
   const body = req.body || {};
   const {
+    imp_uid: impUid,
+    merchant_uid: merchantUidV1,
     paymentId,
     cartItems,
     orderPayload,
@@ -46,6 +50,105 @@ export default async function handler(req, res) {
     guestEmail,
     userId,
   } = body;
+
+  // —— 포트원(아임포트) V1: imp_uid + merchant_uid 만으로 결제 조회 검증 ——
+  if (impUid && merchantUidV1) {
+    const impKey = process.env.IAMPORT_API_KEY;
+    const impSecret = process.env.IAMPORT_API_SECRET;
+    if (!impKey || !impSecret) {
+      return res.status(500).json({
+        success: false,
+        error: 'Server Configuration Error',
+        message: 'V1 결제 검증을 위해 IAMPORT_API_KEY, IAMPORT_API_SECRET 을 서버 환경변수에 설정해 주세요.',
+        details: null,
+      });
+    }
+
+    let tokenRes;
+    try {
+      tokenRes = await fetch(IAMPORT_GET_TOKEN_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ imp_key: impKey, imp_secret: impSecret }),
+      });
+    } catch (e) {
+      console.error('Iamport getToken error:', e);
+      return res.status(502).json({
+        success: false,
+        error: 'Iamport Token Failed',
+        message: e?.message ?? '아임포트 토큰 요청 실패',
+        details: String(e),
+      });
+    }
+
+    const tokenJson = await tokenRes.json().catch(() => ({}));
+    const accessToken = tokenJson?.response?.access_token ?? tokenJson?.access_token;
+    if (!accessToken) {
+      return res.status(502).json({
+        success: false,
+        error: 'Iamport Auth Failed',
+        message: tokenJson?.message || '아임포트 액세스 토큰을 받지 못했습니다.',
+        details: tokenJson,
+      });
+    }
+
+    let payRes;
+    try {
+      payRes = await fetch(`${IAMPORT_PAYMENT_URL}/${encodeURIComponent(impUid)}`, {
+        method: 'GET',
+        headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+      });
+    } catch (e) {
+      console.error('Iamport payment fetch error:', e);
+      return res.status(502).json({
+        success: false,
+        error: 'Iamport Request Failed',
+        message: e?.message ?? '결제 조회 요청 실패',
+        details: String(e),
+      });
+    }
+
+    const payJson = await payRes.json().catch(() => ({}));
+    const pay = payJson?.response ?? payJson;
+    const paidMerchantUid = pay?.merchant_uid;
+    const status = (pay?.status ?? '').toLowerCase();
+    const paidAmount = Number(pay?.amount);
+
+    if (!pay || paidMerchantUid !== merchantUidV1) {
+      return res.status(400).json({
+        success: false,
+        error: 'Verification Failed',
+        message: '결제 정보가 일치하지 않습니다. merchant_uid 를 확인해 주세요.',
+        details: { imp_uid: impUid, expectedMerchantUid: merchantUidV1, paidMerchantUid },
+      });
+    }
+
+    if (status !== 'paid') {
+      return res.status(400).json({
+        success: false,
+        error: 'Not Paid',
+        message: '결제 완료 상태가 아닙니다.',
+        details: { status },
+      });
+    }
+
+    if (paidAmount !== 1000) {
+      return res.status(400).json({
+        success: false,
+        error: 'Amount Mismatch',
+        message: '결제 금액이 테스트 금액(1,000원)과 일치하지 않습니다.',
+        details: { paidAmount, expected: 1000 },
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'V1 payment verified',
+      orderNumber: `DN-V1-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`,
+      imp_uid: impUid,
+      merchant_uid: merchantUidV1,
+    });
+  }
 
   // 배송지: shippingAddress 객체 우선, 없으면 orderPayload에서 복원
   const shippingAddress = shippingAddressFromBody ?? (orderPayload && {

@@ -225,9 +225,15 @@ const Navbar = ({ isScrolled = false, isMobileMenuOpen = false, onMobileMenuChan
                     ref={accountButtonRef}
                     type="button"
                     onClick={() => setAccountOpen(!accountOpen)}
-                    className="text-[10px] font-light tracking-[0.15em] uppercase hover:opacity-80 transition-all text-[#F9F7F2]"
+                    className="flex h-10 w-10 items-center justify-center text-[#F9F7F2] transition-colors hover:opacity-80"
+                    aria-label={t('nav.myPage')}
+                    aria-expanded={accountOpen}
+                    aria-haspopup="true"
                   >
-                    {t('nav.myPage')}
+                    <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.2" viewBox="0 0 24 24" aria-hidden>
+                      <circle cx="12" cy="8" r="3.5" stroke="currentColor" />
+                      <path d="M6 21c0-4 2.5-7 6-7s6 3 6 7" strokeLinecap="round" />
+                    </svg>
                   </button>
                   {/* 마이페이지 드롭다운: 포털로 body에 렌더링해 히어로/스크롤 영역에 가리지 않도록 함 */}
                   {typeof document !== 'undefined' && accountOpen && accountDropdownRect && createPortal(

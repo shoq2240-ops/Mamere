@@ -10,15 +10,10 @@ import { isSoldOut } from '../lib/productStock';
 import { getShippingFee } from '../lib/shipping';
 import { formatPhoneDisplay } from '../lib/formatPhone';
 
-// 포트원 V2 결제 설정 (.env의 VITE_PORTONE_* 사용, 비어 있으면 테스트용 기본값)
-const getPortOneStoreId = () => {
-  const v = (import.meta.env.VITE_PORTONE_STORE_ID ?? '').toString().trim();
-  return v || 'store-147f2609-c82d-42f4-96d8-5e29d0ea773a';
-};
-const getPortOneChannelKey = () => {
-  const v = (import.meta.env.VITE_PORTONE_CHANNEL_KEY ?? '').toString().trim();
-  return v || 'channel-key-129cc6e8-0275-415d-b9e4-11f5d4f50146';
-};
+// 포트원(아임포트) V1 — IMP.init: 가맹점 식별코드 / request_pay: 채널 키
+const trimEnv = (v) => String(v ?? '').replace(/^\uFEFF/, '').trim();
+const getPortOneUserCode = () => trimEnv(import.meta.env.VITE_PORTONE_USER_CODE);
+const getPortOneChannelKey = () => trimEnv(import.meta.env.VITE_PORTONE_CHANNEL_KEY);
 
 // 가격이 "₩890,000" 문자열이거나 숫자일 수 있음
 const parsePrice = (price) => {
@@ -121,7 +116,6 @@ const CheckoutPage = () => {
     if (!isGuest && !user?.id) return;
 
     const name = shippingName.trim().slice(0, 100);
-    const addressFull = combineAddress(shippingAddress, shippingAddressDetail).slice(0, 500);
     const phoneDigits = shippingPhone.trim().replace(/\D/g, '');
     const phone = phoneDigits.slice(0, 11);
 
@@ -138,15 +132,17 @@ const CheckoutPage = () => {
       return;
     }
 
-    const portOneStoreId = getPortOneStoreId();
+    const portOneUserCode = getPortOneUserCode();
     const portOneChannelKey = getPortOneChannelKey();
-    if (!portOneStoreId || !portOneChannelKey) {
-      setError('결제 기능이 일시적으로 준비 중입니다. 잠시 후 다시 시도해 주세요.');
+    if (!portOneUserCode || !portOneChannelKey) {
+      setError(
+        '포트원 설정(VITE_PORTONE_USER_CODE, VITE_PORTONE_CHANNEL_KEY)을 프로젝트 루트 .env에 모두 넣어 주세요. (Vite는 기본적으로 루트 .env만 읽습니다.)'
+      );
       return;
     }
 
-    if (typeof window === 'undefined' || !window.PortOne) {
-      setError('결제 모듈을 불러오는 중입니다. 잠시 후 다시 시도해 주세요.');
+    if (typeof window === 'undefined' || !window.IMP) {
+      setError('결제 모듈(아임포트)을 불러오는 중입니다. 잠시 후 다시 시도해 주세요.');
       toast.error('결제 모듈을 불러오는 중입니다. 잠시 후 다시 시도해 주세요.');
       return;
     }
@@ -217,8 +213,6 @@ const CheckoutPage = () => {
       (sum, item) => sum + (priceMap[item.id] ?? 0) * Math.max(1, Math.min(MAX_QUANTITY, Math.floor(item.quantity || 1))),
       0
     );
-    const shippingFee = getShippingFee(subtotal);
-    const totalAmount = subtotal + shippingFee;
 
     if (subtotal <= 0) {
       setSubmitting(false);
@@ -241,132 +235,36 @@ const CheckoutPage = () => {
       }
     }
 
-    // 주문 저장 시 서버 가격 사용 (클라이언트 조작 방지, 필드 길이 제한)
-    // Supabase products.id(BIGINT)와 매칭되도록 id를 명시. API에서 id 또는 product_id 로 수용.
-    const items = cart.map((item) => {
-      const productId = item.id != null ? item.id : item.product_id;
-      return {
-        id: productId,
-        product_id: productId,
-        name: String(item.name ?? '').slice(0, 200),
-        price: priceMap[item.id] ?? parsePrice(item.price),
-        quantity: Math.max(1, Math.min(MAX_QUANTITY, Math.floor(item.quantity || 1))),
-        image: typeof item.image === 'string' ? item.image.slice(0, 2048) : null,
-      };
-    });
-
-    // 포트원 V2 결제창 호출 (requestPayment) — paymentId 40자 이하(이니시스 등 제한)
-    const paymentId = `payment-${Date.now()}`;
-    const orderName = cart.length === 1
-      ? cart[0].name
-      : `${cart[0].name} 외 ${cart.length - 1}건`;
-
-    const customerEmail = isGuest ? (guestEmail ?? '').trim() : (user?.email ?? 'test@test.com');
-    const customer = {
-      fullName: name || '테스트',
-      email: customerEmail || 'test@test.com',
-      phoneNumber: phone || '010-1234-5678',
-    };
-
     try {
-      const response = await window.PortOne.requestPayment({
-        storeId: portOneStoreId,
-        channelKey: portOneChannelKey,
-        paymentId,
-        orderName,
-        totalAmount: Number(totalAmount),
-        currency: 'KRW',
-        payMethod: 'CARD',
-        customer,
-      });
+      const IMP = window.IMP;
+      IMP.init(import.meta.env.VITE_PORTONE_USER_CODE);
 
-      // 결제 실패 또는 취소: response.code 가 있으면 에러
-      if (response?.code != null) {
-        setSubmitting(false);
-        const message = response?.message || '결제가 완료되지 않았습니다. 다시 시도해 주세요.';
-        setError(message);
-        toast.error(message);
-        return;
-      }
-
-      // 결제 성공: 서버 검증 API 호출 후, 검증 성공 시에만 완료 처리 (금액 조작 방지)
-      if (typeof console !== 'undefined' && console.log) {
-        console.log('PortOne payment success:', response);
-      }
-
-      const orderPayloadForVerify = {
-        items,
-        customer_name: name,
-        shipping_name: name,
-        phone,
-        shipping_phone: phone,
-        address: addressFull,
-        shipping_address: addressFull,
-      };
-
-      // Supabase orders 테이블용 배송지 객체 (customer_name, phone, address, detail_address, zip_code)
-      const shippingAddressPayload = {
-        name,
-        phone,
-        address: (shippingAddress ?? '').trim().slice(0, 500),
-        detailAddress: (shippingAddressDetail ?? '').trim().slice(0, 300),
-        zipCode: (shippingZipCode ?? '').trim().slice(0, 20) || '',
-      };
-
-      let verifyRes;
-      let verifyJson = {};
-      try {
-        verifyRes = await fetch('/api/verify-payment', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            paymentId,
-            expectedAmount: totalAmount,
-            cartItems: items,
-            orderPayload: orderPayloadForVerify,
-            shippingAddress: shippingAddressPayload,
-            isGuest,
-            guestEmail: isGuest ? (guestEmail ?? '').trim() : null,
-            userId: user?.id ?? null,
-          }),
-        });
-        verifyJson = await verifyRes.json().catch(() => ({}));
-      } catch (err) {
-        setSubmitting(false);
-        console.error('서버 결제 검증 에러 상세:', err);
-        const msg = '결제 검증 요청 중 오류가 발생했습니다. 네트워크를 확인한 뒤 다시 시도해 주세요.';
-        setError(msg);
-        toast.error(msg);
-        return;
-      }
-
-        if (!verifyRes.ok || !verifyJson?.success) {
+      IMP.request_pay(
+        {
+          channelKey: import.meta.env.VITE_PORTONE_CHANNEL_KEY,
+          pay_method: 'card',
+          merchant_uid: 'order_' + new Date().getTime(),
+          name: '마메르 테스트 결제',
+          amount: 1000,
+          currency: 'KRW',
+          buyer_email: 'test@mamere.kr',
+          buyer_name: '테스트',
+          buyer_tel: '01012341234',
+        },
+        (rsp) => {
           setSubmitting(false);
-          console.error('서버 결제 검증 에러 상세:', verifyJson);
-          const detailStr =
-            typeof verifyJson?.details === 'object' && verifyJson?.details !== null
-              ? JSON.stringify(verifyJson.details)
-              : verifyJson?.details;
-          const msg =
-            verifyJson?.message ||
-            verifyJson?.error ||
-            (detailStr ? String(detailStr) : null) ||
-            '결제 검증에 실패했습니다. 다시 시도해 주세요.';
-          setError(msg);
-          toast.error(msg);
-          return;
+          if (rsp && rsp.success === true) {
+            alert('결제 성공!');
+            console.log('PortOne 결제 응답:', rsp);
+            return;
+          }
+          alert('결제 실패: ' + (rsp != null ? rsp.error_msg : ''));
         }
-
-      toast.success('결제가 완료되었습니다!');
-      clearCart();
-      setOrderSuccessData({
-        orderNumber: verifyJson.orderNumber || generateOrderNumber(),
-        guestEmail: isGuest ? (guestEmail ?? '').trim() : undefined,
-        isGuest: !!isGuest,
-      });
-    } catch {
+      );
+    } catch (e) {
       setSubmitting(false);
       setError('결제 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.');
+      if (import.meta.env.DEV) console.error(e);
     }
   };
 
