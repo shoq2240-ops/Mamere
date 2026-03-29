@@ -4,9 +4,10 @@
  * POST body: paymentId, cartItems(또는 orderPayload.items), orderPayload(선택). 서버에서 cartItems 기준 DB 단가로 총액 계산 후 포트원 실제 결제 금액과 비교.
  *
  * [Vercel 환경 변수]
- * - IAMPORT_API_KEY / IAMPORT_API_SECRET: 아임포트(V1) REST API — body에 imp_uid + merchant_uid 만 올 때 결제 조회
+ * - PORTONE_API_KEY / PORTONE_API_SECRET: 아임포트(V1) REST API(imp_key/imp_secret) — imp_uid + merchant_uid 검증 분기
+ *   (하위 호환: IAMPORT_API_KEY / IAMPORT_API_SECRET 도 동일 용도로 인식)
  * - PORTONE_API_SECRET: 포트원 V2 API Secret (paymentId + 장바구니 검증 분기)
- * - VITE_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY: V2 분기에서 주문 저장 시 필요
+ * - VITE_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY: 주문 저장 시 필요
  *
  * [orders.payment_id] Supabase에서 supabase-orders-payment-id.sql 실행 후 사용 가능
  */
@@ -53,13 +54,14 @@ export default async function handler(req, res) {
 
   // —— 포트원(아임포트) V1: imp_uid + merchant_uid 만으로 결제 조회 검증 ——
   if (impUid && merchantUidV1) {
-    const impKey = process.env.IAMPORT_API_KEY;
-    const impSecret = process.env.IAMPORT_API_SECRET;
+    const impKey = process.env.PORTONE_API_KEY || process.env.IAMPORT_API_KEY;
+    const impSecret = process.env.PORTONE_API_SECRET || process.env.IAMPORT_API_SECRET;
     if (!impKey || !impSecret) {
       return res.status(500).json({
         success: false,
         error: 'Server Configuration Error',
-        message: 'V1 결제 검증을 위해 IAMPORT_API_KEY, IAMPORT_API_SECRET 을 서버 환경변수에 설정해 주세요.',
+        message:
+          'V1 결제 검증을 위해 PORTONE_API_KEY, PORTONE_API_SECRET(또는 IAMPORT_API_KEY, IAMPORT_API_SECRET)을 서버 환경변수에 설정해 주세요.',
         details: null,
       });
     }
@@ -132,19 +134,123 @@ export default async function handler(req, res) {
       });
     }
 
-    if (paidAmount !== 1000) {
+    const expectedFromBody = Number(body.expectedAmount);
+    const expectedAmount =
+      Number.isFinite(expectedFromBody) && expectedFromBody > 0 ? expectedFromBody : 1000;
+    if (paidAmount !== expectedAmount) {
       return res.status(400).json({
         success: false,
         error: 'Amount Mismatch',
-        message: '결제 금액이 테스트 금액(1,000원)과 일치하지 않습니다.',
-        details: { paidAmount, expected: 1000 },
+        message: '결제 금액이 요청한 예상 금액과 일치하지 않습니다.',
+        details: { paidAmount, expectedAmount },
+      });
+    }
+
+    const supabaseUrl = process.env.VITE_SUPABASE_URL;
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!supabaseUrl || !supabaseServiceKey) {
+      return res.status(500).json({
+        success: false,
+        error: 'Server Configuration Error',
+        message: '주문 저장을 위해 VITE_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY 가 서버에 설정되어야 합니다.',
+        details: { hasUrl: !!supabaseUrl, hasKey: !!supabaseServiceKey },
+      });
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseServiceKey, { db: { schema: 'public' } });
+
+    const { data: existingOrder, error: existingErr } = await supabase
+      .from('orders')
+      .select('order_number')
+      .eq('payment_id', impUid)
+      .maybeSingle();
+
+    if (existingErr) {
+      console.error('Supabase orders duplicate check error:', existingErr);
+      return res.status(500).json({
+        success: false,
+        error: 'Supabase Query Error',
+        message: existingErr?.message ?? '주문 조회에 실패했습니다.',
+        details: { code: existingErr.code },
+      });
+    }
+
+    if (existingOrder?.order_number) {
+      return res.status(200).json({
+        success: true,
+        message: '이미 처리된 결제입니다.',
+        orderNumber: existingOrder.order_number,
+        imp_uid: impUid,
+        merchant_uid: merchantUidV1,
+      });
+    }
+
+    const sa = body.shippingAddress || {};
+    const shipName = String(sa.name ?? body.customer_name ?? '').trim().slice(0, 100) || '—';
+    const shipPhoneRaw = String(sa.phone ?? body.phone ?? '').replace(/\D/g, '').slice(0, 11);
+    const shipPhone = shipPhoneRaw.length >= 9 ? shipPhoneRaw : '01000000000';
+    const addrMain = String(sa.address ?? body.address ?? '').trim().slice(0, 500) || '—';
+    const addrDetail = String(sa.detailAddress ?? body.detail_address ?? '').trim().slice(0, 300);
+    const zipCode = String(sa.zipCode ?? body.zip_code ?? '').trim().slice(0, 20);
+    const shippingAddressCombined = [addrMain, addrDetail].filter(Boolean).join(' ').trim() || addrMain;
+
+    const rawOrderItems = Array.isArray(body.orderItems) ? body.orderItems : [];
+    const itemsJson =
+      rawOrderItems.length > 0
+        ? rawOrderItems.slice(0, 50).map((it) => ({
+            id: it.id ?? it.product_id ?? null,
+            name: String(it.name ?? '').slice(0, 200),
+            quantity: Math.max(1, Math.min(99, Math.floor(Number(it.quantity) || 1))),
+            price: Math.max(0, Math.floor(Number(it.price) || 0)),
+            image: it.image != null ? String(it.image).slice(0, 2048) : null,
+          }))
+        : [
+            {
+              id: null,
+              name: '마메르 테스트 결제',
+              quantity: 1,
+              price: paidAmount,
+              image: null,
+            },
+          ];
+
+    const orderNumber = `DN-${Date.now().toString().slice(-10)}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
+
+    const orderRow = {
+      payment_id: impUid,
+      total_amount: paidAmount,
+      status: '결제완료',
+      items: itemsJson,
+      customer_name: shipName,
+      phone: shipPhone,
+      address: addrMain,
+      detail_address: addrDetail || null,
+      zip_code: zipCode || null,
+      user_id: body.userId || null,
+      is_guest: !!body.isGuest,
+      guest_email: body.isGuest ? body.guestEmail || null : null,
+      order_number: orderNumber,
+      shipping_name: shipName,
+      shipping_address: shippingAddressCombined,
+      shipping_phone: shipPhone,
+    };
+
+    const { error: orderError } = await supabase.from('orders').insert(orderRow).select('id').single();
+
+    if (orderError) {
+      console.error('Supabase orders insert error (V1):', orderError);
+      return res.status(500).json({
+        success: false,
+        error: 'Supabase Query Error',
+        message: orderError?.message ?? '주문 저장에 실패했습니다.',
+        details: { code: orderError.code, hint: orderError.hint, details: orderError.details },
       });
     }
 
     return res.status(200).json({
       success: true,
-      message: 'V1 payment verified',
-      orderNumber: `DN-V1-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`,
+      message: 'Payment verified and order saved',
+      orderNumber,
       imp_uid: impUid,
       merchant_uid: merchantUidV1,
     });

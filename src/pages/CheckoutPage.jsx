@@ -235,30 +235,74 @@ const CheckoutPage = () => {
       }
     }
 
+    const TEST_PAY_AMOUNT = 1000;
+    const merchantUid = `order_${Date.now()}`;
+
     try {
       const IMP = window.IMP;
-      IMP.init(import.meta.env.VITE_PORTONE_USER_CODE);
+      IMP.init(portOneUserCode);
 
       IMP.request_pay(
         {
-          channelKey: import.meta.env.VITE_PORTONE_CHANNEL_KEY,
+          channelKey: portOneChannelKey,
           pay_method: 'card',
-          merchant_uid: 'order_' + new Date().getTime(),
+          merchant_uid: merchantUid,
           name: '마메르 테스트 결제',
-          amount: 1000,
+          amount: TEST_PAY_AMOUNT,
           currency: 'KRW',
-          buyer_email: 'test@mamere.kr',
-          buyer_name: '테스트',
-          buyer_tel: '01012341234',
+          buyer_email: isGuest ? (guestEmail ?? '').trim() || 'guest@mamere.kr' : user?.email || 'test@mamere.kr',
+          buyer_name: name.slice(0, 16) || '구매자',
+          buyer_tel: phone || '01000000000',
         },
-        (rsp) => {
+        async (rsp) => {
           setSubmitting(false);
-          if (rsp && rsp.success === true) {
-            alert('결제 성공!');
-            console.log('PortOne 결제 응답:', rsp);
+          if (!rsp || rsp.success !== true) {
+            alert('결제 실패: ' + (rsp != null ? rsp.error_msg : ''));
             return;
           }
-          alert('결제 실패: ' + (rsp != null ? rsp.error_msg : ''));
+          try {
+            const verifyRes = await fetch('/api/verify-payment', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                imp_uid: rsp.imp_uid,
+                merchant_uid: rsp.merchant_uid,
+                expectedAmount: TEST_PAY_AMOUNT,
+                userId: user?.id ?? null,
+                isGuest,
+                guestEmail: isGuest ? (guestEmail ?? '').trim() : null,
+                shippingAddress: {
+                  name,
+                  phone,
+                  address: combineAddress(shippingAddress, shippingAddressDetail),
+                  detailAddress: shippingAddressDetail,
+                  zipCode: shippingZipCode,
+                },
+                orderItems: cart.map((item) => ({
+                  id: item.id,
+                  name: item.name,
+                  quantity: Math.max(1, Math.min(MAX_QUANTITY, Math.floor(item.quantity || 1))),
+                  price: priceMap[item.id] ?? 0,
+                  image: item.image ?? null,
+                })),
+              }),
+            });
+            const verifyJson = await verifyRes.json().catch(() => ({}));
+            if (!verifyRes.ok || !verifyJson.success) {
+              toast.error(verifyJson.message || '서버에서 결제 검증에 실패했습니다.');
+              return;
+            }
+            alert('결제가 최종 완료되었습니다.');
+            clearCart();
+            setOrderSuccessData({
+              orderNumber: verifyJson.orderNumber,
+              isGuest,
+              guestEmail: isGuest ? (guestEmail ?? '').trim() : undefined,
+            });
+          } catch (err) {
+            if (import.meta.env.DEV) console.error(err);
+            toast.error('서버와 통신하지 못했습니다. 잠시 후 주문 조회로 확인해 주세요.');
+          }
         }
       );
     } catch (e) {
