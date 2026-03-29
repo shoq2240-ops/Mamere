@@ -1,23 +1,17 @@
-import React, { useState, useEffect } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
-import { AnimatePresence, motion } from 'framer-motion';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useCart } from '../store/CartContext';
 import { useAuth } from '../store/AuthContext';
 import { useLanguage } from '../store/LanguageContext';
 import LoginRequiredModal from '../components/LoginRequiredModal';
 import { useProducts } from '../hooks/useProducts';
-import { ProductGridSkeleton, LoadingMessage } from '../components/ProductSkeleton';
+import { ProductGridSkeleton } from '../components/ProductSkeleton';
 import ProductCard from '../components/ProductCard';
 
 const SKIN_TYPES = ['건성', '지성', '복합성', '민감성'];
-const SKIN_TYPE_TOOLTIPS = {
-  건성: '세안 후 얇은 당김이 느껴지고, 피부가 쉽게 메마른다면',
-  지성: '오후가 되면 자연스러운 윤기를 넘어 유분감이 맴돈다면',
-  복합성: '이마와 코는 번들거리지만 볼은 건조해, 세심한 균형이 필요하다면',
-  민감성: '작은 변화에도 쉽게 반응하여, 진정이 필요하다면',
-};
 const SKIN_CONCERNS = ['보습', '진정', '트러블', '미백', '탄력'];
+const PAGE_SIZE = 12;
 
 const normalizeCategory = (c) => (c || '').toLowerCase().replace(/-/g, '_');
 const toArray = (v) => {
@@ -33,11 +27,17 @@ const toArray = (v) => {
   return [];
 };
 
+/** 필터 칩 사이: 세로 막대 (#EEEEEE) */
+const FilterDivider = () => (
+  <span className="mx-2 inline-block h-[10px] w-px shrink-0 self-center bg-[#EEEEEE] sm:mx-3" aria-hidden />
+);
+
 const ShopPage = ({ category }) => {
   const { addToCart } = useCart();
   const { isLoggedIn } = useAuth();
   const { t } = useLanguage();
   const [showLoginModal, setShowLoginModal] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
 
   const [searchParams, setSearchParams] = useSearchParams();
   const query = searchParams.get('search') || '';
@@ -45,54 +45,79 @@ const ShopPage = ({ category }) => {
   const skinConcernParam = searchParams.get('skinConcern') || '';
 
   const [searchTerm, setSearchTerm] = useState(query);
-  const [skinType, setSkinType] = useState(skinTypeParam);
-  const [skinConcern, setSkinConcern] = useState(skinConcernParam);
-  const [hoveredSkinType, setHoveredSkinType] = useState(null);
-
-  const { products, loading, error } = useProducts();
 
   useEffect(() => {
     setSearchTerm(query);
   }, [query]);
-  useEffect(() => {
-    setSkinType(skinTypeParam);
-  }, [skinTypeParam]);
-  useEffect(() => {
-    setSkinConcern(skinConcernParam);
-  }, [skinConcernParam]);
+
+  const { products, loading, error } = useProducts();
 
   const categoryNorm = normalizeCategory(category);
-
   const showSkinFilters = !categoryNorm || categoryNorm === 'skincare';
 
-  useEffect(() => {
-    if (categoryNorm === 'body_hair') {
-      setSkinType('');
-      setSkinConcern('');
-      const next = new URLSearchParams(searchParams);
-      next.delete('skinType');
-      next.delete('skinConcern');
-      setSearchParams(next);
-    }
-  }, [categoryNorm]);
+  const filteredProducts = useMemo(
+    () =>
+      products
+        .filter((product) => {
+          if (!categoryNorm) return true;
+          return normalizeCategory(product.category) === categoryNorm;
+        })
+        .filter((product) => {
+          if (!showSkinFilters || !skinTypeParam) return true;
+          return toArray(product.skin_type || product.skinType).some((ty) => String(ty).trim() === skinTypeParam);
+        })
+        .filter((product) => {
+          if (!showSkinFilters || !skinConcernParam) return true;
+          return toArray(product.skin_concern || product.skinConcern).some((c) => String(c).trim() === skinConcernParam);
+        })
+        .filter((product) => product.name?.toLowerCase().includes(searchTerm.toLowerCase())),
+    [products, categoryNorm, showSkinFilters, skinTypeParam, skinConcernParam, searchTerm]
+  );
 
-  const filteredProducts = products
-    .filter((product) => {
-      if (!categoryNorm) return true;
-      const pCat = normalizeCategory(product.category);
-      return pCat === categoryNorm;
-    })
-    .filter((product) => {
-      if (!showSkinFilters || !skinType) return true;
-      const types = toArray(product.skin_type || product.skinType);
-      return types.some((ty) => String(ty).trim() === skinType);
-    })
-    .filter((product) => {
-      if (!showSkinFilters || !skinConcern) return true;
-      const concerns = toArray(product.skin_concern || product.skinConcern);
-      return concerns.some((c) => String(c).trim() === skinConcern);
-    })
-    .filter((product) => product.name && product.name.toLowerCase().includes(searchTerm.toLowerCase()));
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const loadMoreRef = useRef(null);
+
+  useEffect(() => {
+    setVisibleCount(PAGE_SIZE);
+  }, [categoryNorm, skinTypeParam, skinConcernParam, searchTerm]);
+
+  const displayedProducts = useMemo(
+    () => filteredProducts.slice(0, visibleCount),
+    [filteredProducts, visibleCount]
+  );
+  const hasMore = visibleCount < filteredProducts.length;
+
+  const loadMore = useCallback(() => {
+    setVisibleCount((n) => Math.min(n + PAGE_SIZE, filteredProducts.length));
+  }, [filteredProducts.length]);
+
+  useEffect(() => {
+    if (!hasMore || loading) return undefined;
+    const el = loadMoreRef.current;
+    if (!el) return undefined;
+    const obs = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) loadMore();
+      },
+      { root: null, rootMargin: '200px', threshold: 0 }
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [hasMore, loading, loadMore]);
+
+  const updateFilter = (key, value) => {
+    const next = new URLSearchParams(searchParams);
+    if (!value) next.delete(key);
+    else next.set(key, value);
+    setSearchParams(next);
+  };
+
+  const toggleFilter = (key, value, current) => {
+    const next = new URLSearchParams(searchParams);
+    if (current === value) next.delete(key);
+    else next.set(key, value);
+    setSearchParams(next);
+  };
 
   const handleAddToCart = (product) => {
     if (!isLoggedIn) {
@@ -108,34 +133,27 @@ const ShopPage = ({ category }) => {
     toast.success(t('common.addToCartDone'));
   };
 
-  const updateFilter = (key, value) => {
-    const next = new URLSearchParams(searchParams);
-    if (value) next.set(key, value);
-    else next.delete(key);
-    setSearchParams(next);
-  };
-
-  const categoryLabel =
-    category === 'body_hair'
-      ? t('shop.bodyHair')
-      : category === 'skincare'
-        ? t('shop.skincare')
-        : t('shop.all');
-
-  const categorySubCopy =
-    !categoryNorm
-      ? t('shop.categorySubAll')
+  const categoryTitle =
+    categoryNorm === 'body_hair'
+      ? 'BODY & HAIR'
       : categoryNorm === 'skincare'
-        ? t('shop.categorySubSkincare')
-        : categoryNorm === 'body_hair'
-          ? t('shop.categorySubBodyHair')
-          : null;
+        ? 'SKIN CARE'
+        : 'SHOP ALL';
+
+  const filterLabelClass =
+    'text-[9px] font-extralight uppercase tracking-[0.14em] text-[#BBBBBB]';
+  const filterBtnClass = (active) =>
+    `text-[10px] font-light tracking-[0.1em] transition-colors duration-200 ${
+      active ? 'text-[#1A1A1A]' : 'text-[#1A1A1A]/45 hover:text-[#1A1A1A]/70'
+    }`;
+
+  const skinTypeOptions = [{ value: '', label: t('shop.all') }, ...SKIN_TYPES.map((label) => ({ value: label, label }))];
+  const skinConcernOptions = [{ value: '', label: t('shop.all') }, ...SKIN_CONCERNS.map((c) => ({ value: c, label: c }))];
 
   return (
-    <div className="bg-[#F9F7F2] min-h-screen pt-20 md:pt-24 pb-16 md:pb-20 antialiased relative text-[#3E2F28]">
-      <div className="max-w-[1800px] mx-auto px-6 md:px-8">
-        {/* 검색 바 */}
-        <div className="mb-8 md:mb-10">
+    <div className="min-h-screen bg-[#FFFFFF] pt-24 pb-24 antialiased text-[#1A1A1A]">
+      <div className="mx-auto max-w-[1400px] bg-[#FFFFFF] px-5 md:px-10">
+        <div className="mb-10 bg-[#FFFFFF] md:mb-12">
           <input
             type="text"
             placeholder={t('shop.searchPlaceholder')}
@@ -143,151 +161,114 @@ const ShopPage = ({ category }) => {
             onChange={(e) => {
               const val = e.target.value.slice(0, 100);
               setSearchTerm(val);
-              setSearchParams(val ? { ...Object.fromEntries(searchParams), search: val } : {});
+              const next = new URLSearchParams(searchParams);
+              if (val) next.set('search', val);
+              else next.delete('search');
+              setSearchParams(next);
             }}
-            className="w-full bg-[#F9F7F2] border border-[#A8B894]/40 py-3 md:py-4 px-4 text-[11px] md:text-[12px] font-light tracking-[0.08em] outline-none focus:border-[#A8B894] transition-colors placeholder:text-[#7A6B63] text-[#3E2F28]"
+            className="w-full border-0 border-b border-[#F0F0F0] bg-[#FFFFFF] py-3 text-[11px] font-light tracking-wide text-[#1A1A1A] outline-none transition-colors placeholder:text-[#CCCCCC] focus:border-[#1A1A1A]"
           />
         </div>
 
-        {/* 필터: 피부 타입, 피부 고민 — 전체 쇼핑·스킨케어일 때만 노출 */}
+        <div className="flex items-baseline justify-between gap-6 border-b border-[#F0F0F0] bg-[#FFFFFF] pb-4">
+          <h1 className="text-left text-[16px] font-extralight tracking-[0.2em] text-[#1a1a1a]">
+            {categoryTitle}
+          </h1>
+          {showSkinFilters && (
+            <button
+              type="button"
+              onClick={() => setShowFilters((v) => !v)}
+              className="shrink-0 text-[10px] font-extralight tracking-tighter text-[#1a1a1a]/85 transition-colors hover:text-[#1a1a1a]"
+            >
+              {showFilters ? '– 필터' : '+ 필터'}
+            </button>
+          )}
+        </div>
+
         {showSkinFilters && (
-          <div className="mb-10 md:mb-12 flex flex-col gap-6">
-            <div className="relative">
-              <p className="text-[9px] md:text-[10px] tracking-[0.15em] uppercase text-[#7A6B63] mb-2">{t('shop.skinType')}</p>
-              <div className="flex flex-wrap gap-2">
-                <button
-                  type="button"
-                  onClick={() => updateFilter('skinType', '')}
-                  className={`px-4 py-2 text-[10px] font-light tracking-[0.08em] uppercase transition-colors ${
-                    !skinType ? 'bg-[#A8B894] text-[#2D3A2D]' : 'bg-[#F9F7F2] border border-[#A8B894]/50 text-[#3E2F28] hover:border-[#A8B894]'
-                  }`}
-                >
-                  {t('shop.all')}
-                </button>
-                {SKIN_TYPES.map((typeLabel) => (
-                  <div
-                    key={typeLabel}
-                    className="relative inline-block"
-                    onMouseEnter={() => setHoveredSkinType(typeLabel)}
-                    onMouseLeave={() => setHoveredSkinType(null)}
-                  >
-                    <button
-                      type="button"
-                      onClick={() => updateFilter('skinType', skinType === typeLabel ? '' : typeLabel)}
-                      className={`px-4 py-2 text-[10px] font-light tracking-[0.08em] uppercase transition-colors ${
-                        skinType === typeLabel ? 'bg-[#A8B894] text-[#2D3A2D]' : 'bg-[#F9F7F2] border border-[#A8B894]/50 text-[#3E2F28] hover:border-[#A8B894]'
-                      }`}
-                    >
-                      {typeLabel}
-                    </button>
-                    <AnimatePresence>
-                      {hoveredSkinType === typeLabel && SKIN_TYPE_TOOLTIPS[typeLabel] && (
-                        <motion.div
-                          initial={{ opacity: 0, y: -4 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: -4 }}
-                          transition={{ duration: 0.2, ease: [0.25, 0.1, 0.25, 1] }}
-                          className="absolute left-0 z-10 mt-1 min-w-[200px] max-w-[280px] rounded-sm border border-[#E8E4DF] bg-[#F5F3EE] px-3 py-2.5 text-[11px] font-light leading-relaxed text-[#5C4A42] shadow-[0_8px_20px_rgba(62,47,40,0.08)]"
-                          style={{ top: '100%' }}
+          <div className={`overflow-hidden bg-[#FFFFFF] ${showFilters ? 'max-h-[999px]' : 'max-h-0'}`}>
+            <div className="py-8 md:py-10">
+              <div className="flex flex-col gap-10 md:flex-row md:flex-wrap md:items-start md:gap-x-14 md:gap-y-8">
+                <div className="flex min-w-0 flex-1 flex-col gap-4 sm:flex-row sm:items-center sm:gap-6">
+                  <span className={`shrink-0 ${filterLabelClass}`}>TYPE</span>
+                  <div className="flex flex-wrap items-center">
+                    {skinTypeOptions.map((opt, i) => (
+                      <React.Fragment key={opt.value || 'all'}>
+                        {i > 0 && <FilterDivider />}
+                        <button
+                          type="button"
+                          onClick={() =>
+                            opt.value === '' ? updateFilter('skinType', '') : toggleFilter('skinType', opt.value, skinTypeParam)
+                          }
+                          className={filterBtnClass(opt.value === '' ? !skinTypeParam : skinTypeParam === opt.value)}
                         >
-                          {SKIN_TYPE_TOOLTIPS[typeLabel]}
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
+                          {opt.label}
+                        </button>
+                      </React.Fragment>
+                    ))}
                   </div>
-                ))}
+                </div>
+
+                <div className="flex min-w-0 flex-1 flex-col gap-4 sm:flex-row sm:items-center sm:gap-6">
+                  <span className={`shrink-0 ${filterLabelClass}`}>CONCERN</span>
+                  <div className="flex flex-wrap items-center">
+                    {skinConcernOptions.map((opt, i) => (
+                      <React.Fragment key={opt.value || 'all'}>
+                        {i > 0 && <FilterDivider />}
+                        <button
+                          type="button"
+                          onClick={() =>
+                            opt.value === ''
+                              ? updateFilter('skinConcern', '')
+                              : toggleFilter('skinConcern', opt.value, skinConcernParam)
+                          }
+                          className={filterBtnClass(opt.value === '' ? !skinConcernParam : skinConcernParam === opt.value)}
+                        >
+                          {opt.label}
+                        </button>
+                      </React.Fragment>
+                    ))}
+                  </div>
+                </div>
               </div>
             </div>
-            <div>
-              <p className="text-[9px] md:text-[10px] tracking-[0.15em] uppercase text-[#7A6B63] mb-2">{t('shop.skinConcern')}</p>
-              <div className="flex flex-wrap gap-2">
-                <button
-                  type="button"
-                  onClick={() => updateFilter('skinConcern', '')}
-                  className={`px-4 py-2 text-[10px] font-light tracking-[0.08em] uppercase transition-colors ${
-                    !skinConcern ? 'bg-[#A8B894] text-[#2D3A2D]' : 'bg-[#F9F7F2] border border-[#A8B894]/50 text-[#3E2F28] hover:border-[#A8B894]'
-                  }`}
-                >
-                  {t('shop.all')}
-                </button>
-                {SKIN_CONCERNS.map((c) => (
-                  <button
-                    key={c}
-                    type="button"
-                    onClick={() => updateFilter('skinConcern', skinConcern === c ? '' : c)}
-                    className={`px-4 py-2 text-[10px] font-light tracking-[0.08em] uppercase transition-colors ${
-                      skinConcern === c ? 'bg-[#A8B894] text-[#2D3A2D]' : 'bg-[#F9F7F2] border border-[#A8B894]/50 text-[#3E2F28] hover:border-[#A8B894]'
-                    }`}
-                  >
-                    {c}
-                  </button>
-                ))}
-              </div>
-            </div>
+            {showFilters && <div className="h-[1px] w-full bg-[#F0F0F0]" />}
           </div>
         )}
 
-        {/* 헤더 */}
-        <div className="mb-12 md:mb-16 flex justify-between items-end">
-          <div>
-            <p className="text-[9px] md:text-[10px] tracking-[0.2em] uppercase text-[#7A6B63] font-medium mb-2 md:mb-3" aria-hidden="true">{t('shop.title')}</p>
-            <h1 className="text-lg md:text-2xl font-semibold tracking-tight leading-none text-[#3E2F28]">{categoryLabel}</h1>
-            {categorySubCopy && (
-              <p className="mt-2 md:mt-3 text-[11px] md:text-[12px] font-light text-[#7A6B63] tracking-[0.04em] leading-relaxed max-w-xl">
-                {categorySubCopy}
-              </p>
-            )}
-          </div>
-          <span className="text-[9px] md:text-[10px] font-light text-[#7A6B63] tracking-[0.15em] uppercase mb-2">
-            {loading ? '...' : `${filteredProducts.length}${t('shop.productsCount')}`}
-          </span>
-        </div>
-
         {loading && (
-          <div className="space-y-8">
-            <LoadingMessage />
-            <ProductGridSkeleton count={8} />
+          <div className="mt-12 md:mt-16">
+            <ProductGridSkeleton
+              count={9}
+              columnsClass="grid-cols-2 lg:grid-cols-3"
+              gapClass="gap-x-[15px] gap-y-[80px]"
+            />
           </div>
         )}
 
         {error && (
-          <div className="min-h-[50vh] flex flex-col items-center justify-center py-24 px-8 text-center border border-red-200 bg-red-50">
-            <p className="text-red-600 text-sm font-medium tracking-wide">{t('landing.dbError')}</p>
-            <p className="mt-3 text-xs text-[#666666] font-mono max-w-lg break-all">{error}</p>
+          <div className="py-24 text-center text-[11px] font-light tracking-wide text-[#1A1A1A]/50">
+            {t('landing.dbError')}
           </div>
         )}
 
         {!loading && !error && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-4 gap-y-12 md:gap-y-20">
-            {filteredProducts.length > 0 ? (
-              filteredProducts.map((product) => (
-                <div key={product.id}>
-                  <ProductCard product={product} onAddToCart={handleAddToCart} variant="grid" />
+          <>
+            <div className="mt-12 grid grid-cols-2 gap-x-[15px] gap-y-[80px] md:mt-16 lg:grid-cols-3">
+              {filteredProducts.length > 0 ? (
+                displayedProducts.map((product) => (
+                  <ProductCard key={product.id} product={product} onAddToCart={handleAddToCart} variant="grid" />
+                ))
+              ) : (
+                <div className="col-span-full py-32 text-center text-[10px] font-extralight uppercase tracking-[0.2em] text-[#CCCCCC]">
+                  {t('shop.noProductsTitle')}
                 </div>
-              ))
-            ) : (
-              <div className="col-span-full py-40 text-center space-y-4 px-6">
-                <p className="text-[12px] font-medium tracking-[0.15em] text-[#5C4A42] uppercase">{t('shop.noProductsTitle')}</p>
-                <p className="text-[11px] font-light tracking-[0.08em] text-[#7A6B63]">
-                  {searchTerm || skinType || skinConcern
-                    ? t('shop.noProductsFilter')
-                    : t('shop.noProductsCategory')}
-                </p>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSearchTerm('');
-                    setSkinType('');
-                    setSkinConcern('');
-                    setSearchParams({});
-                  }}
-                  className="mt-6 text-[10px] border-b border-[#A8B894] pb-1 text-[#5C4A42] hover:text-[#3E2F28] transition-colors uppercase tracking-widest"
-                >
-                  {t('shop.viewAll')}
-                </button>
-              </div>
+              )}
+            </div>
+            {filteredProducts.length > 0 && hasMore && (
+              <div ref={loadMoreRef} className="h-8 w-full shrink-0" aria-hidden />
             )}
-          </div>
+          </>
         )}
       </div>
 

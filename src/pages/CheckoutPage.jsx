@@ -10,8 +10,6 @@ import { isSoldOut } from '../lib/productStock';
 import { getShippingFee } from '../lib/shipping';
 import { formatPhoneDisplay } from '../lib/formatPhone';
 
-const trimEnv = (v) => String(v ?? '').replace(/^\uFEFF/, '').trim();
-
 // 가격이 "₩890,000" 문자열이거나 숫자일 수 있음
 const parsePrice = (price) => {
   if (typeof price === 'number') return price;
@@ -122,10 +120,6 @@ const CheckoutPage = () => {
       return;
     }
 
-    // 🚀 에러를 내던 방어로직 삭제 및 실제 값 직접 사용 (캐시 우회)
-    const storeId = 'store-608cd6e6-0477-4d26-800e-bc6fb6572437';
-    const channelKey = 'channel-key-6d31911b-04ff-4b29-bc48-a1bbd66b6a0a';
-
     if (typeof window === 'undefined' || !window.PortOne?.requestPayment) {
       setError('포트원 결제 모듈을 불러오는 중입니다. 잠시 후 다시 시도해 주세요.');
       toast.error('포트원 결제 모듈을 불러오는 중입니다. 잠시 후 다시 시도해 주세요.');
@@ -225,13 +219,20 @@ const CheckoutPage = () => {
 // 🚀 구매자 이메일 결정 (게스트면 입력한 이메일, 회원이면 유저 이메일, 다 없으면 테스트 이메일)
 const buyerEmail = isGuest ? guestEmail : (user?.email || 'test@mamere.kr');
 
+const orderName =
+  cart.length === 1
+    ? String(cart[0]?.name ?? '상품')
+    : `${String(cart[0]?.name ?? '상품')} 외 ${cart.length - 1}건`;
+
+const paymentId = `order_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+
 // 결제창 호출!
 const response = await window.PortOne.requestPayment({
-  storeId: 'store-608cd6e6-0477-4d26-800e-bc6fb6572437',
-  channelKey: 'channel-key-6d31911b-04ff-4b29-bc48-a1bbd66b6a0a',
-  paymentId: `order_${Date.now()}`,
-  orderName: '마메르 테스트 결제',
-  totalAmount: 1000,
+  storeId: import.meta.env.VITE_PORTONE_STORE_ID,
+  channelKey: import.meta.env.VITE_PORTONE_CHANNEL_KEY,
+  paymentId,
+  orderName,
+  totalAmount: displayTotal,
   currency: 'CURRENCY_KRW',
   payMethod: 'CARD',
   // 👇 이니시스가 애타게 찾던 바로 그 고객 정보 추가!
@@ -256,20 +257,57 @@ const response = await window.PortOne.requestPayment({
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ paymentId: response.paymentId }),
+          body: JSON.stringify({
+            paymentId: response.paymentId,
+            expectedAmount: displayTotal,
+          }),
         });
         const verifyJson = await verifyRes.json().catch(() => ({}));
         if (!verifyRes.ok || verifyJson.status !== 'success') {
           toast.error(verifyJson.message || '서버에서 결제 검증에 실패했습니다.');
           return;
         }
-        alert('서버 검증까지 최종 완료되었습니다!');
-        clearCart();
-        setOrderSuccessData({
-          orderNumber: response.paymentId,
-          isGuest,
-          guestEmail: isGuest ? (guestEmail ?? '').trim() : undefined,
-        });
+
+        try {
+          const { error: orderErr } = await publicTable('orders').insert({
+            order_number: response.paymentId,
+            payment_id: response.paymentId,
+            user_id: isGuest ? null : user?.id ?? null,
+            is_guest: isGuest,
+            guest_email: isGuest ? (guestEmail ?? '').trim() : null,
+            total_amount: displayTotal,
+            shipping_name: shippingName.trim(),
+            shipping_address: serializeAddress(shippingAddress, shippingAddressDetail),
+            shipping_phone: shippingPhone,
+            status: 'PAID',
+            items: cart,
+          });
+
+          if (orderErr) throw orderErr;
+
+          const MAX_Q = 99;
+          for (const item of cart) {
+            const qty = Math.max(1, Math.min(MAX_Q, Math.floor(Number(item.quantity) || 1)));
+            const { error: stockErr } = await supabase.rpc('deduct_stock_by_id', {
+              p_product_id: String(item.id),
+              p_quantity: qty,
+            });
+            if (stockErr) throw stockErr;
+          }
+
+          alert('서버 검증까지 최종 완료되었습니다!');
+          clearCart();
+          setOrderSuccessData({
+            orderNumber: response.paymentId,
+            isGuest,
+            guestEmail: isGuest ? (guestEmail ?? '').trim() : undefined,
+          });
+        } catch (dbErr) {
+          console.error(dbErr);
+          toast.error(
+            '결제는 완료되었으나 주문 내역 저장 중 오류가 발생했습니다. 고객센터로 문의해주세요.'
+          );
+        }
       } catch (err) {
         if (import.meta.env.DEV) console.error(err);
         toast.error('서버와 통신하지 못했습니다. 잠시 후 주문 조회로 확인해 주세요.');

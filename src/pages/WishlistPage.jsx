@@ -83,7 +83,7 @@ const WishlistPage = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
             {products.map((product) => (
               <div key={product.id} className="group relative">
-                <Link to={`/product/${product.id}`} className="block aspect-[3/4] overflow-hidden bg-[#F5F5F5]">
+                <Link to={`/product/${product.id}`} className="block aspect-square overflow-hidden bg-[#F5F5F5]">
                   <img
                     src={product.image}
                     alt={product.name}

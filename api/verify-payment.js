@@ -1,6 +1,6 @@
 /**
  * 포트원 V2 결제 검증 (Vercel Serverless)
- * POST JSON: { paymentId }
+ * POST JSON: { paymentId, expectedAmount? } — 금액은 PortOne 응답 amount.total 과 expectedAmount 일치 시 통과 (미전달 시 1000과 비교, 하위 호환)
  */
 
 export default async function handler(req, res) {
@@ -18,7 +18,7 @@ export default async function handler(req, res) {
   try {
     const body =
       typeof req.body === 'string' ? JSON.parse(req.body || '{}') : req.body ?? {};
-    const { paymentId } = body;
+    const { paymentId, expectedAmount } = body;
 
     if (!paymentId) {
       return res.status(400).json({ status: 'fail', message: 'paymentId가 없습니다.' });
@@ -49,7 +49,15 @@ export default async function handler(req, res) {
       });
     }
 
-    const paid = data.status === 'PAID' && Number(data.amount?.total) === 1000;
+    const portTotal = Number(data.amount?.total);
+    const expected =
+      expectedAmount != null && expectedAmount !== ''
+        ? Number(expectedAmount)
+        : 1000;
+    const paid =
+      data.status === 'PAID' &&
+      Number.isFinite(expected) &&
+      portTotal === expected;
     if (paid) {
       return res.status(200).json({ status: 'success', message: 'V2 검증 성공' });
     }

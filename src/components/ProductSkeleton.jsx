@@ -1,44 +1,40 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 
-// 단일 제품 카드 스켈레톤
+// 단일 제품 카드 스켈레톤 (ProductCard 그리드와 동일 비율·텍스트 영역)
 export const ProductCardSkeleton = ({ variant = 'default' }) => (
-  <div className="group relative flex flex-col">
-    <div className="aspect-[3/4] overflow-hidden bg-[#F5F5F5] relative">
+  <div className="group relative flex flex-col w-full">
+    <div className="relative aspect-[3/4] w-full shrink-0 overflow-hidden">
       <motion.div
-        className="absolute inset-0 bg-gradient-to-r from-transparent via-black/5 to-transparent"
+        className="absolute inset-0 bg-gradient-to-r from-transparent via-black/[0.04] to-transparent"
         animate={{ x: ['-100%', '100%'] }}
         transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
       />
     </div>
-    <div className={variant === 'compact' ? 'mt-6 space-y-1 px-1' : 'mt-8 space-y-2 text-left'}>
-      <div className="h-3 bg-black/10 rounded w-3/4 animate-pulse" />
-      <div className="h-4 bg-black/5 rounded w-1/3 animate-pulse" style={{ animationDelay: '0.1s' }} />
+    <div
+      className={
+        variant === 'compact'
+          ? 'mt-4 space-y-1 px-1'
+          : 'mt-4 flex flex-col items-center gap-0 text-center sm:mt-5'
+      }
+    >
+      <div className="mb-1 h-[9px] w-1/3 animate-pulse rounded-sm bg-black/[0.06]" />
+      <div className="h-[13px] w-[88%] animate-pulse rounded-sm bg-black/[0.08]" style={{ animationDelay: '0.05s' }} />
+      <div className="mt-1 h-[12px] w-1/4 animate-pulse rounded-sm bg-black/[0.05]" style={{ animationDelay: '0.1s' }} />
     </div>
   </div>
 );
 
-// 그리드용 스켈레톤 (Shop 페이지)
-export const ProductGridSkeleton = ({ count = 8 }) => (
-  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-[1px] gap-y-20 border-t border-[#F0F0F0]">
+// 그리드용 스켈레톤 (Shop — ProductCard와 1:1)
+export const ProductGridSkeleton = ({
+  count = 9,
+  columnsClass = 'grid-cols-2 lg:grid-cols-3',
+  gapClass = 'gap-x-[15px] gap-y-[80px]',
+}) => (
+  <div className={`grid ${columnsClass} ${gapClass}`}>
     {Array.from({ length: count }).map((_, i) => (
-      <div key={i} className="group relative flex flex-col border-r border-b border-[#F0F0F0] transition-colors duration-700">
-        <div className="aspect-[3/4] overflow-hidden bg-zinc-900/80 relative border-b border-[#F0F0F0]">
-          <motion.div
-            className="absolute inset-0 bg-gradient-to-r from-transparent via-black/5 to-transparent"
-            animate={{ x: ['-100%', '100%'] }}
-            transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut', delay: i * 0.1 }}
-          />
-        </div>
-        <div className="p-8 space-y-4">
-          <div className="space-y-2">
-            <div className="h-3 bg-black/10 rounded w-[80%] animate-pulse" />
-            <div className="h-3 bg-black/5 rounded w-1/3 animate-pulse" style={{ animationDelay: '0.1s' }} />
-          </div>
-          <div className="pt-4">
-            <div className="h-10 bg-black/5 rounded animate-pulse" style={{ animationDelay: '0.2s' }} />
-          </div>
-        </div>
+      <div key={i}>
+        <ProductCardSkeleton />
       </div>
     ))}
   </div>

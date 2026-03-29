@@ -129,6 +129,7 @@ export const translations = {
       noProductsTitle: '등록된 제품이 없습니다',
       noProductsFilter: '필터를 바꿔 보시거나 검색어를 수정해 보세요.',
       noProductsCategory: '해당 카테고리에 등록된 제품이 없습니다.',
+      cardAddToCart: '담기',
     },
     productDetail: {
       backToShop: '← 쇼핑으로 돌아가기',
@@ -322,6 +323,7 @@ export const translations = {
       noProductsTitle: 'no products found',
       noProductsFilter: 'try changing filters or search term.',
       noProductsCategory: 'no products in this category.',
+      cardAddToCart: 'add to bag',
     },
     productDetail: {
       backToShop: '← back to shop',
