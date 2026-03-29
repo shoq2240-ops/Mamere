@@ -236,9 +236,10 @@ const CheckoutPage = () => {
     }
 
     const TEST_PAY_AMOUNT = 1000;
-    const merchantUid = `order_${Date.now()}`;
 
     try {
+      const unique_merchant_uid =
+        'order_' + new Date().getTime() + '_' + Math.random().toString(36).substring(2, 7);
       const IMP = window.IMP;
       IMP.init(portOneUserCode);
 
@@ -246,7 +247,7 @@ const CheckoutPage = () => {
         {
           channelKey: portOneChannelKey,
           pay_method: 'card',
-          merchant_uid: merchantUid,
+          merchant_uid: unique_merchant_uid,
           name: '마메르 테스트 결제',
           amount: TEST_PAY_AMOUNT,
           currency: 'KRW',
