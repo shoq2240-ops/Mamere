@@ -5,7 +5,7 @@
 
 const API_KEY = '0883532187424730';
 const API_SECRET =
-  'MCe3C1QfxWLGud02t5KeNXKqNIb9fBn9zGgl5BeqkFWOQMg6I3UqVZnhF7iwNME5OPVIrWWYv8SXZXOC';
+'MCe3C1QfxWLGud02t5KeNXKqNlb9fBn9zGgl5BeqkFWOQMg6I3UqVZnhF7iwNME5OPVIrWWYv8SXZXOC';
 
 export default async function handler(req, res) {
   // CORS 처리
