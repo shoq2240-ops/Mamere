@@ -10,9 +10,7 @@ import { isSoldOut } from '../lib/productStock';
 import { getShippingFee } from '../lib/shipping';
 import { formatPhoneDisplay } from '../lib/formatPhone';
 
-// 🚀 [캐시 파괴용 하드코딩] Vercel 환경변수 오류를 완전히 무시하기 위해 직접 값을 반환합니다.
-const getPortOneUserCode = () => 'imp61881014';
-const getPortOneChannelKey = () => 'channel-key-d654654c-b7f7-481d-ac22-deadb7410f7c';
+const trimEnv = (v) => String(v ?? '').replace(/^\uFEFF/, '').trim();
 
 // 가격이 "₩890,000" 문자열이거나 숫자일 수 있음
 const parsePrice = (price) => {
@@ -22,13 +20,6 @@ const parsePrice = (price) => {
     return isNaN(num) ? 0 : num;
   }
   return 0;
-};
-
-// 주문 번호 생성 (게스트 조회용)
-const generateOrderNumber = () => {
-  const date = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-  const rand = Math.random().toString(36).slice(2, 8).toUpperCase();
-  return `DN-${date}-${rand}`;
 };
 
 const isValidEmail = (s) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test((s ?? '').trim());
@@ -131,18 +122,18 @@ const CheckoutPage = () => {
       return;
     }
 
-    const portOneUserCode = getPortOneUserCode();
-    const portOneChannelKey = getPortOneChannelKey();
-    if (!portOneUserCode || !portOneChannelKey) {
+    const storeId = trimEnv(import.meta.env.VITE_PORTONE_STORE_ID);
+    const channelKey = trimEnv(import.meta.env.VITE_PORTONE_CHANNEL_KEY);
+    if (!storeId || !channelKey) {
       setError(
-        '포트원 설정(VITE_PORTONE_USER_CODE, VITE_PORTONE_CHANNEL_KEY)을 확인할 수 없습니다.'
+        '포트원 V2 설정(VITE_PORTONE_STORE_ID, VITE_PORTONE_CHANNEL_KEY)을 프로젝트 루트 .env에 넣어 주세요.'
       );
       return;
     }
 
-    if (typeof window === 'undefined' || !window.IMP) {
-      setError('결제 모듈(아임포트)을 불러오는 중입니다. 잠시 후 다시 시도해 주세요.');
-      toast.error('결제 모듈을 불러오는 중입니다. 잠시 후 다시 시도해 주세요.');
+    if (typeof window === 'undefined' || !window.PortOne?.requestPayment) {
+      setError('포트원 결제 모듈을 불러오는 중입니다. 잠시 후 다시 시도해 주세요.');
+      toast.error('포트원 결제 모듈을 불러오는 중입니다. 잠시 후 다시 시도해 주세요.');
       return;
     }
 
@@ -235,62 +226,54 @@ const CheckoutPage = () => {
     }
 
     try {
-      // 🚀 사전 검증 없이 하드코딩된 진짜 값으로 바로 결제창 호출
-      const currentUid = 'order_' + new Date().getTime();
-      const IMP = window.IMP;
-      
-      IMP.init(portOneUserCode); 
+      const response = await window.PortOne.requestPayment({
+        storeId: import.meta.env.VITE_PORTONE_STORE_ID,
+        channelKey: import.meta.env.VITE_PORTONE_CHANNEL_KEY,
+        paymentId: `order_${Date.now()}`,
+        orderName: '마메르 테스트 결제',
+        totalAmount: 1000,
+        currency: 'CURRENCY_KRW',
+        payMethod: 'CARD',
+      });
 
-      IMP.request_pay(
-        {
-          channelKey: portOneChannelKey, 
-          pay_method: 'card',
-          merchant_uid: currentUid,
-          name: '마메르 테스트 결제',
-          amount: 1000,
-          buyer_email: 'test@mamere.kr',
-        },
-        async (rsp) => {
-          setSubmitting(false);
-          if (!rsp || rsp.success !== true) {
-            alert('결제 실패: ' + (rsp != null ? rsp.error_msg : ''));
-            return;
-          }
-          try {
-            const verifyRes = await fetch('/api/verify-payment', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                imp_uid: rsp.imp_uid,
-                merchant_uid: rsp.merchant_uid,
-              }),
-            });
-            const verifyJson = await verifyRes.json().catch(() => ({}));
-            if (!verifyRes.ok || verifyJson.status !== 'success') {
-              toast.error(verifyJson.message || '서버에서 결제 검증에 실패했습니다.');
-              return;
-            }
-            alert('서버 검증까지 최종 완료되었습니다!');
-            clearCart();
-            setOrderSuccessData({
-              orderNumber: rsp.imp_uid,
-              isGuest,
-              guestEmail: isGuest ? (guestEmail ?? '').trim() : undefined,
-            });
-          } catch (err) {
-            if (import.meta.env.DEV) console.error(err);
-            toast.error('서버와 통신하지 못했습니다. 잠시 후 주문 조회로 확인해 주세요.');
-          }
+      setSubmitting(false);
+
+      if (!response?.paymentId || response.code) {
+        const msg = response?.message || '결제가 완료되지 않았습니다.';
+        toast.error(msg);
+        return;
+      }
+
+      try {
+        const verifyRes = await fetch('/api/verify-payment', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ paymentId: response.paymentId }),
+        });
+        const verifyJson = await verifyRes.json().catch(() => ({}));
+        if (!verifyRes.ok || verifyJson.status !== 'success') {
+          toast.error(verifyJson.message || '서버에서 결제 검증에 실패했습니다.');
+          return;
         }
-      );
+        alert('서버 검증까지 최종 완료되었습니다!');
+        clearCart();
+        setOrderSuccessData({
+          orderNumber: response.paymentId,
+          isGuest,
+          guestEmail: isGuest ? (guestEmail ?? '').trim() : undefined,
+        });
+      } catch (err) {
+        if (import.meta.env.DEV) console.error(err);
+        toast.error('서버와 통신하지 못했습니다. 잠시 후 주문 조회로 확인해 주세요.');
+      }
     } catch (e) {
       setSubmitting(false);
       setError('결제 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.');
       if (import.meta.env.DEV) console.error(e);
     }
-  }; // ✅ 에러를 일으켰던 괄호 복구 완료!
+  };
 
   if (authLoading) return null;
 
