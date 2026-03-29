@@ -222,14 +222,24 @@ const CheckoutPage = () => {
 
     try {
 
+// 🚀 구매자 이메일 결정 (게스트면 입력한 이메일, 회원이면 유저 이메일, 다 없으면 테스트 이메일)
+const buyerEmail = isGuest ? guestEmail : (user?.email || 'test@mamere.kr');
+
+// 결제창 호출!
 const response = await window.PortOne.requestPayment({
   storeId: 'store-608cd6e6-0477-4d26-800e-bc6fb6572437',
-  channelKey: 'channel-key-6d31911b-04ff-4b29-bc48-a1bbd66b6a0a', // 👈 포트원이 애타게 찾던 바로 그 키!
+  channelKey: 'channel-key-6d31911b-04ff-4b29-bc48-a1bbd66b6a0a',
   paymentId: `order_${Date.now()}`,
   orderName: '마메르 테스트 결제',
   totalAmount: 1000,
   currency: 'CURRENCY_KRW',
   payMethod: 'CARD',
+  // 👇 이니시스가 애타게 찾던 바로 그 고객 정보 추가!
+  customer: {
+    email: buyerEmail,
+    fullName: shippingName || '마메르 고객',
+    phoneNumber: shippingPhone.replace(/\D/g, '') || '01000000000'
+  }
 });
 
       setSubmitting(false);
