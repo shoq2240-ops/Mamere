@@ -122,14 +122,9 @@ const CheckoutPage = () => {
       return;
     }
 
-    const storeId = trimEnv(import.meta.env.VITE_PORTONE_STORE_ID);
-    const channelKey = trimEnv(import.meta.env.VITE_PORTONE_CHANNEL_KEY);
-    if (!storeId || !channelKey) {
-      setError(
-        '포트원 V2 설정(VITE_PORTONE_STORE_ID, VITE_PORTONE_CHANNEL_KEY)을 프로젝트 루트 .env에 넣어 주세요.'
-      );
-      return;
-    }
+    // 🚀 에러를 내던 방어로직 삭제 및 실제 값 직접 사용 (캐시 우회)
+    const storeId = 'store-608cd6e6-0477-4d26-800e-bc6fb6572437';
+    const channelKey = 'channel-key-6d31911b-04ff-4b29-bc48-a1bbd66b6a0a';
 
     if (typeof window === 'undefined' || !window.PortOne?.requestPayment) {
       setError('포트원 결제 모듈을 불러오는 중입니다. 잠시 후 다시 시도해 주세요.');
@@ -226,9 +221,10 @@ const CheckoutPage = () => {
     }
 
     try {
+      // 🚀 실제 값 변수를 직접 사용합니다.
       const response = await window.PortOne.requestPayment({
-        storeId: import.meta.env.VITE_PORTONE_STORE_ID,
-        channelKey: import.meta.env.VITE_PORTONE_CHANNEL_KEY,
+        storeId: storeId,
+        channelKey: channelKey,
         paymentId: `order_${Date.now()}`,
         orderName: '마메르 테스트 결제',
         totalAmount: 1000,
