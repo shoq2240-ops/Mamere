@@ -235,25 +235,20 @@ const CheckoutPage = () => {
       }
     }
 
-    const TEST_PAY_AMOUNT = 1000;
-
     try {
-      const unique_merchant_uid =
-        'order_' + new Date().getTime() + '_' + Math.random().toString(36).substring(2, 7);
+      // 사전 검증(Prepare) API 호출 없음 — IMP.request_pay 만 실행
+      const currentUid = 'order_' + new Date().getTime();
       const IMP = window.IMP;
       IMP.init(portOneUserCode);
 
       IMP.request_pay(
         {
-          channelKey: portOneChannelKey,
+          channelKey: import.meta.env.VITE_PORTONE_CHANNEL_KEY,
           pay_method: 'card',
-          merchant_uid: unique_merchant_uid,
+          merchant_uid: currentUid,
           name: '마메르 테스트 결제',
-          amount: TEST_PAY_AMOUNT,
-          currency: 'KRW',
-          buyer_email: isGuest ? (guestEmail ?? '').trim() || 'guest@mamere.kr' : user?.email || 'test@mamere.kr',
-          buyer_name: name.slice(0, 16) || '구매자',
-          buyer_tel: phone || '01000000000',
+          amount: 1000,
+          buyer_email: 'test@mamere.kr',
         },
         async (rsp) => {
           setSubmitting(false);
@@ -267,36 +262,18 @@ const CheckoutPage = () => {
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
                 imp_uid: rsp.imp_uid,
-                merchant_uid: rsp.merchant_uid,
-                expectedAmount: TEST_PAY_AMOUNT,
-                userId: user?.id ?? null,
-                isGuest,
-                guestEmail: isGuest ? (guestEmail ?? '').trim() : null,
-                shippingAddress: {
-                  name,
-                  phone,
-                  address: combineAddress(shippingAddress, shippingAddressDetail),
-                  detailAddress: shippingAddressDetail,
-                  zipCode: shippingZipCode,
-                },
-                orderItems: cart.map((item) => ({
-                  id: item.id,
-                  name: item.name,
-                  quantity: Math.max(1, Math.min(MAX_QUANTITY, Math.floor(item.quantity || 1))),
-                  price: priceMap[item.id] ?? 0,
-                  image: item.image ?? null,
-                })),
+                merchant_uid: String(rsp.merchant_uid ?? currentUid).trim(),
               }),
             });
             const verifyJson = await verifyRes.json().catch(() => ({}));
-            if (!verifyRes.ok || !verifyJson.success) {
+            if (!verifyRes.ok || verifyJson.status !== 'success') {
               toast.error(verifyJson.message || '서버에서 결제 검증에 실패했습니다.');
               return;
             }
             alert('결제가 최종 완료되었습니다.');
             clearCart();
             setOrderSuccessData({
-              orderNumber: verifyJson.orderNumber,
+              orderNumber: rsp.imp_uid,
               isGuest,
               guestEmail: isGuest ? (guestEmail ?? '').trim() : undefined,
             });
