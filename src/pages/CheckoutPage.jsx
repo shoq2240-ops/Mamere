@@ -259,10 +259,12 @@ const CheckoutPage = () => {
           try {
             const verifyRes = await fetch('/api/verify-payment', {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
+              headers: {
+                'Content-Type': 'application/json',
+              },
               body: JSON.stringify({
                 imp_uid: rsp.imp_uid,
-                merchant_uid: String(rsp.merchant_uid ?? currentUid).trim(),
+                merchant_uid: rsp.merchant_uid,
               }),
             });
             const verifyJson = await verifyRes.json().catch(() => ({}));

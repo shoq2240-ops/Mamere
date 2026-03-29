@@ -38,9 +38,34 @@ export default async function handler(req, res) {
     });
   }
 
-  const body = req.body || {};
-  const impUidV1 = body.imp_uid != null ? String(body.imp_uid).trim() : '';
-  const merchantUidV1 = body.merchant_uid != null ? String(body.merchant_uid).trim() : '';
+  console.log('전달받은 원본 바디:', req.body);
+
+  let body;
+  try {
+    body =
+      typeof req.body === 'string'
+        ? JSON.parse(req.body || '{}')
+        : req.body && typeof req.body === 'object'
+          ? req.body
+          : {};
+  } catch (e) {
+    console.error('[verify-payment] 요청 본문 JSON.parse 실패:', e);
+    return res.status(400).json({
+      status: 'fail',
+      message: '요청 본문이 올바른 JSON이 아닙니다.',
+    });
+  }
+
+  const { imp_uid, merchant_uid } = body;
+  if (!imp_uid && !body.paymentId) {
+    return res.status(400).json({
+      status: 'fail',
+      message: 'imp_uid가 전달되지 않았습니다.',
+    });
+  }
+
+  const impUidV1 = imp_uid != null ? String(imp_uid).trim() : '';
+  const merchantUidV1 = merchant_uid != null ? String(merchant_uid).trim() : '';
   const {
     paymentId,
     cartItems,
