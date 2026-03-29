@@ -83,7 +83,7 @@ const FAQ = ({ items = DEFAULT_ITEMS, title = 'FAQ', showTitle = true, className
     <section className={`bg-[#FFFFFF] text-[#000000] antialiased ${className}`} aria-label="자주 묻는 질문">
       <div className="max-w-2xl mx-auto px-6 md:px-8">
         {showTitle && (
-          <h2 className="text-lg md:text-xl font-light uppercase tracking-tight text-[#000000] mb-8 md:mb-10">
+          <h2 className="text-lg md:text-xl font-semibold text-black uppercase tracking-tight mb-8 md:mb-10">
             {title}
           </h2>
         )}

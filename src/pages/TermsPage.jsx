@@ -8,7 +8,7 @@ const TermsPage = () => {
         <Link to="/" className="inline-block text-[10px] tracking-[0.15em] uppercase text-[#666666] hover:text-[#000000] mb-12">
           ← Dr.care
         </Link>
-        <h1 className="text-2xl font-bold tracking-tight uppercase mb-12">이용약관</h1>
+        <h1 className="text-2xl font-semibold text-black tracking-tight uppercase mb-12">이용약관</h1>
         <div className="text-[11px] text-[#333333] leading-relaxed space-y-6 whitespace-pre-line">
           {`제1조 (목적)
 본 약관은 Dr.care(이하 "회사")이 제공하는 서비스의 이용 조건 및 절차, 회사와 이용자의 권리, 의무 및 책임사항을 규정함을 목적으로 합니다.

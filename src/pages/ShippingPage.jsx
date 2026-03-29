@@ -8,7 +8,7 @@ const ShippingPage = () => {
         <Link to="/" className="inline-block text-[10px] tracking-[0.15em] uppercase text-[#666666] hover:text-[#000000] mb-12 transition-colors">
           ← Dr.care
         </Link>
-        <h1 className="text-2xl font-bold tracking-tight uppercase mb-12">배송 정보</h1>
+        <h1 className="text-2xl font-semibold text-black tracking-tight uppercase mb-12">배송 정보</h1>
         <div className="text-[11px] text-[#333333] leading-relaxed space-y-6 whitespace-pre-line">
           {`배송 기간: 주문 후 2~5 영업일
 배송 지역: 국내 전 지역 (일부 제주/산간 지역 추가 소요 가능)

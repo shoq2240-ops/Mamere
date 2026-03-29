@@ -138,7 +138,7 @@ const ReturnsPage = () => {
           ← 마메르
         </Link>
 
-        <h1 className="text-[11px] md:text-xs font-medium tracking-[0.2em] uppercase text-[#3E2F28] mb-2">
+        <h1 className="text-xl md:text-2xl font-semibold text-black tracking-tight uppercase mb-2">
           반품 및 교환
         </h1>
         <p className="text-[10px] font-light tracking-[0.08em] text-[#5C4A42] mb-12">
