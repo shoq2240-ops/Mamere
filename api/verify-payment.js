@@ -1,7 +1,11 @@
 /**
  * Vercel Serverless: 포트원(아임포트) V1 결제 검증
- * 키는 절대 소스에 넣지 말고 Vercel 환경변수 PORTONE_API_KEY, PORTONE_API_SECRET 에 설정하세요.
+ * (디버깅) 토큰 발급용 키는 아래 상수 하드코딩 — 운영 전 반드시 제거·환경변수로 복구
  */
+
+const API_KEY = '0883532187424730';
+const API_SECRET =
+  'MCe3C1QfxWLGud02t5KeNXKqNIb9fBn9zGgl5BeqkFWOQMg6I3UqVZnhF7iwNME5OPVIrWWYv8SXZXOC';
 
 export default async function handler(req, res) {
   // CORS 처리
@@ -35,14 +39,7 @@ export default async function handler(req, res) {
       return res.status(400).json({ status: 'fail', message: 'imp_uid가 전달되지 않았습니다.' });
     }
 
-    const API_KEY = process.env.PORTONE_API_KEY;
-    const API_SECRET = process.env.PORTONE_API_SECRET;
-    if (!API_KEY || !API_SECRET) {
-      console.error('❌ PORTONE_API_KEY 또는 PORTONE_API_SECRET 미설정');
-      return res.status(500).json({ status: 'fail', message: '서버 키 설정이 없습니다.' });
-    }
-
-    // 1. 포트원 토큰 발급
+    // 1. 포트원 토큰 발급 (imp_key / imp_secret → 상수 API_KEY, API_SECRET)
     const tokenResponse = await fetch('https://api.iamport.kr/users/getToken', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
