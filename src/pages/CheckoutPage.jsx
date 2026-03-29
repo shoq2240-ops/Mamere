@@ -221,16 +221,16 @@ const CheckoutPage = () => {
     }
 
     try {
-      // 🚀 실제 값 변수를 직접 사용합니다. (channelKey 제거!)
-      const response = await window.PortOne.requestPayment({
-        storeId: 'store-608cd6e6-0477-4d26-800e-bc6fb6572437', // 👈 이건 그대로 둡니다
-        // channelKey: 'channel-key-6d31911b-04ff-4b29-bc48-a1bbd66b6a0a', 👈 이 줄을 지우거나 주석 처리하세요!!
-        paymentId: `order_${Date.now()}`,
-        orderName: '마메르 테스트 결제',
-        totalAmount: 1000,
-        currency: 'CURRENCY_KRW',
-        payMethod: 'CARD',
-      });
+
+const response = await window.PortOne.requestPayment({
+  storeId: 'store-608cd6e6-0477-4d26-800e-bc6fb6572437',
+  channelKey: 'channel-key-6d31911b-04ff-4b29-bc48-a1bbd66b6a0a', // 👈 포트원이 애타게 찾던 바로 그 키!
+  paymentId: `order_${Date.now()}`,
+  orderName: '마메르 테스트 결제',
+  totalAmount: 1000,
+  currency: 'CURRENCY_KRW',
+  payMethod: 'CARD',
+});
 
       setSubmitting(false);
 
