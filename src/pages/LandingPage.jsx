@@ -72,7 +72,7 @@ const LandingPage = () => {
   const mainDescription = '매일 마주하는 자극으로부터 피부를 다정하게 지켜냅니다. 마메르와 함께 피부가 편안하게 숨 쉬는 시간을 경험해 보세요.';
 
   return (
-    <div className="flex min-h-0 w-full flex-1 flex-col overflow-x-hidden bg-[#EDEAE4]">
+    <div className="flex min-h-0 w-full flex-1 flex-col overflow-x-hidden bg-white">
       <Helmet>
         <meta property="og:type" content="website" />
         <meta property="og:title" content="마메르(mamère) | 다정한 위로, 순수한 자연" />
@@ -84,7 +84,7 @@ const LandingPage = () => {
 
       {/* #main-scroll 가용 높이(헤더 제외)를 flex-1로 전부 채움 */}
       <section
-        className="relative m-0 flex min-h-[400px] w-full flex-1 flex-col overflow-hidden bg-[#EDEAE4]"
+        className="relative m-0 flex min-h-[400px] w-full flex-1 flex-col overflow-hidden bg-white"
         aria-label="메인 비주얼"
       >
         <HeroCarousel />

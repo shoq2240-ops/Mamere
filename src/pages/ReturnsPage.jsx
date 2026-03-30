@@ -125,7 +125,7 @@ const ReturnsPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#F9F7F2] text-[#3E2F28] pt-24 md:pt-28 pb-24 px-6 antialiased">
+    <div className="min-h-screen bg-white text-[#3E2F28] pt-24 md:pt-28 pb-24 px-6 antialiased">
       <Helmet>
         <title>반품 및 교환 | 마메르(Mamère)</title>
         <meta name="description" content="반품/교환 신청을 안내합니다. 수령일로부터 7일 이내, 미사용 상품에 한해 가능합니다." />
@@ -164,7 +164,7 @@ const ReturnsPage = () => {
               value={form.order_number}
               onChange={(e) => setForm((prev) => ({ ...prev, order_number: e.target.value }))}
               placeholder="주문 번호를 입력하세요"
-              className="w-full border border-[#E8E4DF] bg-[#F9F7F2] px-4 py-3 text-[11px] text-[#3E2F28] placeholder:text-[#7A6B63]/60 outline-none focus:border-[#A8B894] transition-colors"
+              className="w-full border border-[#E8E4DF] bg-white px-4 py-3 text-[11px] text-[#3E2F28] placeholder:text-[#7A6B63]/60 outline-none focus:border-[#A8B894] transition-colors"
             />
           </div>
 
@@ -196,7 +196,7 @@ const ReturnsPage = () => {
             <select
               value={form.reason}
               onChange={(e) => setForm((prev) => ({ ...prev, reason: e.target.value }))}
-              className="w-full border border-[#E8E4DF] bg-[#F9F7F2] px-4 py-3 text-[11px] text-[#3E2F28] outline-none focus:border-[#A8B894] transition-colors"
+              className="w-full border border-[#E8E4DF] bg-white px-4 py-3 text-[11px] text-[#3E2F28] outline-none focus:border-[#A8B894] transition-colors"
             >
               {REASONS.map((r) => (
                 <option key={r.value || 'empty'} value={r.value}>
@@ -215,7 +215,7 @@ const ReturnsPage = () => {
               onChange={(e) => setForm((prev) => ({ ...prev, detail: e.target.value }))}
               placeholder="구체적인 사유를 적어 주시면 빠른 처리에 도움이 됩니다."
               rows={5}
-              className="w-full border border-[#E8E4DF] bg-[#F9F7F2] px-4 py-3 text-[11px] text-[#3E2F28] placeholder:text-[#7A6B63]/60 outline-none focus:border-[#A8B894] transition-colors resize-y min-h-[120px]"
+              className="w-full border border-[#E8E4DF] bg-white px-4 py-3 text-[11px] text-[#3E2F28] placeholder:text-[#7A6B63]/60 outline-none focus:border-[#A8B894] transition-colors resize-y min-h-[120px]"
             />
           </div>
 
@@ -226,7 +226,7 @@ const ReturnsPage = () => {
             <p className="text-[10px] font-light text-[#7A6B63] mb-2 tracking-[0.06em]">
               파손·불량 상태 확인을 위해 사진을 첨부해 주세요.
             </p>
-            <div className="border-2 border-dashed border-[#E8E4DF] bg-[#F9F7F2] rounded-sm p-6 text-center transition-colors hover:border-[#A8B894]/60">
+            <div className="border-2 border-dashed border-[#E8E4DF] bg-white rounded-sm p-6 text-center transition-colors hover:border-[#A8B894]/60">
               <input
                 type="file"
                 accept="image/*"

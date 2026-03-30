@@ -1,12 +1,10 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import ContactModal from './ContactModal';
-import { useLanguage } from '../store/LanguageContext';
 
 /** 메인 랜딩: fixed bottom 전체화면 미니멀 플로팅 푸터 */
 const LandingFloatingFooter = () => {
   const [isContactOpen, setIsContactOpen] = useState(false);
-  const { t } = useLanguage();
 
   return (
     <>
@@ -18,13 +16,13 @@ const LandingFloatingFooter = () => {
       >
         <div className="absolute bottom-16 left-4 md:bottom-8 md:left-8 flex flex-col gap-1.5 text-[10px] md:text-[11px] lowercase leading-relaxed pointer-events-auto text-left">
           <Link to="/terms" className="hover:opacity-70 transition-opacity">
-            {t('footer.terms', 'terms')}
+            terms
           </Link>
           <Link to="/privacy" className="hover:opacity-70 transition-opacity">
-            {t('footer.privacy', 'privacy policy')}
+            privacy policy
           </Link>
           <Link to="/faq" className="hover:opacity-70 transition-opacity">
-            {t('footer.faq', 'faq')}
+            faq
           </Link>
         </div>
 
@@ -47,17 +45,17 @@ const LandingFloatingFooter = () => {
 
         <div className="absolute bottom-16 right-4 md:bottom-8 md:right-8 flex flex-col gap-1.5 text-[10px] md:text-[11px] lowercase leading-relaxed pointer-events-auto text-right">
           <Link to="/shipping" className="hover:opacity-70 transition-opacity">
-            {t('footer.shippingInfo', 'shipping')}
+            shipping
           </Link>
           <Link to="/returns" className="hover:opacity-70 transition-opacity">
-            {t('footer.returns', 'returns')}
+            returns
           </Link>
           <button
             type="button"
             onClick={() => setIsContactOpen(true)}
             className="text-right hover:opacity-70 transition-opacity bg-transparent border-0 p-0 cursor-pointer w-full lowercase"
           >
-            {t('footer.contactForm', 'contact')}
+            contact
           </button>
         </div>
       </footer>

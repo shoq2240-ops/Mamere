@@ -105,19 +105,19 @@ const AddressInput = ({
   }, [handleComplete]);
 
   return (
-    <div className={`space-y-2 ${className}`}>
-      <div className="flex gap-2">
+    <div className={`flex flex-col gap-2 ${className}`}>
+      <div className="flex items-center gap-2">
         <input
           type="text"
           value={addressValue}
           onChange={(e) => onAddressChange(e.target.value.slice(0, 400))}
           placeholder={addressPlaceholder}
-          className={`flex-1 bg-[#F9F9F9] px-4 py-3 text-[11px] text-[#000000] outline-none focus:bg-[#F5F5F5] placeholder:text-[#999999] ${inputClassName}`}
+          className={`flex-1 bg-transparent border border-[#E5E5E5] py-3 px-2 text-[13px] font-light text-[#1A1A1A] outline-none focus:border-black transition-colors placeholder:text-[#999999] ${inputClassName}`}
         />
         <button
           type="button"
           onClick={handleClick}
-          className="shrink-0 px-4 py-3 text-[10px] font-bold tracking-widest uppercase border border-[#E5E5E5] text-[#000000] hover:bg-[#F5F5F5] transition-colors whitespace-nowrap"
+          className="shrink-0 text-[11px] font-light bg-white border border-[#E5E5E5] px-4 py-2 text-[#1A1A1A] hover:border-black transition-colors whitespace-nowrap"
         >
           주소 찾기
         </button>
@@ -127,7 +127,7 @@ const AddressInput = ({
         value={detailValue}
         onChange={(e) => onDetailChange(e.target.value.slice(0, 100))}
         placeholder={detailPlaceholder}
-        className={`w-full bg-[#F9F9F9] px-4 py-3 text-[11px] text-[#000000] outline-none focus:bg-[#F5F5F5] placeholder:text-[#999999] ${inputClassName}`}
+        className={`w-full bg-transparent border border-[#E5E5E5] py-3 px-2 text-[13px] font-light text-[#1A1A1A] outline-none focus:border-black transition-colors placeholder:text-[#999999] ${inputClassName}`}
       />
     </div>
   );

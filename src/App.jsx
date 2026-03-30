@@ -6,7 +6,6 @@ import { HelmetProvider, Helmet } from "react-helmet-async";
 import { CartProvider } from "./store/CartContext";
 import { WishlistProvider } from "./store/WishlistContext";
 import { AuthProvider, useAuth } from "./store/AuthContext";
-import { LanguageProvider, useLanguage } from "./store/LanguageContext";
 import ScrollToTop from "./components/ScrollToTop";
 
 import Navbar from "./components/Navbar";
@@ -27,7 +26,6 @@ const WishlistPage = lazy(() => import('./pages/WishlistPage'));
 const LoginPage = lazy(() => import('./pages/LoginPage'));
 const SignupPage = lazy(() => import('./pages/SignupPage'));
 const ProfilePage = lazy(() => import('./pages/ProfilePage'));
-const CartPage = lazy(() => import('./pages/CartPage'));
 const CheckoutPage = lazy(() => import('./pages/CheckoutPage'));
 const OrdersPage = lazy(() => import('./pages/OrdersPage'));
 const OrderLookupPage = lazy(() => import('./pages/OrderLookupPage'));
@@ -42,7 +40,7 @@ const ShippingPage = lazy(() => import('./pages/ShippingPage'));
 const ReturnsPage = lazy(() => import('./pages/ReturnsPage'));
 
 const PageLoadFallback = () => (
-  <div className="min-h-[60vh] flex items-center justify-center bg-[#FAF9F6] text-[#333333]" aria-hidden="true">
+  <div className="min-h-[60vh] flex items-center justify-center bg-white text-[#333333]" aria-hidden="true">
     <div className="w-8 h-8 border-2 border-[#A8B894]/40 border-t-[#3E2F28] rounded-full animate-spin" />
   </div>
 );
@@ -75,7 +73,6 @@ const AnimatedRoutes = () => {
         <Route path="/login" element={<PageWrapper><LoginPage /></PageWrapper>} />
         <Route path="/signup" element={<PageWrapper><SignupPage /></PageWrapper>} />
         <Route path="/profile" element={<PageWrapper><RequireAuth><ProfilePage /></RequireAuth></PageWrapper>} />
-        <Route path="/cart" element={<PageWrapper><CartPage /></PageWrapper>} />
         <Route path="/checkout" element={<PageWrapper><CheckoutPage /></PageWrapper>} />
         <Route path="/orders" element={<PageWrapper><RequireAuth><OrdersPage /></RequireAuth></PageWrapper>} />
         <Route path="/order-lookup" element={<PageWrapper><OrderLookupPage /></PageWrapper>} />
@@ -120,7 +117,6 @@ function AppContent() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { pathname } = useLocation();
-  const { t } = useLanguage();
 
   const handleScroll = () => {
     const el = mainScrollRef.current;
@@ -151,14 +147,14 @@ function AppContent() {
       <header
         className={`sticky top-0 z-[150] flex flex-col flex-none shrink-0 transition-all duration-300 ${headerBgClass}`}
       >
-        {!isAdmin && <Marquee text={t('marquee.freeShipping')} />}
+        {!isAdmin && <Marquee text="3만원 이상 구매 시 무료배송" />}
         <Navbar isScrolled={isScrolled} isMobileMenuOpen={isMobileMenuOpen} onMobileMenuChange={setIsMobileMenuOpen} />
       </header>
       <main
         ref={mainScrollRef}
         onScroll={handleScroll}
         id="main-scroll"
-        className="flex min-h-0 flex-1 flex-col overflow-y-auto overflow-x-hidden bg-[#FAF9F6] text-[#333333]"
+        className="flex min-h-0 flex-1 flex-col overflow-y-auto overflow-x-hidden bg-white text-[#333333]"
       >
         <AnimatedRoutes />
         <Footer />
@@ -183,19 +179,18 @@ function App() {
   return (
     <HelmetProvider>
     <AuthProvider>
-      <LanguageProvider>
       <CartProvider>
         <WishlistProvider>
         <Router>
           <WithdrawnToast />
           <ScrollToTop />
-          <div className="flex flex-col h-screen max-h-[100dvh] bg-[#FAF9F6] text-[#333333] antialiased overflow-hidden flex font-sans tracking-wide leading-loose">
+          <div className="flex flex-col h-screen max-h-[100dvh] bg-white text-[#333333] antialiased overflow-hidden flex font-sans tracking-wide leading-loose">
             <Toaster
               position="top-center"
               toastOptions={{
                 duration: 2500,
                 style: {
-                  background: '#FAF9F6',
+                  background: '#FFFFFF',
                   color: '#333333',
                   border: '1px solid #A8B894',
                   borderRadius: 0,
@@ -209,7 +204,6 @@ function App() {
         </Router>
         </WishlistProvider>
       </CartProvider>
-      </LanguageProvider>
     </AuthProvider>
     </HelmetProvider>
   );

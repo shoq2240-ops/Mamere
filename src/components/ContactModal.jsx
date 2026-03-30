@@ -3,7 +3,6 @@ import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../store/AuthContext';
-import { useLanguage } from '../store/LanguageContext';
 import { toast } from 'react-hot-toast';
 
 const MESSAGE_MAX_LENGTH = 1000;
@@ -23,7 +22,6 @@ const SUBJECT_OPTIONS = [
 
 const ContactModal = ({ isOpen, onClose }) => {
   const { user } = useAuth();
-  const { t } = useLanguage();
   const [form, setForm] = useState({
     firstName: '',
     lastName: '',
@@ -202,7 +200,7 @@ const ContactModal = ({ isOpen, onClose }) => {
                 onChange={(e) => handleChange('email', e.target.value.slice(0, EMAIL_MAX_LENGTH))}
                 maxLength={EMAIL_MAX_LENGTH}
                 className="w-full bg-transparent border-0 border-b border-[#E0E0E0] py-2 text-[13px] text-[#000000] placeholder:text-[#CCCCCC] focus:outline-none focus:border-[#000000] transition-colors"
-                placeholder={t('footer.emailPlaceholder')}
+                placeholder="email@example.com"
               />
               {errors.email && <p className="mt-1 text-[11px] text-red-600">{errors.email}</p>}
             </div>

@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useCart } from '../store/CartContext';
 import { useAuth } from '../store/AuthContext';
-import { useLanguage } from '../store/LanguageContext';
 import LoginRequiredModal from '../components/LoginRequiredModal';
+import ContactModal from '../components/ContactModal';
 import { useProducts } from '../hooks/useProducts';
 import { ProductGridSkeleton } from '../components/ProductSkeleton';
 import ProductCard from '../components/ProductCard';
@@ -27,15 +27,11 @@ const toArray = (v) => {
   return [];
 };
 
-const FilterDivider = () => (
-  <span className="mx-2 inline-block h-[10px] w-px shrink-0 self-center bg-[#EEEEEE] sm:mx-3" aria-hidden />
-);
-
 const ShopPage = ({ category }) => {
   const { addToCart } = useCart();
   const { isLoggedIn } = useAuth();
-  const { t } = useLanguage();
   const [showLoginModal, setShowLoginModal] = useState(false);
+  const [isContactOpen, setIsContactOpen] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
 
   const [searchParams, setSearchParams] = useSearchParams();
@@ -121,7 +117,7 @@ const ShopPage = ({ category }) => {
       toast.error(`최대 구매 가능 수량은 ${stock}개입니다.`);
       return;
     }
-    toast.success(t('common.addToCartDone'));
+    toast.success('장바구니에 담았습니다.');
   };
 
   const categoryTitle =
@@ -130,112 +126,100 @@ const ShopPage = ({ category }) => {
       : categoryNorm === 'skincare'
         ? 'DEEP CARE'
         : 'SHOP ALL';
-
-  const filterLabelClass =
-    'text-[9px] font-extralight uppercase tracking-[0.14em] text-[#BBBBBB]';
+  const filterSectionTitleClass = 'mb-3 text-[10px] font-medium uppercase tracking-[0.2em] text-[#AAAAAA]';
   const filterBtnClass = (active) =>
-    `text-[10px] font-light tracking-[0.1em] transition-colors duration-200 ${
-      active ? 'text-[#1A1A1A]' : 'text-[#1A1A1A]/45 hover:text-[#1A1A1A]/70'
+    `text-[11px] underline-offset-4 transition-colors ${
+      active ? 'font-medium text-[#1A1A1A] underline' : 'font-light text-[#777777] hover:font-medium hover:text-[#1A1A1A] hover:underline'
     }`;
 
-  const skinTypeOptions = [{ value: '', label: t('shop.all') }, ...SKIN_TYPES.map((label) => ({ value: label, label }))];
-  const skinConcernOptions = [{ value: '', label: t('shop.all') }, ...SKIN_CONCERNS.map((c) => ({ value: c, label: c }))];
+  const skinTypeOptions = [{ value: '', label: '전체' }, ...SKIN_TYPES.map((label) => ({ value: label, label }))];
+  const skinConcernOptions = [{ value: '', label: '전체' }, ...SKIN_CONCERNS.map((c) => ({ value: c, label: c }))];
 
   return (
-    <div className="min-h-screen bg-white pt-20 pb-12 antialiased text-[#1A1A1A] md:pt-24 md:pb-16">
-      <div className="mx-auto w-full max-w-[820px] bg-white px-3 sm:px-4">
-        <div className="flex items-center justify-between gap-2 border-b border-[#F5F5F5] bg-white py-1.5">
-          <h1 className="text-left text-[13px] font-extralight tracking-[0.2em] text-[#1a1a1a]">
-            {categoryTitle}
-          </h1>
+    <div className="min-h-screen bg-white pt-24 pb-16 antialiased text-[#1A1A1A]">
+      <ContactModal isOpen={isContactOpen} onClose={() => setIsContactOpen(false)} />
+      <div className="w-full border-b border-[#EEEEEE] bg-white">
+        <div className="mx-auto flex w-full max-w-[1440px] items-center justify-between px-8 py-4">
+          <h2 className="text-[13px] font-light tracking-widest text-[#1A1A1A]">{categoryTitle}</h2>
           {showSkinFilters && (
-            <button
-              type="button"
-              onClick={() => setShowFilters((v) => !v)}
-              className="shrink-0 pl-1 text-[13px] font-extralight tracking-tighter text-[#1a1a1a]/85 transition-colors hover:text-[#1a1a1a]"
-            >
-              {showFilters ? '– 필터' : '+ 필터'}
-            </button>
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setShowFilters((v) => !v)}
+                className="text-[11px] font-extralight tracking-tight text-[#1A1A1A]"
+              >
+                {showFilters ? '- FILTER' : '+ FILTER'}
+              </button>
+              {showFilters && (
+                <div className="absolute right-0 top-full z-50 mt-2 w-[280px] border border-[#EEEEEE] bg-white/95 p-6 shadow-[0_4px_20px_rgba(0,0,0,0.05)] backdrop-blur-md">
+                  <div className="flex flex-col gap-6">
+                    <section>
+                      <p className={filterSectionTitleClass}>TYPE</p>
+                      <div className="flex flex-wrap gap-x-4 gap-y-2">
+                        {skinTypeOptions.map((opt) => (
+                          <button
+                            key={opt.value || 'all'}
+                            type="button"
+                            onClick={() =>
+                              opt.value === '' ? updateFilter('skinType', '') : toggleFilter('skinType', opt.value, skinTypeParam)
+                            }
+                            className={filterBtnClass(opt.value === '' ? !skinTypeParam : skinTypeParam === opt.value)}
+                          >
+                            {opt.label}
+                          </button>
+                        ))}
+                      </div>
+                    </section>
+                    <section>
+                      <p className={filterSectionTitleClass}>CONCERN</p>
+                      <div className="flex flex-wrap gap-x-4 gap-y-2">
+                        {skinConcernOptions.map((opt) => (
+                          <button
+                            key={opt.value || 'all'}
+                            type="button"
+                            onClick={() =>
+                              opt.value === ''
+                                ? updateFilter('skinConcern', '')
+                                : toggleFilter('skinConcern', opt.value, skinConcernParam)
+                            }
+                            className={filterBtnClass(opt.value === '' ? !skinConcernParam : skinConcernParam === opt.value)}
+                          >
+                            {opt.label}
+                          </button>
+                        ))}
+                      </div>
+                    </section>
+                  </div>
+                </div>
+              )}
+            </div>
           )}
         </div>
+      </div>
 
-        {showSkinFilters && (
-          <div className={`overflow-hidden bg-white ${showFilters ? 'max-h-[999px]' : 'max-h-0'}`}>
-            <div className="py-4 md:py-5">
-              <div className="flex flex-col gap-6 md:flex-row md:flex-wrap md:items-start md:gap-x-10 md:gap-y-5">
-                <div className="flex min-w-0 flex-1 flex-col gap-4 sm:flex-row sm:items-center sm:gap-6">
-                  <span className={`shrink-0 ${filterLabelClass}`}>TYPE</span>
-                  <div className="flex flex-wrap items-center">
-                    {skinTypeOptions.map((opt, i) => (
-                      <React.Fragment key={opt.value || 'all'}>
-                        {i > 0 && <FilterDivider />}
-                        <button
-                          type="button"
-                          onClick={() =>
-                            opt.value === '' ? updateFilter('skinType', '') : toggleFilter('skinType', opt.value, skinTypeParam)
-                          }
-                          className={filterBtnClass(opt.value === '' ? !skinTypeParam : skinTypeParam === opt.value)}
-                        >
-                          {opt.label}
-                        </button>
-                      </React.Fragment>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="flex min-w-0 flex-1 flex-col gap-4 sm:flex-row sm:items-center sm:gap-6">
-                  <span className={`shrink-0 ${filterLabelClass}`}>CONCERN</span>
-                  <div className="flex flex-wrap items-center">
-                    {skinConcernOptions.map((opt, i) => (
-                      <React.Fragment key={opt.value || 'all'}>
-                        {i > 0 && <FilterDivider />}
-                        <button
-                          type="button"
-                          onClick={() =>
-                            opt.value === ''
-                              ? updateFilter('skinConcern', '')
-                              : toggleFilter('skinConcern', opt.value, skinConcernParam)
-                          }
-                          className={filterBtnClass(opt.value === '' ? !skinConcernParam : skinConcernParam === opt.value)}
-                        >
-                          {opt.label}
-                        </button>
-                      </React.Fragment>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-            {showFilters && <div className="h-px w-full bg-[#EEEEEE]" />}
-          </div>
-        )}
-
+      <div className="mx-auto mt-10 w-full max-w-[1440px] px-8">
         {loading && (
-          <div className="pt-2">
-            <ProductGridSkeleton
-              count={9}
-              columnsClass="grid-cols-2 md:grid-cols-3"
-              gapClass="gap-x-2 gap-y-14"
-            />
+          <div>
+            <ProductGridSkeleton count={12} columnsClass="grid-cols-2 lg:grid-cols-4" gapClass="gap-x-4 gap-y-24" />
           </div>
         )}
 
         {error && (
           <div className="py-24 text-center text-[11px] font-light tracking-wide text-[#1A1A1A]/50">
-            {t('landing.dbError')}
+            데이터를 불러오지 못했습니다.
           </div>
         )}
 
         {!loading && !error && (
           <>
-            <div className="grid w-full grid-cols-2 gap-x-2 gap-y-14 pt-2 md:grid-cols-3">
+            <div className="grid w-full grid-cols-2 gap-x-4 gap-y-24 lg:grid-cols-4">
               {filteredProducts.length > 0 ? (
                 displayedProducts.map((product) => (
                   <ProductCard key={product.id} product={product} onAddToCart={handleAddToCart} variant="grid" />
                 ))
               ) : (
                 <div className="col-span-full py-32 text-center text-[10px] font-extralight uppercase tracking-[0.2em] text-[#CCCCCC]">
-                  {t('shop.noProductsTitle')}
+                  상품이 없습니다.
                 </div>
               )}
             </div>
@@ -244,6 +228,67 @@ const ShopPage = ({ category }) => {
             )}
           </>
         )}
+
+        <div className="mt-24 grid w-full grid-cols-1 border-t border-[#EEEEEE] bg-white md:grid-cols-2 lg:grid-cols-4">
+          <div className="px-6 py-6 lg:border-r lg:border-[#EEEEEE]">
+            <h3 className="mb-2 mt-2 text-[13px] font-medium text-[#1A1A1A]">고객 센터</h3>
+            <p className="mt-1 text-[11px] font-light leading-[1.8] text-[#777777]">10:00 ~ 19:00</p>
+            <p className="mt-1 text-[11px] font-light leading-[1.8] text-[#777777]">주말 및 공휴일 휴무</p>
+          </div>
+          <div className="px-6 py-6 lg:border-r lg:border-[#EEEEEE]">
+            <h3 className="mb-2 mt-2 text-[13px] font-medium text-[#1A1A1A]">법적 고지</h3>
+            <Link to="/terms" className="mt-1 block text-[11px] font-light leading-[1.8] text-[#777777] hover:text-[#1A1A1A]">
+              이용약관
+            </Link>
+            <Link to="/privacy" className="mt-1 block text-[11px] font-light leading-[1.8] text-[#777777] hover:text-[#1A1A1A]">
+              개인정보 방침
+            </Link>
+            <Link to="/faq" className="mt-1 block text-[11px] font-light leading-[1.8] text-[#777777] hover:text-[#1A1A1A]">
+              자주 묻는 질문
+            </Link>
+          </div>
+          <div className="px-6 py-6 lg:border-r lg:border-[#EEEEEE]">
+            <h3 className="mb-2 mt-2 text-[13px] font-medium text-[#1A1A1A]">서비스</h3>
+            <Link to="/shipping" className="mt-1 block text-[11px] font-light leading-[1.8] text-[#777777] hover:text-[#1A1A1A]">
+              배송정보
+            </Link>
+            <Link to="/returns" className="mt-1 block text-[11px] font-light leading-[1.8] text-[#777777] hover:text-[#1A1A1A]">
+              반품 및 교환 요청하기
+            </Link>
+            <button
+              type="button"
+              onClick={() => setIsContactOpen(true)}
+              className="mt-1 block text-left text-[11px] font-light leading-[1.8] text-[#777777] hover:text-[#1A1A1A]"
+            >
+              문의하기
+            </button>
+          </div>
+          <div className="px-6 py-6">
+            <h3 className="mb-2 mt-2 text-[13px] font-medium text-[#1A1A1A]">소셜</h3>
+            <a
+              href="https://www.instagram.com/official_mamere/"
+              target="_blank"
+              rel="noreferrer"
+              aria-label="마메르 인스타그램"
+              className="mt-1 inline-block text-[11px] font-light leading-[1.8] text-[#777777] hover:text-[#1A1A1A]"
+            >
+              인스타그램
+            </a>
+            <a
+              href="https://www.instagram.com/official_mamere/"
+              target="_blank"
+              rel="noreferrer"
+              aria-hidden
+              className="mt-3 inline-flex text-[#B5B5B5] hover:text-[#1A1A1A]"
+            >
+              <svg className="h-4 w-4 text-[#B5B5B5]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1">
+                <rect x="4" y="4" width="16" height="16" rx="4" />
+                <circle cx="12" cy="12" r="4" />
+                <circle cx="17.5" cy="6.5" r="0.75" fill="currentColor" stroke="none" />
+              </svg>
+            </a>
+          </div>
+        </div>
       </div>
 
       <LoginRequiredModal show={showLoginModal} onClose={() => setShowLoginModal(false)} />

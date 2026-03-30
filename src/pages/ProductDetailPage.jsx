@@ -29,7 +29,7 @@ const toArray = (v) => {
 function AccordionItem({ id, title, isOpen, onToggle, children }) {
   return (
     <div
-      className="border-b border-[#EAE5DD] bg-[#FAF9F6]/50 first:border-t first:border-[#EAE5DD]"
+      className="border-b border-[#EAE5DD] bg-white first:border-t first:border-[#EAE5DD]"
       role="region"
       aria-labelledby={`accordion-${id}-head`}
     >
@@ -200,11 +200,11 @@ const ProductDetailPage = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#F9F7F2] pt-20 md:pt-24 pb-16 antialiased">
+      <div className="min-h-screen bg-white pt-20 md:pt-24 pb-16 antialiased">
         <div className="max-w-5xl mx-auto px-6 md:px-12">
-          <div className="aspect-[4/5] w-full max-w-md mx-auto bg-[#EDEAE4] animate-pulse" />
-          <div className="mt-6 h-6 w-3/4 bg-[#EDEAE4] animate-pulse" />
-          <div className="mt-3 h-5 w-1/4 bg-[#EDEAE4] animate-pulse" />
+          <div className="aspect-[4/5] w-full max-w-md mx-auto bg-white animate-pulse" />
+          <div className="mt-6 h-6 w-3/4 bg-white animate-pulse" />
+          <div className="mt-3 h-5 w-1/4 bg-white animate-pulse" />
         </div>
       </div>
     );
@@ -212,7 +212,7 @@ const ProductDetailPage = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-[#F9F7F2] pt-20 md:pt-24 pb-16 antialiased flex flex-col items-center justify-center px-6">
+      <div className="min-h-screen bg-white pt-20 md:pt-24 pb-16 antialiased flex flex-col items-center justify-center px-6">
         <p className="text-[#7A6B63] text-[10px] tracking-widest uppercase">DB 연결 실패</p>
         <Link to="/shop" className="mt-4 text-[10px] tracking-widest uppercase text-[#3E2F28] border-b border-[#A8B894]">
           쇼핑으로 돌아가기
@@ -223,7 +223,7 @@ const ProductDetailPage = () => {
 
   if (!product) {
     return (
-      <div className="min-h-screen bg-[#F9F7F2] pt-20 md:pt-24 pb-16 antialiased flex flex-col items-center justify-center px-6">
+      <div className="min-h-screen bg-white pt-20 md:pt-24 pb-16 antialiased flex flex-col items-center justify-center px-6">
         <p className="text-[#7A6B63] text-[10px] tracking-widest uppercase">상품을 찾을 수 없습니다.</p>
         <Link to="/shop" className="mt-4 text-[10px] tracking-widest uppercase text-[#3E2F28] border-b border-[#A8B894]">
           쇼핑으로 돌아가기
@@ -256,7 +256,7 @@ const ProductDetailPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#F9F7F2] pt-20 md:pt-24 pb-16 antialiased text-[#3E2F28]">
+    <div className="min-h-screen bg-white pt-20 md:pt-24 pb-16 antialiased text-[#3E2F28]">
       <Helmet>
         <title>{productName}</title>
         <meta name="description" content={metaDescription} />
@@ -276,7 +276,7 @@ const ProductDetailPage = () => {
           <div className="flex flex-col gap-4 min-w-0 md:flex-1">
             <div className="relative w-full overflow-visible">
               {showPlaceholder ? (
-                <div className="flex items-center justify-center p-6 bg-[#EDEAE4] min-h-[280px]">
+                <div className="flex items-center justify-center p-6 bg-white min-h-[280px]">
                   <span className="text-[10px] font-medium tracking-[0.1em] text-[#7A6B63] text-center line-clamp-4">
                     {product.name || 'No Image'}
                   </span>
@@ -300,7 +300,7 @@ const ProductDetailPage = () => {
                 <button
                   type="button"
                   onClick={handleWishlistClick}
-                  className="absolute right-3 top-3 z-10 p-2 text-[#7A6B63] hover:text-[#3E2F28] transition-colors bg-[#F9F7F2]/90 hover:bg-[#F9F7F2] rounded-full backdrop-blur-sm"
+                  className="absolute right-3 top-3 z-10 p-2 text-[#7A6B63] hover:text-[#3E2F28] transition-colors bg-white rounded-full backdrop-blur-sm"
                   aria-label={isInWishlist(product.id) ? '위시리스트에서 제거' : '위시리스트에 추가'}
                 >
                   <svg className="w-5 h-5" fill={isInWishlist(product.id) ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
@@ -328,7 +328,7 @@ const ProductDetailPage = () => {
           </div>
 
           {/* 오른쪽: 구매 정보 박스 (이미지 두 번째 조각쯤·약 200px 아래부터 시작, 스티키로 스크롤 시 따라옴) */}
-          <div className="flex flex-col w-full max-w-[380px] mx-auto md:mx-0 md:pt-16 md:sticky md:top-[50px] md:h-fit md:max-h-[calc(100vh-100px)] md:overflow-y-auto md:overscroll-contain md:pb-20 md:scrollbar-hide px-5 py-5 md:px-6 md:py-6 border border-[#E8E4DF] rounded-sm shadow-[0_2px_12px_rgba(62,47,40,0.06)] bg-[#FAF9F6]">
+          <div className="flex flex-col w-full max-w-[380px] mx-auto md:mx-0 md:pt-16 md:sticky md:top-[50px] md:h-fit md:max-h-[calc(100vh-100px)] md:overflow-y-auto md:overscroll-contain md:pb-20 md:scrollbar-hide px-5 py-5 md:px-6 md:py-6 border border-[#E8E4DF] rounded-sm shadow-[0_2px_12px_rgba(62,47,40,0.06)] bg-white">
             <h1 className="font-serif text-2xl font-normal leading-snug tracking-[0.06em] text-[#333333] md:text-[1.65rem]">
               {product.name}
             </h1>
@@ -382,7 +382,7 @@ const ProductDetailPage = () => {
                 disabled={soldOut}
                 className={`w-full py-4 text-[10px] font-medium tracking-[0.12em] uppercase transition-colors ${
                   soldOut
-                    ? 'bg-[#EDEAE4] text-[#7A6B63] cursor-not-allowed border border-[#A8B894]/40'
+                    ? 'bg-white text-[#7A6B63] cursor-not-allowed border border-[#A8B894]/40'
                     : 'bg-[#A8B894] text-[#2D3A2D] hover:opacity-90 border border-[#A8B894]'
                 }`}
               >

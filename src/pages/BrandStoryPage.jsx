@@ -8,7 +8,7 @@ const fadeUp = {
 
 const BrandStoryPage = () => {
   return (
-    <div className="bg-[#FAF9F6] text-[#333333] min-h-screen pt-24 md:pt-28 pb-24 px-6 md:px-10 antialiased">
+    <div className="bg-white text-[#333333] min-h-screen pt-24 md:pt-28 pb-24 px-6 md:px-10 antialiased">
       <div className="max-w-5xl mx-auto">
         {/* Hero 섹션 */}
         <section className="mb-24 md:mb-32">

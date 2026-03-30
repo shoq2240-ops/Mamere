@@ -47,10 +47,10 @@ const CheckoutPage = () => {
   const displayShippingFee = getShippingFee(displaySubtotal);
   const displayTotal = displaySubtotal + displayShippingFee;
 
-  // 장바구니 비어 있으면 카트로 (주문 완료 화면이 아닐 때만)
+  // 장바구니 비어 있으면 쇼핑 페이지로 (주문 완료 화면이 아닐 때만)
   useEffect(() => {
     if (!authLoading && cart.length === 0 && !orderSuccessData) {
-      navigate('/cart', { replace: true });
+      navigate('/shop', { replace: true });
     }
   }, [authLoading, cart.length, navigate, orderSuccessData]);
 
@@ -530,10 +530,10 @@ const response = await window.PortOne.requestPayment({
 
           <div className="flex gap-4">
             <Link
-              to="/cart"
+              to="/shop"
               className="flex-1 border border-white/20 py-4 text-center text-[11px] font-bold tracking-widest uppercase text-[#666666] hover:bg-[#F9F9F9] transition-colors"
             >
-              장바구니로
+              쇼핑으로
             </Link>
             <button
               type="submit"

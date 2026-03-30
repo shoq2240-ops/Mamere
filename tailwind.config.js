@@ -7,9 +7,9 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['Helvetica Neue', 'Helvetica', 'Arial', 'sans-serif'],
-        serif: ['Georgia', 'Cambria', 'Times New Roman', 'Times', 'serif'],
-        mono: ['Helvetica Neue', 'Helvetica', 'Arial', 'sans-serif'],
+        sans: ['Noto Sans KR', 'Noto Sans', 'system-ui', 'sans-serif'],
+        serif: ['Noto Sans KR', 'Noto Sans', 'system-ui', 'sans-serif'],
+        mono: ['Noto Sans KR', 'Noto Sans', 'system-ui', 'sans-serif'],
       },
       fontWeight: {
         light: '300',

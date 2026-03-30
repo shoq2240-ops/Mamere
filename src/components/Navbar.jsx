@@ -7,8 +7,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useCart } from '../store/CartContext';
 import { useWishlist } from '../store/WishlistContext';
 import { useAuth } from '../store/AuthContext';
-import { useLanguage } from '../store/LanguageContext';
 import { supabase } from '../lib/supabase';
+import CartDrawer from './CartDrawer';
 
 /** 티트리 잎사귀 SVG (placeholder). [이미지 교체] 나중에 <img src="/tealeaf-1.svg" /> 등 실제 잎 이미지로 교체 가능 */
 const LeafIcon1 = ({ className = 'w-4 h-4' }) => (
@@ -57,11 +57,11 @@ const Navbar = ({ isScrolled = false, isMobileMenuOpen = false, onMobileMenuChan
   const [accountDropdownRect, setAccountDropdownRect] = useState(null);
   const accountButtonRef = useRef(null);
   const [searchInput, setSearchInput] = useState("");
+  const [isCartOpen, setIsCartOpen] = useState(false);
   const { cartCount } = useCart();
   const { wishlist } = useWishlist();
   const wishlistCount = Array.isArray(wishlist) ? wishlist.length : 0;
   const { isLoggedIn } = useAuth();
-  const { locale, toggleLocale, t } = useLanguage();
   const navigate = useNavigate();
   const { pathname } = useLocation();
 
@@ -144,9 +144,9 @@ const Navbar = ({ isScrolled = false, isMobileMenuOpen = false, onMobileMenuChan
   }
 
   const navLinks = [
-    { key: 'nav.skincare', path: '/shop/skincare' },
-    { key: 'nav.bodyHair', path: '/shop/body-hair' },
-    { key: 'nav.brandStory', path: '/brand-story' },
+    { label: 'SKINCARE', path: '/shop/skincare' },
+    { label: 'BODY & HAIR', path: '/shop/body-hair' },
+    { label: 'BRAND STORY', path: '/brand-story' },
   ];
 
   return (
@@ -173,8 +173,8 @@ const Navbar = ({ isScrolled = false, isMobileMenuOpen = false, onMobileMenuChan
           <div className="z-10 flex min-w-0 items-center justify-start">
             <div className="hidden h-full items-center gap-6 text-sm font-medium uppercase tracking-[0.12em] md:flex lg:gap-8">
               {navLinks.map((link) => (
-                <Link key={link.key} to={link.path} className="whitespace-nowrap text-[#F9F7F2] transition-all hover:opacity-80">
-                  {t(link.key)}
+                <Link key={link.path} to={link.path} className="whitespace-nowrap text-[#F9F7F2] transition-all hover:opacity-80">
+                  {link.label}
                 </Link>
               ))}
             </div>
@@ -182,7 +182,7 @@ const Navbar = ({ isScrolled = false, isMobileMenuOpen = false, onMobileMenuChan
               type="button"
               onClick={toggleMenu}
               className="flex h-9 w-9 shrink-0 flex-col items-center justify-center gap-[5px] md:hidden"
-              aria-label={t(activeMenuOpen ? 'nav.menuClose' : 'nav.menuOpen')}
+              aria-label={activeMenuOpen ? '메뉴 닫기' : '메뉴 열기'}
             >
               <motion.span animate={activeMenuOpen ? { rotate: 45, y: 5.5, backgroundColor: '#F9F7F2' } : { rotate: 0, y: 0, backgroundColor: '#F9F7F2' }} className="block h-px w-4" />
               <motion.span animate={activeMenuOpen ? { opacity: 0 } : { opacity: 1 }} className="block h-px w-4 bg-[#F9F7F2]" />
@@ -206,17 +206,10 @@ const Navbar = ({ isScrolled = false, isMobileMenuOpen = false, onMobileMenuChan
             </Link>
           </div>
 
-          {/* 우: 언어 / 계정 / 검색 / 장바구니 — gap-4 균형 */}
+          {/* 우: 언어 / 검색 / 계정 / 장바구니 — gap-4 균형 */}
           <div className="z-10 flex min-w-0 items-center justify-end gap-4">
-            <button
-              type="button"
-              onClick={toggleLocale}
-              className="hidden md:flex items-center gap-1 text-[9px] font-light tracking-[0.15em] uppercase hover:opacity-80 transition-all text-[#F9F7F2]"
-              aria-label={locale === 'ko' ? 'Switch to English' : 'Switch to Korean'}
-            >
-              <span className={locale === 'ko' ? 'opacity-50' : 'font-medium'}>EN</span>
-              <span className="text-[#F9F7F2]/50">/</span>
-              <span className={locale === 'en' ? 'opacity-50' : 'font-medium'}>KO</span>
+            <button onClick={() => { setIsSearchOpen(true); handleMenuToggle(false); }} className="w-7 h-7 md:w-9 md:h-9 flex items-center justify-center hover:opacity-80 transition-colors text-[#F9F7F2]">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" /></svg>
             </button>
             <div className="hidden md:block relative">
               {isLoggedIn ? (
@@ -226,7 +219,7 @@ const Navbar = ({ isScrolled = false, isMobileMenuOpen = false, onMobileMenuChan
                     type="button"
                     onClick={() => setAccountOpen(!accountOpen)}
                     className="flex h-10 w-10 items-center justify-center text-[#F9F7F2] transition-colors hover:opacity-80"
-                    aria-label={t('nav.myPage')}
+                    aria-label="마이페이지"
                     aria-expanded={accountOpen}
                     aria-haspopup="true"
                   >
@@ -245,13 +238,14 @@ const Navbar = ({ isScrolled = false, isMobileMenuOpen = false, onMobileMenuChan
                         className="fixed py-4 px-6 bg-[#F9F7F2] border border-[#A8B894]/30 min-w-[160px] z-[9997] flex flex-col gap-3 shadow-lg text-[#3E2F28]"
                         style={{
                           top: accountDropdownRect.bottom + 8,
-                          right: typeof window !== 'undefined' ? window.innerWidth - accountDropdownRect.right : 0,
+                          left: accountDropdownRect.left + accountDropdownRect.width / 2,
+                          transform: 'translateX(-50%)',
                         }}
                       >
-                        <Link to="/wishlist" onClick={() => setAccountOpen(false)} className="text-[10px] font-light text-[#5C4A42] hover:text-[#3E2F28] transition-colors tracking-[0.15em] uppercase">{t('nav.wishlist')}</Link>
-                        <Link to="/orders" onClick={() => setAccountOpen(false)} className="text-[10px] font-light text-[#5C4A42] hover:text-[#3E2F28] transition-colors tracking-[0.15em] uppercase">{t('nav.orders')}</Link>
-                        <Link to="/profile" onClick={() => setAccountOpen(false)} className="text-[10px] font-light text-[#5C4A42] hover:text-[#3E2F28] transition-colors tracking-[0.15em] uppercase">{t('nav.profile')}</Link>
-                        <button type="button" onClick={() => { handleLogout(); setAccountOpen(false); }} className="text-[10px] font-light text-[#5C4A42] hover:text-[#3E2F28] transition-colors tracking-[0.15em] uppercase text-left">{t('nav.logout')}</button>
+                        <Link to="/wishlist" onClick={() => setAccountOpen(false)} className="text-[10px] font-light text-[#5C4A42] hover:text-[#3E2F28] transition-colors tracking-[0.15em] uppercase">WISHLIST</Link>
+                        <Link to="/orders" onClick={() => setAccountOpen(false)} className="text-[10px] font-light text-[#5C4A42] hover:text-[#3E2F28] transition-colors tracking-[0.15em] uppercase">ORDERS</Link>
+                        <Link to="/profile" onClick={() => setAccountOpen(false)} className="text-[10px] font-light text-[#5C4A42] hover:text-[#3E2F28] transition-colors tracking-[0.15em] uppercase">PROFILE</Link>
+                        <button type="button" onClick={() => { handleLogout(); setAccountOpen(false); }} className="text-[10px] font-light text-[#5C4A42] hover:text-[#3E2F28] transition-colors tracking-[0.15em] uppercase text-left">LOGOUT</button>
                       </motion.div>
                     </>,
                     document.body
@@ -266,10 +260,15 @@ const Navbar = ({ isScrolled = false, isMobileMenuOpen = false, onMobileMenuChan
                 </Link>
               )}
             </div>
-            <button onClick={() => { setIsSearchOpen(true); handleMenuToggle(false); }} className="w-7 h-7 md:w-9 md:h-9 flex items-center justify-center hover:opacity-80 transition-colors text-[#F9F7F2]">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" /></svg>
-            </button>
-            <Link to="/cart" className="w-7 h-7 md:w-9 md:h-9 flex items-center justify-center relative hover:opacity-80 transition-colors text-[#F9F7F2]">
+            <button
+              type="button"
+              onClick={() => {
+                setIsCartOpen(true);
+                handleMenuToggle(false);
+              }}
+              className="w-7 h-7 md:w-9 md:h-9 flex items-center justify-center relative hover:opacity-80 transition-colors text-[#F9F7F2]"
+              aria-label="장바구니"
+            >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" /><path d="M3 6h18" /><path d="M16 10a4 4 0 0 1-8 0" /></svg>
               <AnimatePresence mode="popLayout">
                 {cartCount > 0 && (
@@ -281,7 +280,7 @@ const Navbar = ({ isScrolled = false, isMobileMenuOpen = false, onMobileMenuChan
                   </motion.span>
                 )}
               </AnimatePresence>
-            </Link>
+            </button>
           </div>
         </div>
       </nav>
@@ -325,7 +324,7 @@ const Navbar = ({ isScrolled = false, isMobileMenuOpen = false, onMobileMenuChan
                     <svg className="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.15} aria-hidden>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M15 18l-6-6 6-6" />
                     </svg>
-                    <span className="text-[10px] font-light uppercase tracking-[0.2em]">{t('common.back')}</span>
+                    <span className="text-[10px] font-light uppercase tracking-[0.2em]">BACK</span>
                   </button>
                 </div>
 
@@ -338,7 +337,7 @@ const Navbar = ({ isScrolled = false, isMobileMenuOpen = false, onMobileMenuChan
                         onClick={() => handleMenuClick('/shop/skincare')}
                         className="block w-full text-left text-2xl font-light tracking-[0.08em] text-[#333333] transition-opacity hover:opacity-75"
                       >
-                        {t('nav.skincare')}
+                        SKINCARE
                       </button>
                       <div className="mt-5 flex justify-end pr-1">
                         <img
@@ -366,7 +365,7 @@ const Navbar = ({ isScrolled = false, isMobileMenuOpen = false, onMobileMenuChan
                         onClick={() => handleMenuClick('/shop/body-hair')}
                         className="min-w-0 flex-1 pt-1 text-right text-2xl font-light tracking-[0.08em] text-[#333333] transition-opacity hover:opacity-75"
                       >
-                        {t('nav.bodyHair')}
+                        BODY & HAIR
                       </button>
                     </section>
 
@@ -376,40 +375,35 @@ const Navbar = ({ isScrolled = false, isMobileMenuOpen = false, onMobileMenuChan
                         onClick={() => handleMenuClick('/brand-story')}
                         className="block w-full text-left text-2xl font-light tracking-[0.08em] text-[#333333] transition-opacity hover:opacity-75"
                       >
-                        {t('nav.brandStory')}
+                        BRAND STORY
                       </button>
                       <p className="mt-5 max-w-[19rem] text-[13px] font-light leading-relaxed text-[#8A8278]">
-                        {t('nav.brandStoryTagline')}
+                        자연이 건네는 다정한 위로
                       </p>
                     </section>
                   </div>
 
                   <div className="mt-auto flex shrink-0 flex-col space-y-3 border-t border-[#EAE5DD] pt-6 text-[11px]">
-                    <button type="button" onClick={() => handleMenuClick('/cart')} className="flex justify-between font-medium uppercase tracking-[0.12em] text-[#333333] py-1.5">
-                      <span>{t('nav.shoppingBag')}</span>
+                    <button type="button" onClick={() => { setIsCartOpen(true); handleMenuToggle(false); }} className="flex justify-between font-medium uppercase tracking-[0.12em] text-[#333333] py-1.5">
+                      <span>SHOPPING BAG</span>
                       <span>[{cartCount}]</span>
                     </button>
                     <button type="button" onClick={() => handleMenuClick('/wishlist')} className="flex justify-between py-1.5 text-left font-light uppercase tracking-[0.12em] text-[#5C4A42]">
-                      <span>{t('nav.wishlist')}</span>
+                      <span>WISHLIST</span>
                       {wishlistCount > 0 ? <span>[{wishlistCount}]</span> : null}
                     </button>
                     {isLoggedIn ? (
                       <>
-                        <button type="button" onClick={() => handleMenuClick('/orders')} className="py-1.5 text-left font-light uppercase tracking-[0.12em] text-[#5C4A42]">{t('nav.orders')}</button>
-                        <button type="button" onClick={() => handleMenuClick('/profile')} className="py-1.5 text-left font-light uppercase tracking-[0.12em] text-[#5C4A42]">{t('nav.profile')}</button>
-                        <button type="button" onClick={handleLogout} className="py-1.5 text-left font-light uppercase tracking-[0.12em] text-[#7A6B63]">{t('nav.logout')}</button>
+                        <button type="button" onClick={() => handleMenuClick('/orders')} className="py-1.5 text-left font-light uppercase tracking-[0.12em] text-[#5C4A42]">ORDERS</button>
+                        <button type="button" onClick={() => handleMenuClick('/profile')} className="py-1.5 text-left font-light uppercase tracking-[0.12em] text-[#5C4A42]">PROFILE</button>
+                        <button type="button" onClick={handleLogout} className="py-1.5 text-left font-light uppercase tracking-[0.12em] text-[#7A6B63]">LOGOUT</button>
                       </>
                     ) : (
                       <>
-                        <button type="button" onClick={() => handleMenuClick('/login')} className="py-1.5 text-left font-light uppercase tracking-[0.12em] text-[#7A6B63]">{t('nav.login')}</button>
-                        <button type="button" onClick={() => handleMenuClick('/signup')} className="py-1.5 text-left font-light uppercase tracking-[0.12em] text-[#7A6B63]">{t('nav.joinNow')}</button>
+                        <button type="button" onClick={() => handleMenuClick('/login')} className="py-1.5 text-left font-light uppercase tracking-[0.12em] text-[#7A6B63]">LOGIN</button>
+                        <button type="button" onClick={() => handleMenuClick('/signup')} className="py-1.5 text-left font-light uppercase tracking-[0.12em] text-[#7A6B63]">JOIN NOW</button>
                       </>
                     )}
-                    <button type="button" onClick={toggleLocale} className="mt-2 flex items-center gap-1.5 border-t border-[#EAE5DD]/80 pt-4 text-left text-[9px] font-light uppercase tracking-[0.12em] text-[#7A6B63]">
-                      <span className={locale === 'ko' ? 'opacity-50' : 'font-medium text-[#5C4A42]'}>EN</span>
-                      <span className="text-[#A8B894]/60">/</span>
-                      <span className={locale === 'en' ? 'opacity-50' : 'font-medium text-[#5C4A42]'}>KO</span>
-                    </button>
                   </div>
                 </div>
               </motion.div>
@@ -426,11 +420,12 @@ const Navbar = ({ isScrolled = false, isMobileMenuOpen = false, onMobileMenuChan
             <form onSubmit={handleSearch} className="w-full max-w-2xl relative">
               <input autoFocus type="text" value={searchInput} onChange={(e) => setSearchInput(e.target.value)} placeholder="search" className="w-full bg-transparent border-b border-[#3E2F28] py-4 text-3xl md:text-5xl font-medium lowercase outline-none text-[#3E2F28] placeholder:text-[#A8B894]/70" />
               <button type="submit" className="hidden">Search</button>
-              <button onClick={() => setIsSearchOpen(false)} className="absolute right-0 top-1/2 -translate-y-1/2 text-[#3E2F28] font-medium text-[10px] uppercase tracking-widest">{t('common.close')}</button>
+              <button onClick={() => setIsSearchOpen(false)} className="absolute right-0 top-1/2 -translate-y-1/2 text-[#3E2F28] font-medium text-[10px] uppercase tracking-widest">CLOSE</button>
             </form>
           </motion.div>
         )}
       </AnimatePresence>
+      <CartDrawer open={isCartOpen} onClose={() => setIsCartOpen(false)} />
     </div>
   );
 };

@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase, fetchClientIp, logUserConsent, getAuthRedirectUrl } from '../lib/supabase';
-import { useLanguage } from '../store/LanguageContext';
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const EMAIL_MAX_LENGTH = 254;
@@ -32,7 +31,6 @@ function isDuplicateUserResponse(data) {
 
 const SignupPage = () => {
   const navigate = useNavigate();
-  const { t, locale } = useLanguage();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [agreeTerms, setAgreeTerms] = useState(false);
@@ -70,11 +68,11 @@ const SignupPage = () => {
 
     const trimmedEmail = email.trim().slice(0, EMAIL_MAX_LENGTH);
     if (!trimmedEmail) {
-      setError(t('signup.emailInvalid'));
+      setError('올바른 이메일 형식을 입력해 주세요.');
       return;
     }
     if (!EMAIL_REGEX.test(trimmedEmail)) {
-      setError(t('signup.emailInvalid'));
+      setError('올바른 이메일 형식을 입력해 주세요.');
       return;
     }
     if (password.length < PASSWORD_MIN_LENGTH || password.length > PASSWORD_MAX_LENGTH) {
@@ -96,7 +94,7 @@ const SignupPage = () => {
 
       if (signUpError) {
         if (isDuplicateEmailError(signUpError)) {
-          setError(t('signup.emailAlreadyRegistered'));
+          setError('이미 가입된 이메일입니다.');
           return;
         }
         setError('가입에 실패했습니다. 잠시 후 다시 시도해 주세요.');
@@ -104,7 +102,7 @@ const SignupPage = () => {
       }
 
       if (data?.user && isDuplicateUserResponse(data)) {
-        setError(t('signup.emailAlreadyRegistered'));
+        setError('이미 가입된 이메일입니다.');
         return;
       }
 
@@ -126,7 +124,7 @@ const SignupPage = () => {
       }
 
       if (data?.user && !data?.session) {
-        setMessage(t('signup.messageSent'));
+        setMessage('가입이 완료되었습니다. 확인 메일을 확인해 주세요.');
         return;
       }
 
@@ -139,7 +137,7 @@ const SignupPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#F9F7F2] flex items-center justify-center px-8 pt-20 antialiased text-[#3E2F28]">
+    <div className="min-h-screen bg-white flex items-center justify-center px-8 pt-20 antialiased text-[#3E2F28]">
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
@@ -147,8 +145,8 @@ const SignupPage = () => {
         className="max-w-md w-full space-y-12"
       >
         <div className="text-center space-y-4">
-          <h1 className="text-4xl font-semibold uppercase tracking-tight text-[#3E2F28]">{t('signup.title')}</h1>
-          <p className="text-[10px] font-light text-[#7A6B63] tracking-mega-wide uppercase">{t('signup.subtitle')}</p>
+          <h1 className="text-4xl font-semibold uppercase tracking-tight text-[#3E2F28]">join</h1>
+          <p className="text-[10px] font-light text-[#7A6B63] tracking-mega-wide uppercase">create your account</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -160,7 +158,7 @@ const SignupPage = () => {
           )}
           <input
             type="email"
-            placeholder={t('signup.email').toUpperCase()}
+            placeholder="EMAIL"
             value={email}
             onChange={(e) => { setEmail(e.target.value.slice(0, EMAIL_MAX_LENGTH)); setError(''); }}
             required
@@ -171,7 +169,7 @@ const SignupPage = () => {
           />
           <input
             type="password"
-            placeholder={t('signup.passwordPlaceholder')}
+            placeholder="비밀번호 (영문/숫자/특수문자 포함)"
             value={password}
             onChange={(e) => setPassword(e.target.value.slice(0, PASSWORD_MAX_LENGTH))}
             required
@@ -188,10 +186,10 @@ const SignupPage = () => {
                 type="checkbox"
                 checked={agreeTerms}
                 onChange={(e) => setAgreeTerms(e.target.checked)}
-                className="mt-1 w-4 h-4 rounded border-[#A8B894]/50 bg-[#F9F7F2] text-[#3E2F28] focus:ring-[#A8B894] focus:ring-offset-0"
+                className="mt-1 w-4 h-4 rounded border-[#A8B894]/50 bg-white text-[#3E2F28] focus:ring-[#A8B894] focus:ring-offset-0"
               />
               <span className="text-[10px] text-[#5C4A42] group-hover:text-[#3E2F28] transition-colors">
-                <Link to="/terms" target="_blank" rel="noopener noreferrer" className="underline underline-offset-2">{t('footer.terms')}</Link> {t('signup.agreeTermsLabel')}
+                <Link to="/terms" target="_blank" rel="noopener noreferrer" className="underline underline-offset-2">이용약관</Link> 동의 (필수)
               </span>
             </label>
             <label className="flex items-start gap-3 cursor-pointer group">
@@ -199,10 +197,10 @@ const SignupPage = () => {
                 type="checkbox"
                 checked={agreePrivacy}
                 onChange={(e) => setAgreePrivacy(e.target.checked)}
-                className="mt-1 w-4 h-4 rounded border-[#A8B894]/50 bg-[#F9F7F2] text-[#3E2F28] focus:ring-[#A8B894] focus:ring-offset-0"
+                className="mt-1 w-4 h-4 rounded border-[#A8B894]/50 bg-white text-[#3E2F28] focus:ring-[#A8B894] focus:ring-offset-0"
               />
               <span className="text-[10px] text-[#5C4A42] group-hover:text-[#3E2F28] transition-colors">
-                <Link to="/privacy" target="_blank" rel="noopener noreferrer" className="underline underline-offset-2">{t('footer.privacy')}</Link> {t('signup.agreePrivacyLabel')}
+                <Link to="/privacy" target="_blank" rel="noopener noreferrer" className="underline underline-offset-2">개인정보처리방침</Link> 동의 (필수)
               </span>
             </label>
             <label className="flex items-start gap-3 cursor-pointer group">
@@ -213,7 +211,7 @@ const SignupPage = () => {
                 className="mt-1 w-4 h-4 rounded border-[#CCCCCC] bg-white text-[#000000] focus:ring-[#000000] focus:ring-offset-0"
               />
               <span className="text-[10px] text-[#5C4A42] group-hover:text-[#3E2F28] transition-colors">
-                {t('signup.agreeMarketing')}
+                마케팅 수신 동의 (선택)
               </span>
             </label>
           </div>
@@ -226,7 +224,7 @@ const SignupPage = () => {
             {loading && (
               <span className="inline-block w-4 h-4 border-2 border-[#2D3A2D]/40 border-t-[#2D3A2D] rounded-full animate-spin" aria-hidden />
             )}
-            {loading ? (locale === 'ko' ? '처리 중...' : 'Processing...') : t('signup.submit')}
+            {loading ? '처리 중...' : '가입하기'}
           </button>
 
           <div className="relative py-4">
@@ -234,7 +232,7 @@ const SignupPage = () => {
               <div className="w-full border-t border-[#A8B894]/30" />
             </div>
             <div className="relative flex justify-center text-[9px] uppercase tracking-widest text-[#7A6B63]">
-              {t('login.or')}
+              OR
             </div>
           </div>
 
@@ -248,13 +246,13 @@ const SignupPage = () => {
               <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M12 3c5.799 0 10.5 3.664 10.5 8.185 0 4.52-4.701 8.184-10.5 8.184a13.5 13.5 0 01-1.727-.11l-4.408 2.883c-.501.265-.678.236-.472-.413l.892-3.678c-2.88-1.46-4.785-3.99-4.785-6.866C1.5 6.665 6.201 3 12 3z" />
               </svg>
-              {locale === 'ko' ? '카카오로 시작' : 'Kakao'}
+              카카오로 시작
             </button>
             <button
               type="button"
               onClick={() => handleOAuthSignIn('google')}
               disabled={loading || !agreeTerms || !agreePrivacy}
-              className="flex-1 flex items-center justify-center gap-2 py-4 bg-[#F9F7F2] text-[#3E2F28] border border-[#A8B894]/50 text-[10px] font-bold rounded transition-opacity hover:bg-[#F5F3EE] disabled:opacity-50"
+              className="flex-1 flex items-center justify-center gap-2 py-4 bg-white text-[#3E2F28] border border-[#A8B894]/50 text-[10px] font-bold rounded transition-opacity hover:bg-white disabled:opacity-50"
             >
               <svg className="w-5 h-5" viewBox="0 0 24 24">
                 <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -262,14 +260,14 @@ const SignupPage = () => {
                 <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
                 <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
               </svg>
-              {locale === 'ko' ? '구글로 시작' : 'Google'}
+              구글로 시작
             </button>
           </div>
         </form>
 
         <div className="text-center text-[9px] font-bold tracking-widest text-[#7A6B63] uppercase">
           <Link to="/login" className="hover:text-[#3E2F28] transition-colors">
-            {t('signup.haveAccount')} {t('signup.login')}
+            이미 계정이 있으신가요? 로그인
           </Link>
         </div>
       </motion.div>
