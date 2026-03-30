@@ -27,7 +27,6 @@ const toArray = (v) => {
   return [];
 };
 
-/** 필터 칩 사이: 세로 막대 (#EEEEEE) */
 const FilterDivider = () => (
   <span className="mx-2 inline-block h-[10px] w-px shrink-0 self-center bg-[#EEEEEE] sm:mx-3" aria-hidden />
 );
@@ -40,15 +39,8 @@ const ShopPage = ({ category }) => {
   const [showFilters, setShowFilters] = useState(false);
 
   const [searchParams, setSearchParams] = useSearchParams();
-  const query = searchParams.get('search') || '';
   const skinTypeParam = searchParams.get('skinType') || '';
   const skinConcernParam = searchParams.get('skinConcern') || '';
-
-  const [searchTerm, setSearchTerm] = useState(query);
-
-  useEffect(() => {
-    setSearchTerm(query);
-  }, [query]);
 
   const { products, loading, error } = useProducts();
 
@@ -69,9 +61,8 @@ const ShopPage = ({ category }) => {
         .filter((product) => {
           if (!showSkinFilters || !skinConcernParam) return true;
           return toArray(product.skin_concern || product.skinConcern).some((c) => String(c).trim() === skinConcernParam);
-        })
-        .filter((product) => product.name?.toLowerCase().includes(searchTerm.toLowerCase())),
-    [products, categoryNorm, showSkinFilters, skinTypeParam, skinConcernParam, searchTerm]
+        }),
+    [products, categoryNorm, showSkinFilters, skinTypeParam, skinConcernParam]
   );
 
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
@@ -79,7 +70,7 @@ const ShopPage = ({ category }) => {
 
   useEffect(() => {
     setVisibleCount(PAGE_SIZE);
-  }, [categoryNorm, skinTypeParam, skinConcernParam, searchTerm]);
+  }, [categoryNorm, skinTypeParam, skinConcernParam]);
 
   const displayedProducts = useMemo(
     () => filteredProducts.slice(0, visibleCount),
@@ -137,7 +128,7 @@ const ShopPage = ({ category }) => {
     categoryNorm === 'body_hair'
       ? 'BODY & HAIR'
       : categoryNorm === 'skincare'
-        ? 'SKIN CARE'
+        ? 'DEEP CARE'
         : 'SHOP ALL';
 
   const filterLabelClass =
@@ -151,34 +142,17 @@ const ShopPage = ({ category }) => {
   const skinConcernOptions = [{ value: '', label: t('shop.all') }, ...SKIN_CONCERNS.map((c) => ({ value: c, label: c }))];
 
   return (
-    <div className="min-h-screen bg-[#FFFFFF] pt-24 pb-24 antialiased text-[#1A1A1A]">
-      <div className="mx-auto max-w-[1400px] bg-[#FFFFFF] px-5 md:px-10">
-        <div className="mb-10 bg-[#FFFFFF] md:mb-12">
-          <input
-            type="text"
-            placeholder={t('shop.searchPlaceholder')}
-            value={searchTerm}
-            onChange={(e) => {
-              const val = e.target.value.slice(0, 100);
-              setSearchTerm(val);
-              const next = new URLSearchParams(searchParams);
-              if (val) next.set('search', val);
-              else next.delete('search');
-              setSearchParams(next);
-            }}
-            className="w-full border-0 border-b border-[#F0F0F0] bg-[#FFFFFF] py-3 text-[11px] font-light tracking-wide text-[#1A1A1A] outline-none transition-colors placeholder:text-[#CCCCCC] focus:border-[#1A1A1A]"
-          />
-        </div>
-
-        <div className="flex items-baseline justify-between gap-6 border-b border-[#F0F0F0] bg-[#FFFFFF] pb-4">
-          <h1 className="text-left text-[16px] font-extralight tracking-[0.2em] text-[#1a1a1a]">
+    <div className="min-h-screen bg-white pt-20 pb-12 antialiased text-[#1A1A1A] md:pt-24 md:pb-16">
+      <div className="mx-auto w-full max-w-[820px] bg-white px-3 sm:px-4">
+        <div className="flex items-center justify-between gap-2 border-b border-[#F5F5F5] bg-white py-1.5">
+          <h1 className="text-left text-[13px] font-extralight tracking-[0.2em] text-[#1a1a1a]">
             {categoryTitle}
           </h1>
           {showSkinFilters && (
             <button
               type="button"
               onClick={() => setShowFilters((v) => !v)}
-              className="shrink-0 text-[10px] font-extralight tracking-tighter text-[#1a1a1a]/85 transition-colors hover:text-[#1a1a1a]"
+              className="shrink-0 pl-1 text-[13px] font-extralight tracking-tighter text-[#1a1a1a]/85 transition-colors hover:text-[#1a1a1a]"
             >
               {showFilters ? '– 필터' : '+ 필터'}
             </button>
@@ -186,9 +160,9 @@ const ShopPage = ({ category }) => {
         </div>
 
         {showSkinFilters && (
-          <div className={`overflow-hidden bg-[#FFFFFF] ${showFilters ? 'max-h-[999px]' : 'max-h-0'}`}>
-            <div className="py-8 md:py-10">
-              <div className="flex flex-col gap-10 md:flex-row md:flex-wrap md:items-start md:gap-x-14 md:gap-y-8">
+          <div className={`overflow-hidden bg-white ${showFilters ? 'max-h-[999px]' : 'max-h-0'}`}>
+            <div className="py-4 md:py-5">
+              <div className="flex flex-col gap-6 md:flex-row md:flex-wrap md:items-start md:gap-x-10 md:gap-y-5">
                 <div className="flex min-w-0 flex-1 flex-col gap-4 sm:flex-row sm:items-center sm:gap-6">
                   <span className={`shrink-0 ${filterLabelClass}`}>TYPE</span>
                   <div className="flex flex-wrap items-center">
@@ -232,16 +206,16 @@ const ShopPage = ({ category }) => {
                 </div>
               </div>
             </div>
-            {showFilters && <div className="h-[1px] w-full bg-[#F0F0F0]" />}
+            {showFilters && <div className="h-px w-full bg-[#EEEEEE]" />}
           </div>
         )}
 
         {loading && (
-          <div className="mt-12 md:mt-16">
+          <div className="pt-2">
             <ProductGridSkeleton
               count={9}
-              columnsClass="grid-cols-2 lg:grid-cols-3"
-              gapClass="gap-x-[15px] gap-y-[80px]"
+              columnsClass="grid-cols-2 md:grid-cols-3"
+              gapClass="gap-x-2 gap-y-14"
             />
           </div>
         )}
@@ -254,7 +228,7 @@ const ShopPage = ({ category }) => {
 
         {!loading && !error && (
           <>
-            <div className="mt-12 grid grid-cols-2 gap-x-[15px] gap-y-[80px] md:mt-16 lg:grid-cols-3">
+            <div className="grid w-full grid-cols-2 gap-x-2 gap-y-14 pt-2 md:grid-cols-3">
               {filteredProducts.length > 0 ? (
                 displayedProducts.map((product) => (
                   <ProductCard key={product.id} product={product} onAddToCart={handleAddToCart} variant="grid" />

@@ -32,9 +32,9 @@ const LandingFloatingFooter = () => {
           <p className="whitespace-nowrap font-medium text-[9px] md:text-[10px] mb-1">© 2026 dr.care. all rights reserved.</p>
 
           <div className="hidden md:flex flex-col items-center gap-0.5">
-            <p>ceo : 신천영 | tel : 010-3126-6701 | email : pjk6412@naver.com</p>
+            <p>ceo : 신천영 | 상호명 : DR케어 | tel : 010-3126-6701 | email : pjk6412@naver.com</p>
             <p>address : 경기도 용인시 기흥구 흥덕중앙로 120 유타워 3208호</p>
-            <p className="opacity-60 text-[7px] md:text-[8px] mt-1">
+            <p className="opacity 00 text-[7px] md:text-[8px] mt-1">
               business license : 241-14-00646 | online license : 2019-용인기흥-0330
             </p>
           </div>

@@ -1,10 +1,10 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 
-// 단일 제품 카드 스켈레톤 (ProductCard 그리드와 동일 비율·텍스트 영역)
+// 단일 제품 카드 스켈레톤 (Shop: 그리드 열 폭에 맞춤, 3:4)
 export const ProductCardSkeleton = ({ variant = 'default' }) => (
-  <div className="group relative flex flex-col w-full">
-    <div className="relative aspect-[3/4] w-full shrink-0 overflow-hidden">
+  <div className="group relative flex w-full min-w-0 flex-col">
+    <div className="relative aspect-[3/4] w-full shrink-0 overflow-hidden bg-[#FAFAFA]">
       <motion.div
         className="absolute inset-0 bg-gradient-to-r from-transparent via-black/[0.04] to-transparent"
         animate={{ x: ['-100%', '100%'] }}
@@ -15,12 +15,12 @@ export const ProductCardSkeleton = ({ variant = 'default' }) => (
       className={
         variant === 'compact'
           ? 'mt-4 space-y-1 px-1'
-          : 'mt-4 flex flex-col items-center gap-0 text-center sm:mt-5'
+          : 'mt-2.5 flex min-w-0 flex-col items-start gap-0.5 text-left sm:mt-3'
       }
     >
-      <div className="mb-1 h-[9px] w-1/3 animate-pulse rounded-sm bg-black/[0.06]" />
-      <div className="h-[13px] w-[88%] animate-pulse rounded-sm bg-black/[0.08]" style={{ animationDelay: '0.05s' }} />
-      <div className="mt-1 h-[12px] w-1/4 animate-pulse rounded-sm bg-black/[0.05]" style={{ animationDelay: '0.1s' }} />
+      <div className="h-[7px] w-1/3 animate-pulse rounded-sm bg-black/[0.06]" />
+      <div className="h-[11px] w-[88%] animate-pulse rounded-sm bg-black/[0.08]" style={{ animationDelay: '0.05s' }} />
+      <div className="h-[9px] w-1/4 animate-pulse rounded-sm bg-black/[0.05]" style={{ animationDelay: '0.1s' }} />
     </div>
   </div>
 );
@@ -28,8 +28,8 @@ export const ProductCardSkeleton = ({ variant = 'default' }) => (
 // 그리드용 스켈레톤 (Shop — ProductCard와 1:1)
 export const ProductGridSkeleton = ({
   count = 9,
-  columnsClass = 'grid-cols-2 lg:grid-cols-3',
-  gapClass = 'gap-x-[15px] gap-y-[80px]',
+  columnsClass = 'grid-cols-2 md:grid-cols-3',
+  gapClass = 'gap-x-2 gap-y-14',
 }) => (
   <div className={`grid ${columnsClass} ${gapClass}`}>
     {Array.from({ length: count }).map((_, i) => (
