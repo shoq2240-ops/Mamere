@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase, getAuthRedirectUrl } from '../lib/supabase';
 
@@ -96,113 +95,97 @@ const LoginPage = () => {
     setResetSent(true);
   };
 
-  return (
-    <div className="min-h-[calc(100dvh-100px)] bg-white flex items-center justify-center px-6 py-12 antialiased text-[#3E2F28]">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, ease: "easeOut" }}
-        className="max-w-sm w-full space-y-8"
-      >
-        <div className="flex flex-col items-center gap-10">
-          <div className="text-center space-y-2">
-            <h1 className="text-2xl font-bold uppercase tracking-[0.2em] text-[#3E2F28]">login</h1>
-            <p className="text-[9pt] text-[#7A6B63] tracking-[0.15em] uppercase">sign in to your account</p>
-          </div>
-        </div>
+  const handleFindId = () => {
+    setError('아이디 찾기 기능은 준비 중입니다.');
+  };
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {error && (
-            <p className="text-red-600 text-[9pt] text-center">{error}</p>
-          )}
-          {resetSent && (
-            <p className="text-[#5C4A42] text-[9pt] text-center">
-              비밀번호 재설정 메일을 보냈습니다.
+  return (
+    <div className="min-h-[calc(100dvh-100px)] bg-white antialiased">
+      <div className="mx-auto w-full max-w-[420px] px-4 pt-20">
+        <h1 className="mb-8 text-[15px] font-medium text-[#1A1A1A]">로그인</h1>
+
+        <form onSubmit={handleSubmit}>
+          {(error || resetSent || resetSuccess) && (
+            <p className="mb-4 text-[12px] font-light text-[#1A1A1A]">
+              {error || (resetSent ? '비밀번호 재설정 메일을 보냈습니다.' : '비밀번호가 변경되었습니다.')}
             </p>
           )}
-          {resetSuccess && (
-            <p className="text-green-600 text-[9pt] text-center">
-              비밀번호가 변경되었습니다.
-            </p>
-          )}
-          <input
-            type="email"
-            placeholder="EMAIL"
-            value={email}
-            onChange={(e) => setEmail(e.target.value.slice(0, EMAIL_MAX_LENGTH))}
-            required
-            maxLength={EMAIL_MAX_LENGTH}
-            autoComplete="email"
-            className="w-full bg-[#F9F9F9] px-5 py-4 text-[9pt] text-[#000000] outline-none focus:bg-[#F5F5F5] transition-all placeholder-[#999999] tracking-[0.1em]"
-          />
-          <input
-            type="password"
-            placeholder="PASSWORD"
-            value={password}
-            onChange={(e) => setPassword(e.target.value.slice(0, PASSWORD_MAX_LENGTH))}
-            required
-            maxLength={PASSWORD_MAX_LENGTH}
-            autoComplete="current-password"
-            className="w-full bg-[#F9F9F9] px-5 py-4 text-[9pt] text-[#000000] outline-none focus:bg-[#F5F5F5] transition-all placeholder-[#999999] tracking-[0.1em]"
-          />
-          <label className="flex items-center gap-3 cursor-pointer group">
+
+          <div className="space-y-0">
             <input
-              type="checkbox"
-              checked={saveEmail}
-              onChange={(e) => setSaveEmail(e.target.checked)}
-              className="w-4 h-4 rounded border-[#CCCCCC] bg-white text-[#000000] focus:ring-[#000000] focus:ring-offset-0"
+              type="email"
+              placeholder="아이디"
+              value={email}
+              onChange={(e) => setEmail(e.target.value.slice(0, EMAIL_MAX_LENGTH))}
+              required
+              maxLength={EMAIL_MAX_LENGTH}
+              autoComplete="email"
+              className="w-full rounded-none border border-[#E5E5E5] bg-white px-4 py-4 text-[13px] text-[#1A1A1A] outline-none"
             />
-            <span className="text-[9pt] text-[#5C4A42] group-hover:text-[#3E2F28] transition-colors">
-              이메일 저장
-            </span>
-          </label>
+            <input
+              type="password"
+              placeholder="비밀번호"
+              value={password}
+              onChange={(e) => setPassword(e.target.value.slice(0, PASSWORD_MAX_LENGTH))}
+              required
+              maxLength={PASSWORD_MAX_LENGTH}
+              autoComplete="current-password"
+              className="w-full rounded-none border border-[#E5E5E5] border-t-0 bg-white px-4 py-4 text-[13px] text-[#1A1A1A] outline-none"
+            />
+          </div>
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-[#A8B894] text-[#2D3A2D] py-4 text-[9pt] font-bold uppercase tracking-[0.15em] hover:opacity-90 transition-opacity disabled:opacity-50"
+            className="mt-6 w-full rounded-none bg-black py-4 text-[13px] font-medium text-white disabled:opacity-60"
           >
-            {loading ? '로그인 중...' : '로그인'}
+            로그인
           </button>
-
-          <div className="relative py-6">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-[#A8B894]/30" />
-            </div>
-            <div className="relative flex justify-center text-[9px] uppercase tracking-[0.15em] text-[#7A6B63] bg-white px-4">
-              OR
-            </div>
-          </div>
-
-          <div className="m-0 p-0">
-            <button
-              type="button"
-              onClick={() => handleOAuthSignIn('kakao')}
-              disabled={loading}
-              className="flex w-full items-center justify-center gap-2 py-4 bg-[#FEE500] text-[#191919] text-[9pt] font-bold transition-opacity hover:opacity-90 disabled:opacity-50"
-            >
-              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 3c5.799 0 10.5 3.664 10.5 8.185 0 4.52-4.701 8.184-10.5 8.184a13.5 13.5 0 01-1.727-.11l-4.408 2.883c-.501.265-.678.236-.472-.413l.892-3.678c-2.88-1.46-4.785-3.99-4.785-6.866C1.5 6.665 6.201 3 12 3z" />
-              </svg>
-              KAKAO
-            </button>
-          </div>
         </form>
 
-        <div className="flex justify-between items-center text-[9pt] font-medium tracking-[0.1em] text-[#5C4A42] uppercase">
+        <div className="mt-5 flex gap-3">
+          <button
+            type="button"
+            onClick={handleFindId}
+            className="text-[12px] font-light text-[#1A1A1A] underline underline-offset-4 decoration-[#AAAAAA]"
+          >
+            아이디 찾기
+          </button>
           <button
             type="button"
             onClick={handleForgotPassword}
             disabled={loading || !email.trim()}
-            className="hover:text-[#3E2F28] transition-colors disabled:opacity-40"
+            className="text-[12px] font-light text-[#1A1A1A] underline underline-offset-4 decoration-[#AAAAAA] disabled:opacity-50"
           >
             비밀번호 찾기
           </button>
-          <Link to="/signup" className="hover:text-[#3E2F28] transition-colors underline underline-offset-4 decoration-[#A8B894]/50 hover:decoration-[#A8B894]">
-            회원가입
+          <Link
+            to="/order-lookup"
+            className="text-[12px] font-light text-[#1A1A1A] underline underline-offset-4 decoration-[#AAAAAA]"
+          >
+            비회원 주문조회
           </Link>
         </div>
-      </motion.div>
+
+        <button
+          type="button"
+          onClick={() => handleOAuthSignIn('kakao')}
+          disabled={loading}
+          className="mt-10 flex w-full items-center justify-center gap-2 rounded-none border border-black bg-white py-4 text-[13px] font-medium text-black disabled:opacity-60"
+        >
+          <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden>
+            <path d="M12 4C7.03 4 3 7.18 3 11.1c0 2.6 1.77 4.87 4.4 6.11l-.78 2.89 3.25-2.03c.7.11 1.42.17 2.13.17 4.97 0 9-3.18 9-7.1S16.97 4 12 4z" />
+          </svg>
+          카카오톡 로그인
+        </button>
+
+        <Link
+          to="/signup"
+          className="mt-10 block w-full rounded-none border border-[#1A1A1A] bg-[#FBFBFB] py-4 text-center text-[13px] font-medium text-black"
+        >
+          회원가입
+        </Link>
+      </div>
     </div>
   );
 };
