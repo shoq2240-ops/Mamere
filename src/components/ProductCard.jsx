@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useWishlist } from '../store/WishlistContext';
 import { formatPrice } from '../lib/formatPrice';
 import { isSoldOut } from '../lib/productStock';
 
@@ -41,7 +40,6 @@ const gridCategoryLabel = (product) => {
 };
 
 const ProductCard = ({ product, onAddToCart, variant = 'grid' }) => {
-  const { toggleWishlist, isInWishlist } = useWishlist();
   const soldOut = isSoldOut(product);
   const [imgError, setImgError] = useState(false);
 
@@ -49,12 +47,6 @@ const ProductCard = ({ product, onAddToCart, variant = 'grid' }) => {
   const primaryImage = product.card_image || imageUrls[0] || product.image;
   const hoverImage = product.card_hover_image || (imageUrls.length > 1 ? imageUrls[1] : null);
   const showPlaceholder = !primaryImage || imgError;
-
-  const handleWishlistClick = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    toggleWishlist(product.id);
-  };
 
   return (
     <div className="group/card relative flex w-full min-w-0 flex-col bg-white">
@@ -86,45 +78,21 @@ const ProductCard = ({ product, onAddToCart, variant = 'grid' }) => {
           )}
         </Link>
 
-        <div className="absolute right-3 top-3 z-30 flex items-center gap-2">
-          {!soldOut && onAddToCart && (
-            <div className="relative group/cart">
-              <button type="button" aria-label="장바구니" className="bg-transparent p-0 text-white">
-                <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.2" viewBox="0 0 24 24">
-                  <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
-                  <path d="M3 6h18" />
-                </svg>
-              </button>
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  onAddToCart(product, e);
-                }}
-                className="pointer-events-none absolute bottom-full left-1/2 z-40 -translate-x-1/2 translate-y-[calc(-100%_-_10px)] whitespace-nowrap border border-[#EEEEEE] bg-white/90 px-4 py-2.5 text-[11px] font-light tracking-tight text-[#1A1A1A] opacity-0 transition-opacity duration-300 ease-out group-hover/cart:pointer-events-auto group-hover/cart:opacity-100"
-              >
-                장바구니 담기
-              </button>
-            </div>
-          )}
-          <button
-            type="button"
-            onClick={handleWishlistClick}
-            aria-label="위시리스트"
-            className="bg-transparent p-0"
-          >
-            <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <path
-                d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z"
-                fill={isInWishlist(product.id) ? '#FFFFFF' : 'none'}
-                stroke="#FFFFFF"
-                strokeWidth={0.5}
-                vectorEffect="non-scaling-stroke"
-              />
-            </svg>
-          </button>
-        </div>
+        {!soldOut && onAddToCart && (
+          <div className="pointer-events-none absolute inset-0 z-30 flex items-center justify-center">
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onAddToCart(product, e);
+              }}
+              className="pointer-events-auto rounded-[8px] bg-black/70 px-5 py-3 text-[12px] font-light text-white opacity-0 transition-opacity duration-300 ease-out group-hover/card:opacity-100"
+            >
+              장바구니 담기
+            </button>
+          </div>
+        )}
 
         {soldOut && (
           <div className="absolute inset-0 z-20 flex items-center justify-center bg-white/50 backdrop-blur-[1px]">

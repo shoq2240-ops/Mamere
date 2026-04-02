@@ -70,7 +70,11 @@ const Footer = () => {
     return <LandingFloatingFooter />;
   }
 
-  return null;
+  return (
+    <footer className="mt-auto w-full border-t border-[#EEEEEE] bg-white px-6 py-4 text-center text-[10px] font-light text-[#888888]">
+      © 2026 mamere. all rights reserved.
+    </footer>
+  );
 };
 
 export default Footer;

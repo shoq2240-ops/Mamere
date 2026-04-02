@@ -329,9 +329,8 @@ const Navbar = ({ isScrolled = false, isMobileMenuOpen = false, onMobileMenuChan
                 </div>
 
                 <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain">
-                  {/* 매거진형 Z: 카테고리 ↔ 소형 비주얼 교차 */}
                   <div className="pb-4">
-                    <section className="relative mb-12">
+                    <section className="mb-8">
                       <button
                         type="button"
                         onClick={() => handleMenuClick('/shop/skincare')}
@@ -339,37 +338,19 @@ const Navbar = ({ isScrolled = false, isMobileMenuOpen = false, onMobileMenuChan
                       >
                         skincare
                       </button>
-                      <div className="mt-5 flex justify-end pr-1">
-                        <img
-                          src="/flower1.png"
-                          alt=""
-                          className="h-[5.25rem] w-[5.25rem] rounded-sm object-cover shadow-[0_4px_20px_rgba(62,47,40,0.08)]"
-                          loading="lazy"
-                          decoding="async"
-                        />
-                      </div>
                     </section>
 
-                    <section className="relative mb-12 flex flex-row items-start justify-between gap-6">
-                      <div className="shrink-0 pt-1">
-                        <img
-                          src="/flower2.png"
-                          alt=""
-                          className="h-16 w-16 rounded-sm object-cover opacity-95 shadow-sm"
-                          loading="lazy"
-                          decoding="async"
-                        />
-                      </div>
+                    <section className="mb-8">
                       <button
                         type="button"
                         onClick={() => handleMenuClick('/shop/body-hair')}
-                        className="min-w-0 flex-1 pt-1 text-right text-2xl font-light tracking-[0.08em] text-[#333333] transition-opacity hover:opacity-75 font-sans"
+                        className="block w-full text-left text-2xl font-light tracking-[0.08em] text-[#333333] transition-opacity hover:opacity-75 font-sans"
                       >
                         body & hair
                       </button>
                     </section>
 
-                    <section className="mb-10">
+                    <section className="mb-8">
                       <button
                         type="button"
                         onClick={() => handleMenuClick('/brand-story')}
@@ -377,7 +358,7 @@ const Navbar = ({ isScrolled = false, isMobileMenuOpen = false, onMobileMenuChan
                       >
                         brand story
                       </button>
-                      <p className="mt-5 max-w-[19rem] text-[13px] font-light leading-relaxed text-[#8A8278]">
+                      <p className="mt-3 max-w-[19rem] text-[13px] font-light leading-relaxed text-[#8A8278]">
                         자연이 건네는 다정한 위로
                       </p>
                     </section>
