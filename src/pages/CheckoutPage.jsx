@@ -303,7 +303,7 @@ const response = await window.PortOne.requestPayment({
             is_guest: isGuest,
             guest_email: isGuest ? (guestEmail ?? '').trim() : null,
             total_amount: paidAmount,
-            name: rsp.buyer_name || shippingName.trim(),
+            customer_name: rsp.buyer_name || shippingName.trim(),
             address: shippingAddress.trim() || null,
             detail_address: shippingAddressDetail.trim() || null,
             zip_code: shippingZipCode.trim() || null,
