@@ -83,6 +83,8 @@ const AddressInput = ({
   onAddressChange,
   detailValue,
   onDetailChange,
+  zipValue = '',
+  onZipChange = undefined,
   addressPlaceholder = '기본 주소 (주소 찾기)',
   detailPlaceholder = '상세 주소 (동, 호수 등)',
   className = '',
@@ -92,8 +94,11 @@ const AddressInput = ({
     (data) => {
       const fullAddress = formatAddress(data);
       onAddressChange(fullAddress);
+      if (typeof onZipChange === 'function') {
+        onZipChange((data?.zonecode || '').slice(0, 10));
+      }
     },
-    [onAddressChange]
+    [onAddressChange, onZipChange]
   );
 
   const handleClick = useCallback(async () => {
@@ -122,6 +127,15 @@ const AddressInput = ({
           주소 찾기
         </button>
       </div>
+      {typeof onZipChange === 'function' && (
+        <input
+          type="text"
+          value={zipValue}
+          onChange={(e) => onZipChange(e.target.value.slice(0, 10))}
+          placeholder="우편번호"
+          className={`w-full bg-transparent border border-[#E5E5E5] py-3 px-2 text-[13px] font-light text-[#1A1A1A] outline-none focus:border-black transition-colors placeholder:text-[#999999] ${inputClassName}`}
+        />
+      )}
       <input
         type="text"
         value={detailValue}

@@ -307,7 +307,7 @@ const response = await window.PortOne.requestPayment({
             address: shippingAddress.trim() || null,
             detail_address: shippingAddressDetail.trim() || null,
             zip_code: shippingZipCode.trim() || null,
-            shipping_phone: shippingPhone,
+            phone: shippingPhone,
             status: 'paid',
             items: cart,
           };
@@ -499,6 +499,8 @@ const response = await window.PortOne.requestPayment({
                     onAddressChange={setShippingAddress}
                     detailValue={shippingAddressDetail}
                     onDetailChange={setShippingAddressDetail}
+                    zipValue={shippingZipCode}
+                    onZipChange={setShippingZipCode}
                     addressPlaceholder="기본 주소 (주소 찾기)"
                     detailPlaceholder="상세 주소 (동, 호수 등)"
                   />
