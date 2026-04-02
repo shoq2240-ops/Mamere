@@ -144,9 +144,9 @@ const Navbar = ({ isScrolled = false, isMobileMenuOpen = false, onMobileMenuChan
   }
 
   const navLinks = [
-    { label: 'SKINCARE', path: '/shop/skincare' },
-    { label: 'BODY & HAIR', path: '/shop/body-hair' },
-    { label: 'BRAND STORY', path: '/brand-story' },
+    { label: 'skincare', path: '/shop/skincare' },
+    { label: 'body & hair', path: '/shop/body-hair' },
+    { label: 'brand story', path: '/brand-story' },
   ];
 
   return (
@@ -171,9 +171,9 @@ const Navbar = ({ isScrolled = false, isMobileMenuOpen = false, onMobileMenuChan
 
           {/* 좌: 햄버거(모바일) / GNB(데스크톱) — 우측과 동일 최소폭으로 로고 기하학적 중앙 */}
           <div className="z-10 flex min-w-0 items-center justify-start">
-            <div className="hidden h-full items-center gap-6 text-sm font-medium uppercase tracking-[0.12em] md:flex lg:gap-8">
+            <div className="hidden h-full items-center gap-6 text-sm font-medium tracking-[0.12em] md:flex lg:gap-8 font-sans">
               {navLinks.map((link) => (
-                <Link key={link.path} to={link.path} className="whitespace-nowrap text-[#F9F7F2] transition-all hover:opacity-80">
+                <Link key={link.path} to={link.path} className="whitespace-nowrap text-[#F9F7F2] transition-all hover:opacity-80 font-sans">
                   {link.label}
                 </Link>
               ))}
@@ -335,9 +335,9 @@ const Navbar = ({ isScrolled = false, isMobileMenuOpen = false, onMobileMenuChan
                       <button
                         type="button"
                         onClick={() => handleMenuClick('/shop/skincare')}
-                        className="block w-full text-left text-2xl font-light tracking-[0.08em] text-[#333333] transition-opacity hover:opacity-75"
+                        className="block w-full text-left text-2xl font-light tracking-[0.08em] text-[#333333] transition-opacity hover:opacity-75 font-sans"
                       >
-                        SKINCARE
+                        skincare
                       </button>
                       <div className="mt-5 flex justify-end pr-1">
                         <img
@@ -363,9 +363,9 @@ const Navbar = ({ isScrolled = false, isMobileMenuOpen = false, onMobileMenuChan
                       <button
                         type="button"
                         onClick={() => handleMenuClick('/shop/body-hair')}
-                        className="min-w-0 flex-1 pt-1 text-right text-2xl font-light tracking-[0.08em] text-[#333333] transition-opacity hover:opacity-75"
+                        className="min-w-0 flex-1 pt-1 text-right text-2xl font-light tracking-[0.08em] text-[#333333] transition-opacity hover:opacity-75 font-sans"
                       >
-                        BODY & HAIR
+                        body & hair
                       </button>
                     </section>
 
@@ -373,9 +373,9 @@ const Navbar = ({ isScrolled = false, isMobileMenuOpen = false, onMobileMenuChan
                       <button
                         type="button"
                         onClick={() => handleMenuClick('/brand-story')}
-                        className="block w-full text-left text-2xl font-light tracking-[0.08em] text-[#333333] transition-opacity hover:opacity-75"
+                        className="block w-full text-left text-2xl font-light tracking-[0.08em] text-[#333333] transition-opacity hover:opacity-75 font-sans"
                       >
-                        BRAND STORY
+                        brand story
                       </button>
                       <p className="mt-5 max-w-[19rem] text-[13px] font-light leading-relaxed text-[#8A8278]">
                         자연이 건네는 다정한 위로

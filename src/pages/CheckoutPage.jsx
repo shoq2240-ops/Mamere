@@ -270,19 +270,32 @@ const response = await window.PortOne.requestPayment({
 
         try {
           const rsp = response || {};
-          const { data: authUserData } = await supabase.auth.getUser();
-          const resolvedUserId = isGuest ? null : user?.id ?? authUserData?.user?.id ?? null;
+          const { data: sessionData } = await supabase.auth.getSession();
+          const sessionUserId = sessionData?.session?.user?.id ?? null;
+          const resolvedUserId = isGuest ? null : user?.id ?? sessionUserId ?? null;
+          if (!isGuest && !resolvedUserId) {
+            throw new Error('user_id 누락: 로그인 세션에서 사용자 식별자를 찾지 못했습니다.');
+          }
+
+          const paidAmount = Number(rsp.paid_amount ?? rsp.amount ?? displayTotal);
+          if (!Number.isFinite(paidAmount)) {
+            throw new Error('결제 금액 변환 실패: paid_amount/amount 값이 유효하지 않습니다.');
+          }
+
+          // orders 스키마 기준 매핑:
+          // merchant_uid -> order_number, imp_uid -> payment_id, paid_amount -> total_amount
           const orderData = {
             order_number: rsp.merchant_uid || rsp.paymentId,
-            payment_id: rsp.paymentId,
+            payment_id: rsp.imp_uid || rsp.paymentId,
             user_id: resolvedUserId,
             is_guest: isGuest,
             guest_email: isGuest ? (guestEmail ?? '').trim() : null,
-            total_amount: rsp.amount ?? displayTotal,
+            total_amount: paidAmount,
+            customer_name: rsp.buyer_name || shippingName.trim(),
             shipping_name: rsp.buyer_name || shippingName.trim(),
             shipping_address: serializeAddress(shippingAddress, shippingAddressDetail),
             shipping_phone: shippingPhone,
-            status: 'PAID',
+            status: 'paid',
             items: cart,
           };
           console.log('전송할 주문 데이터:', orderData);
