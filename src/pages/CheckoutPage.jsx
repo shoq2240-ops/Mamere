@@ -22,6 +22,18 @@ const parsePrice = (price) => {
 
 const isValidEmail = (s) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test((s ?? '').trim());
 
+const buildOrderNumber = () => {
+  const now = new Date(); // 로컬 시간 기준
+  const yyyy = String(now.getFullYear());
+  const mm = String(now.getMonth() + 1).padStart(2, '0');
+  const dd = String(now.getDate()).padStart(2, '0');
+  const hh = String(now.getHours()).padStart(2, '0');
+  const mi = String(now.getMinutes()).padStart(2, '0');
+  const ss = String(now.getSeconds()).padStart(2, '0');
+  const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+  return `ORD-${yyyy}${mm}${dd}-${hh}${mi}${ss}-${random}`;
+};
+
 const CheckoutPage = () => {
   const navigate = useNavigate();
   const { user, isLoggedIn, loading: authLoading } = useAuth();
@@ -224,7 +236,7 @@ const orderName =
     ? String(cart[0]?.name ?? '상품')
     : `${String(cart[0]?.name ?? '상품')} 외 ${cart.length - 1}건`;
 
-const paymentId = `order_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+const paymentId = buildOrderNumber();
 
 // 결제창 호출!
 const response = await window.PortOne.requestPayment({
@@ -291,8 +303,7 @@ const response = await window.PortOne.requestPayment({
             is_guest: isGuest,
             guest_email: isGuest ? (guestEmail ?? '').trim() : null,
             total_amount: paidAmount,
-            customer_name: rsp.buyer_name || shippingName.trim(),
-            shipping_name: rsp.buyer_name || shippingName.trim(),
+            name: rsp.buyer_name || shippingName.trim(),
             address: shippingAddress.trim() || null,
             detail_address: shippingAddressDetail.trim() || null,
             zip_code: shippingZipCode.trim() || null,
