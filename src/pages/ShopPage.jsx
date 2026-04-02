@@ -2,8 +2,6 @@ import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import { Link, useSearchParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useCart } from '../store/CartContext';
-import { useAuth } from '../store/AuthContext';
-import LoginRequiredModal from '../components/LoginRequiredModal';
 import ContactModal from '../components/ContactModal';
 import { useProducts } from '../hooks/useProducts';
 import { ProductGridSkeleton } from '../components/ProductSkeleton';
@@ -29,8 +27,6 @@ const toArray = (v) => {
 
 const ShopPage = ({ category }) => {
   const { addToCart } = useCart();
-  const { isLoggedIn } = useAuth();
-  const [showLoginModal, setShowLoginModal] = useState(false);
   const [isContactOpen, setIsContactOpen] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
 
@@ -107,10 +103,6 @@ const ShopPage = ({ category }) => {
   };
 
   const handleAddToCart = (product) => {
-    if (!isLoggedIn) {
-      setShowLoginModal(true);
-      return;
-    }
     const added = addToCart(product, 1);
     if (!added) {
       const stock = product?.stock_quantity ?? product?.stock ?? 0;
@@ -291,7 +283,6 @@ const ShopPage = ({ category }) => {
         </div>
       </div>
 
-      <LoginRequiredModal show={showLoginModal} onClose={() => setShowLoginModal(false)} />
     </div>
   );
 };

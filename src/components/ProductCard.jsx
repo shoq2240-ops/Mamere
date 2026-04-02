@@ -79,7 +79,7 @@ const ProductCard = ({ product, onAddToCart, variant = 'grid' }) => {
         </Link>
 
         {!soldOut && onAddToCart && (
-          <div className="pointer-events-none absolute inset-0 z-30 flex items-center justify-center">
+          <div className="pointer-events-none absolute inset-0 z-30 flex items-end justify-center p-2">
             <button
               type="button"
               onClick={(e) => {
@@ -87,7 +87,7 @@ const ProductCard = ({ product, onAddToCart, variant = 'grid' }) => {
                 e.stopPropagation();
                 onAddToCart(product, e);
               }}
-              className="pointer-events-auto rounded-[8px] bg-black/70 px-5 py-3 text-[12px] font-light text-white opacity-0 transition-opacity duration-300 ease-out group-hover/card:opacity-100"
+              className="pointer-events-auto w-full rounded-[8px] border border-[#CFCFCF] bg-transparent px-5 py-3 text-[12px] font-light text-[#1A1A1A] font-sans opacity-0 transition-opacity duration-300 ease-out group-hover/card:opacity-100"
             >
               장바구니 담기
             </button>
