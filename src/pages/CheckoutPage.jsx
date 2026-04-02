@@ -269,19 +269,26 @@ const response = await window.PortOne.requestPayment({
         }
 
         try {
-          const { error: orderErr } = await publicTable('orders').insert({
-            order_number: response.paymentId,
-            payment_id: response.paymentId,
-            user_id: isGuest ? null : user?.id ?? null,
+          const rsp = response || {};
+          const { data: authUserData } = await supabase.auth.getUser();
+          const resolvedUserId = isGuest ? null : user?.id ?? authUserData?.user?.id ?? null;
+          const orderData = {
+            order_number: rsp.merchant_uid || rsp.paymentId,
+            payment_id: rsp.paymentId,
+            user_id: resolvedUserId,
             is_guest: isGuest,
             guest_email: isGuest ? (guestEmail ?? '').trim() : null,
-            total_amount: displayTotal,
-            shipping_name: shippingName.trim(),
+            total_amount: rsp.amount ?? displayTotal,
+            shipping_name: rsp.buyer_name || shippingName.trim(),
             shipping_address: serializeAddress(shippingAddress, shippingAddressDetail),
             shipping_phone: shippingPhone,
             status: 'PAID',
             items: cart,
-          });
+          };
+          console.log('전송할 주문 데이터:', orderData);
+          console.log('Order Insert Payload:', orderData);
+
+          const { error: orderErr } = await publicTable('orders').insert(orderData);
 
           if (orderErr) throw orderErr;
 
@@ -303,7 +310,10 @@ const response = await window.PortOne.requestPayment({
             guestEmail: isGuest ? (guestEmail ?? '').trim() : undefined,
           });
         } catch (dbErr) {
-          console.error(dbErr);
+          // RLS 에러일 경우 프론트 수정으로 해결 불가: Supabase 대시보드에서 orders 테이블 INSERT 정책을 확인하세요.
+          console.error('Supabase 400 Error Details:', dbErr);
+          console.error('Supabase 400 Error Message:', dbErr?.message);
+          console.error('Supabase 400 Error Details Field:', dbErr?.details);
           toast.error(
             '결제는 완료되었으나 주문 내역 저장 중 오류가 발생했습니다. 고객센터로 문의해주세요.'
           );
