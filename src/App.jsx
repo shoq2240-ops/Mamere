@@ -137,7 +137,7 @@ function AppContent() {
   const headerBgClass = isAdmin ? 'bg-[#000000] border-b border-white/10' : '';
 
   const customerHeaderClass =
-    'fixed top-0 left-0 w-full z-50 flex flex-col transition-all duration-300';
+    'fixed top-0 left-0 w-full z-[210] flex flex-col transition-all duration-300';
 
   /** 고객 페이지: 홈과 동일하게 본문을 상단부터 깔아 fixed 헤더(마키+글래스 네비)가 항상 같은 오버레이로 동작 */
   const mainPaddingTop = isAdmin ? 'pt-20' : 'pt-0';
@@ -180,7 +180,7 @@ function AppContent() {
         ref={mainScrollRef}
         onScroll={handleScroll}
         id="main-scroll"
-        className={`flex min-h-0 flex-1 flex-col overflow-y-auto overflow-x-hidden bg-white text-[#333333] ${mainPaddingTop}`}
+        className={`relative flex min-h-0 flex-1 flex-col overflow-y-auto overflow-x-hidden bg-white text-[#333333] ${mainPaddingTop}`}
       >
         <AnimatedRoutes />
         <Footer />

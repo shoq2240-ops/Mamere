@@ -6,7 +6,7 @@ const ShippingPage = () => {
     <div className="min-h-screen bg-[#FFFFFF] text-[#000000] pt-32 pb-24 px-6 antialiased">
       <div className="max-w-2xl mx-auto">
         <Link to="/" className="inline-block text-[10px] tracking-[0.15em] uppercase text-[#666666] hover:text-[#000000] mb-12 transition-colors">
-          ← Dr.care
+          ← home
         </Link>
         <h1 className="text-2xl font-semibold text-black tracking-tight uppercase mb-12">배송 정보</h1>
         <div className="text-[11px] text-[#333333] leading-relaxed space-y-6 whitespace-pre-line">

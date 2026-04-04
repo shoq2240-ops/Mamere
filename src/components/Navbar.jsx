@@ -1,11 +1,10 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useLayoutEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 // [이미지 교체] 브랜드 로고: public 폴더의 brand.logo2.png 사용
 const brandLogo = '/brand.logo1.png';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCart } from '../store/CartContext';
-import { useWishlist } from '../store/WishlistContext';
 import { useAuth } from '../store/AuthContext';
 import { supabase } from '../lib/supabase';
 import CartDrawer from './CartDrawer';
@@ -48,6 +47,7 @@ const Navbar = ({ isScrolled = false, isMobileMenuOpen = false, onMobileMenuChan
   const toggleMenu = () => {
     const nextOpen = !activeMenuOpen;
     console.log('Menu Clicked!', nextOpen);
+    if (nextOpen) setAccountOpen(false);
     handleMenuToggle(nextOpen);
   };
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -56,14 +56,13 @@ const Navbar = ({ isScrolled = false, isMobileMenuOpen = false, onMobileMenuChan
   const [accountOpen, setAccountOpen] = useState(false);
   const [accountDropdownRect, setAccountDropdownRect] = useState(null);
   const accountButtonRef = useRef(null);
+  const accountMenuRef = useRef(null);
   const searchButtonRef = useRef(null);
   const searchInputRef = useRef(null);
   const [searchPanelRect, setSearchPanelRect] = useState(null);
   const [searchInput, setSearchInput] = useState('');
   const [isCartOpen, setIsCartOpen] = useState(false);
   const { cartCount } = useCart();
-  const { wishlist } = useWishlist();
-  const wishlistCount = Array.isArray(wishlist) ? wishlist.length : 0;
   const { isLoggedIn } = useAuth();
   const navigate = useNavigate();
   const { pathname } = useLocation();
@@ -142,16 +141,16 @@ const Navbar = ({ isScrolled = false, isMobileMenuOpen = false, onMobileMenuChan
     }
   }, [isSearchOpen, searchPanelRect]);
 
-  // 마이페이지 드롭다운 위치 (포털용) — 열릴 때 버튼 기준으로 계산, 스크롤/리사이즈 시 갱신
-  const updateAccountDropdownRect = () => {
+  const updateAccountDropdownRect = useCallback(() => {
     if (accountButtonRef.current) {
       setAccountDropdownRect(accountButtonRef.current.getBoundingClientRect());
     }
-  };
-  useEffect(() => {
-    if (!accountOpen) {
+  }, []);
+
+  useLayoutEffect(() => {
+    if (!accountOpen || !isLoggedIn) {
       setAccountDropdownRect(null);
-      return;
+      return undefined;
     }
     updateAccountDropdownRect();
     window.addEventListener('scroll', updateAccountDropdownRect, true);
@@ -160,6 +159,31 @@ const Navbar = ({ isScrolled = false, isMobileMenuOpen = false, onMobileMenuChan
       window.removeEventListener('scroll', updateAccountDropdownRect, true);
       window.removeEventListener('resize', updateAccountDropdownRect);
     };
+  }, [accountOpen, isLoggedIn, updateAccountDropdownRect]);
+
+  useEffect(() => {
+    if (!accountOpen) return undefined;
+    const onPointerDown = (e) => {
+      const t = e.target;
+      if (accountButtonRef.current?.contains(t)) return;
+      if (accountMenuRef.current?.contains(t)) return;
+      setAccountOpen(false);
+    };
+    document.addEventListener('mousedown', onPointerDown);
+    document.addEventListener('touchstart', onPointerDown, { passive: true });
+    return () => {
+      document.removeEventListener('mousedown', onPointerDown);
+      document.removeEventListener('touchstart', onPointerDown);
+    };
+  }, [accountOpen]);
+
+  useEffect(() => {
+    if (!accountOpen) return undefined;
+    const onKey = (ev) => {
+      if (ev.key === 'Escape') setAccountOpen(false);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
   }, [accountOpen]);
 
   // GNB: Skincare, Body & Hair, Brand Story
@@ -197,8 +221,8 @@ const Navbar = ({ isScrolled = false, isMobileMenuOpen = false, onMobileMenuChan
   ];
 
   return (
-    <div className="bg-transparent antialiased" onMouseLeave={() => setHoveredMenu(null)}>
-      <nav className="relative z-[150] w-full overflow-x-hidden bg-transparent text-white transition-all duration-300">
+    <div className="overflow-x-hidden bg-transparent antialiased" onMouseLeave={() => setHoveredMenu(null)}>
+      <nav className="relative z-[150] w-full overflow-visible bg-transparent text-white transition-all duration-300">
         <div className="relative isolate mx-auto grid h-12 w-full max-w-[1800px] grid-cols-[minmax(5.5rem,1fr)_auto_minmax(5.5rem,1fr)] items-center gap-2 px-5 py-0 md:h-16 md:px-6">
 
           <div className="pointer-events-none absolute inset-0 z-0" aria-hidden>
@@ -258,12 +282,13 @@ const Navbar = ({ isScrolled = false, isMobileMenuOpen = false, onMobileMenuChan
           </div>
 
           {/* 우: 검색 / 계정 / 장바구니 — 로고보다 위로 두어 클릭 영역 유지 */}
-          <div className="relative z-[30] flex min-w-0 items-center justify-end gap-4">
+          <div className="relative z-[30] flex min-w-0 items-center justify-end gap-4 overflow-visible">
             <button
               ref={searchButtonRef}
               type="button"
               onClick={() => {
                 handleMenuToggle(false);
+                setAccountOpen(false);
                 setIsSearchOpen((open) => !open);
               }}
               className="flex h-7 w-7 items-center justify-center text-white transition-colors hover:opacity-80 md:h-9 md:w-9"
@@ -276,14 +301,18 @@ const Navbar = ({ isScrolled = false, isMobileMenuOpen = false, onMobileMenuChan
                 <path d="m21 21-4.35-4.35" />
               </svg>
             </button>
-            <div className="hidden md:block relative">
+            <div className="relative">
               {isLoggedIn ? (
                 <>
                   <button
                     ref={accountButtonRef}
                     type="button"
-                    onClick={() => setAccountOpen(!accountOpen)}
-                    className="flex h-10 w-10 items-center justify-center text-white transition-colors hover:opacity-80"
+                    onClick={() => {
+                      handleMenuToggle(false);
+                      setIsSearchOpen(false);
+                      setAccountOpen((o) => !o);
+                    }}
+                    className="flex h-9 w-9 items-center justify-center text-white transition-colors hover:opacity-80 md:h-10 md:w-10"
                     aria-label="마이페이지"
                     aria-expanded={accountOpen}
                     aria-haspopup="true"
@@ -293,32 +322,17 @@ const Navbar = ({ isScrolled = false, isMobileMenuOpen = false, onMobileMenuChan
                       <path d="M6 21c0-4 2.5-7 6-7s6 3 6 7" strokeLinecap="round" />
                     </svg>
                   </button>
-                  {/* 마이페이지 드롭다운: 포털로 body에 렌더링해 히어로/스크롤 영역에 가리지 않도록 함 */}
-                  {typeof document !== 'undefined' && accountOpen && accountDropdownRect && createPortal(
-                    <>
-                      <div className="fixed inset-0 z-[9996]" onClick={() => setAccountOpen(false)} aria-hidden="true" />
-                      <motion.div
-                        initial={{ opacity: 0, y: -8 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="fixed py-4 px-6 bg-[#F9F7F2] border border-[#A8B894]/30 min-w-[160px] z-[9997] flex flex-col gap-3 shadow-lg text-[#3E2F28]"
-                        style={{
-                          top: accountDropdownRect.bottom + 8,
-                          left: accountDropdownRect.left + accountDropdownRect.width / 2,
-                          transform: 'translateX(-50%)',
-                        }}
-                      >
-                        <Link to="/wishlist" onClick={() => setAccountOpen(false)} className="text-[10px] font-light text-[#5C4A42] hover:text-[#3E2F28] transition-colors tracking-[0.15em] uppercase">WISHLIST</Link>
-                        <Link to="/orders" onClick={() => setAccountOpen(false)} className="text-[10px] font-light text-[#5C4A42] hover:text-[#3E2F28] transition-colors tracking-[0.15em] uppercase">ORDERS</Link>
-                        <Link to="/profile" onClick={() => setAccountOpen(false)} className="text-[10px] font-light text-[#5C4A42] hover:text-[#3E2F28] transition-colors tracking-[0.15em] uppercase">PROFILE</Link>
-                        <button type="button" onClick={() => { handleLogout(); setAccountOpen(false); }} className="text-[10px] font-light text-[#5C4A42] hover:text-[#3E2F28] transition-colors tracking-[0.15em] uppercase text-left">LOGOUT</button>
-                      </motion.div>
-                    </>,
-                    document.body
-                  )}
                 </>
               ) : (
-                <Link to="/login" className="flex items-center justify-center w-10 h-10 hover:opacity-80 transition-colors text-white">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="1.2" viewBox="0 0 24 24">
+                <Link
+                  to="/login"
+                  onClick={() => {
+                    handleMenuToggle(false);
+                    setIsSearchOpen(false);
+                  }}
+                  className="flex h-9 w-9 items-center justify-center text-white transition-colors hover:opacity-80 md:h-10 md:w-10"
+                >
+                  <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.2" viewBox="0 0 24 24" aria-hidden>
                     <circle cx="12" cy="8" r="3.5" stroke="currentColor" />
                     <path d="M6 21c0-4 2.5-7 6-7s6 3 6 7" stroke="currentColor" strokeLinecap="round" />
                   </svg>
@@ -328,6 +342,7 @@ const Navbar = ({ isScrolled = false, isMobileMenuOpen = false, onMobileMenuChan
             <button
               type="button"
               onClick={() => {
+                setAccountOpen(false);
                 setIsCartOpen(true);
                 handleMenuToggle(false);
               }}
@@ -350,116 +365,140 @@ const Navbar = ({ isScrolled = false, isMobileMenuOpen = false, onMobileMenuChan
         </div>
       </nav>
 
-      {/* 모바일 메뉴 (Portal: 배경 #FFFFFF 불투명, z-index 9999) */}
+      {/* 회원 메뉴: body 포털 + 높은 z-index로 히어로/본문 위에 표시 (overflow·스택킹 이슈 회피, 모바일 터치 유지) */}
+      {typeof document !== 'undefined' &&
+        accountOpen &&
+        isLoggedIn &&
+        accountDropdownRect &&
+        createPortal(
+          <motion.div
+            ref={accountMenuRef}
+            role="menu"
+            aria-label="마이페이지 메뉴"
+            initial={{ opacity: 0, y: -6 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.18 }}
+            className="fixed z-[250] w-48 max-w-[min(12rem,calc(100vw-1rem))] overflow-hidden border border-white/40 bg-white/50 shadow-lg backdrop-blur-md [-webkit-tap-highlight-color:transparent]"
+            style={{
+              top: accountDropdownRect.bottom + 8,
+              right: Math.max(8, document.documentElement.clientWidth - accountDropdownRect.right),
+            }}
+          >
+            <div className="flex flex-col py-3 px-4 text-center text-gray-800 text-[11px] tracking-wider">
+              <Link
+                to="/wishlist"
+                role="menuitem"
+                onClick={() => setAccountOpen(false)}
+                className="block rounded-sm py-2.5 transition-colors hover:bg-white/20 active:bg-white/25"
+              >
+                wishlist
+              </Link>
+              <Link
+                to="/orders"
+                role="menuitem"
+                onClick={() => setAccountOpen(false)}
+                className="block rounded-sm py-2.5 transition-colors hover:bg-white/20 active:bg-white/25"
+              >
+                orders
+              </Link>
+              <Link
+                to="/profile"
+                role="menuitem"
+                onClick={() => setAccountOpen(false)}
+                className="block rounded-sm py-2.5 transition-colors hover:bg-white/20 active:bg-white/25"
+              >
+                profile
+              </Link>
+              <button
+                type="button"
+                role="menuitem"
+                onClick={() => {
+                  handleLogout();
+                  setAccountOpen(false);
+                }}
+                className="block w-full rounded-sm py-2.5 transition-colors hover:bg-white/20 active:bg-white/25"
+              >
+                logout
+              </button>
+            </div>
+          </motion.div>,
+          document.body
+        )}
+
+      {/* 모바일 카테고리 메뉴: 좌측 콤팩트 글래스 패널 (전체 화면 아님) */}
       {typeof document !== 'undefined' && createPortal(
         <AnimatePresence>
           {activeMenuOpen && (
             <>
               <motion.div
+                key="mobile-menu-backdrop"
+                className="fixed inset-0 z-[38] bg-black/25 md:hidden"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.2 }}
-                className="fixed inset-0 md:hidden"
-                style={{ zIndex: 9998, backgroundColor: 'rgba(0,0,0,0.25)' }}
+                aria-hidden
                 onClick={() => handleMenuToggle(false)}
-                aria-hidden="true"
               />
               <motion.div
-                initial={{ x: "-100%" }}
-                animate={{ x: 0 }}
-                exit={{ x: "-100%" }}
-                transition={{ type: "spring", damping: 25, stiffness: 200 }}
-                className="fixed inset-0 flex flex-col px-6 pb-10 tracking-wide leading-loose text-[#333333] md:hidden"
+                key="mobile-menu-panel"
+                role="dialog"
+                aria-modal="true"
+                aria-label="카테고리 메뉴"
+                initial={{ opacity: 0, y: -8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.2 }}
+                className="fixed left-4 z-[40] flex max-h-[min(28rem,78dvh)] w-[min(18rem,calc(100vw-2rem))] flex-col overflow-y-auto overscroll-contain rounded-2xl border border-white/40 bg-white/50 shadow-lg backdrop-blur-md md:hidden supports-[backdrop-filter]:bg-white/45"
                 style={{
-                  zIndex: 9999,
-                  backgroundColor: '#FAF9F6',
-                  paddingTop: 'max(0.75rem, env(safe-area-inset-top, 0px))',
+                  top: 'calc(36px + 48px + env(safe-area-inset-top, 0px) + 8px)',
                 }}
               >
-                <div
-                  className="mb-6 flex h-12 shrink-0 items-center"
-                  style={{ minHeight: '3rem' }}
+                <button
+                  type="button"
+                  onClick={() => handleMenuToggle(false)}
+                  className="absolute left-3 top-3 z-10 flex items-center gap-2 text-gray-800 transition-opacity hover:opacity-70"
+                  aria-label="메뉴 닫기"
                 >
+                  <svg className="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.15} aria-hidden>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 18l-6-6 6-6" />
+                  </svg>
+                  <span className="text-[10px] font-medium uppercase tracking-[0.2em]">back</span>
+                </button>
+
+                <div className="flex flex-col items-center gap-6 px-8 pb-8 pt-14 text-center">
                   <button
                     type="button"
-                    onClick={() => handleMenuToggle(false)}
-                    className="flex items-center gap-2.5 text-[#7A6B63] transition-opacity hover:opacity-80"
+                    onClick={() => handleMenuClick('/shop/skincare')}
+                    className="text-xl font-light tracking-[0.08em] text-gray-800 transition-opacity hover:opacity-75 font-sans"
                   >
-                    <svg className="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.15} aria-hidden>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 18l-6-6 6-6" />
-                    </svg>
-                    <span className="text-[10px] font-light uppercase tracking-[0.2em]">BACK</span>
+                    skincare
                   </button>
-                </div>
-
-                <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain">
-                  <div className="pb-4">
-                    <section className="mb-8">
-                      <button
-                        type="button"
-                        onClick={() => handleMenuClick('/shop/skincare')}
-                        className="block w-full text-left text-2xl font-light tracking-[0.08em] text-[#333333] transition-opacity hover:opacity-75 font-sans"
-                      >
-                        skincare
-                      </button>
-                    </section>
-
-                    <section className="mb-8">
-                      <button
-                        type="button"
-                        onClick={() => handleMenuClick('/shop/body-hair')}
-                        className="block w-full text-left text-2xl font-light tracking-[0.08em] text-[#333333] transition-opacity hover:opacity-75 font-sans"
-                      >
-                        body & hair
-                      </button>
-                    </section>
-
-                    <section className="mb-8">
-                      <button
-                        type="button"
-                        onClick={() => handleMenuClick('/shop/household')}
-                        className="block w-full text-left text-2xl font-light tracking-[0.08em] text-[#333333] transition-opacity hover:opacity-75 font-sans"
-                      >
-                        household items
-                      </button>
-                    </section>
-
-                    <section className="mb-8">
-                      <button
-                        type="button"
-                        onClick={() => handleMenuClick('/brand-story')}
-                        className="block w-full text-left text-2xl font-light tracking-[0.08em] text-[#333333] transition-opacity hover:opacity-75 font-sans"
-                      >
-                        brand story
-                      </button>
-                      <p className="mt-3 max-w-[19rem] text-[13px] font-light leading-relaxed text-[#8A8278]">
-                        자연이 건네는 다정한 위로
-                      </p>
-                    </section>
-                  </div>
-
-                  <div className="mt-auto flex shrink-0 flex-col space-y-3 border-t border-[#EAE5DD] pt-6 text-[11px]">
-                    <button type="button" onClick={() => { setIsCartOpen(true); handleMenuToggle(false); }} className="flex justify-between font-medium uppercase tracking-[0.12em] text-[#333333] py-1.5">
-                      <span>SHOPPING BAG</span>
-                      <span>[{cartCount}]</span>
+                  <button
+                    type="button"
+                    onClick={() => handleMenuClick('/shop/body-hair')}
+                    className="text-xl font-light tracking-[0.08em] text-gray-800 transition-opacity hover:opacity-75 font-sans"
+                  >
+                    body & hair
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleMenuClick('/shop/household')}
+                    className="text-xl font-light tracking-[0.08em] text-gray-800 transition-opacity hover:opacity-75 font-sans"
+                  >
+                    household items
+                  </button>
+                  <div>
+                    <button
+                      type="button"
+                      onClick={() => handleMenuClick('/brand-story')}
+                      className="text-xl font-light tracking-[0.08em] text-gray-800 transition-opacity hover:opacity-75 font-sans"
+                    >
+                      brand story
                     </button>
-                    <button type="button" onClick={() => handleMenuClick('/wishlist')} className="flex justify-between py-1.5 text-left font-light uppercase tracking-[0.12em] text-[#5C4A42]">
-                      <span>WISHLIST</span>
-                      {wishlistCount > 0 ? <span>[{wishlistCount}]</span> : null}
-                    </button>
-                    {isLoggedIn ? (
-                      <>
-                        <button type="button" onClick={() => handleMenuClick('/orders')} className="py-1.5 text-left font-light uppercase tracking-[0.12em] text-[#5C4A42]">ORDERS</button>
-                        <button type="button" onClick={() => handleMenuClick('/profile')} className="py-1.5 text-left font-light uppercase tracking-[0.12em] text-[#5C4A42]">PROFILE</button>
-                        <button type="button" onClick={handleLogout} className="py-1.5 text-left font-light uppercase tracking-[0.12em] text-[#7A6B63]">LOGOUT</button>
-                      </>
-                    ) : (
-                      <>
-                        <button type="button" onClick={() => handleMenuClick('/login')} className="py-1.5 text-left font-light uppercase tracking-[0.12em] text-[#7A6B63]">LOGIN</button>
-                        <button type="button" onClick={() => handleMenuClick('/signup')} className="py-1.5 text-left font-light uppercase tracking-[0.12em] text-[#7A6B63]">JOIN NOW</button>
-                      </>
-                    )}
+                    <p className="mt-2 max-w-[15rem] text-[12px] font-light leading-relaxed text-gray-700">
+                      자연이 건네는 다정한 위로
+                    </p>
                   </div>
                 </div>
               </motion.div>

@@ -24,6 +24,7 @@ const ProfilePage = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [withdrawing, setWithdrawing] = useState(false);
+  const [withdrawModalOpen, setWithdrawModalOpen] = useState(false);
   const [error, setError] = useState('');
   const [isEditingName, setIsEditingName] = useState(false);
   const [isEditingEmail, setIsEditingEmail] = useState(false);
@@ -212,17 +213,20 @@ const ProfilePage = () => {
     setIsEditingAddress(true);
   };
 
-  const handleWithdraw = async () => {
-    if (!window.confirm('정말 탈퇴하시겠습니까?')) return;
+  const handleWithdrawConfirm = async () => {
     setWithdrawing(true);
+    setError('');
     try {
       const { error: withdrawError } = await withdrawUser();
       if (withdrawError) throw new Error(withdrawError);
       await supabase.auth.signOut();
+      setWithdrawModalOpen(false);
       toast.success('회원 탈퇴가 완료되었습니다.');
       navigate('/', { replace: true });
     } catch (withdrawErr) {
-      setError(withdrawErr?.message || '회원 탈퇴에 실패했습니다.');
+      const msg = withdrawErr?.message || '회원 탈퇴에 실패했습니다.';
+      setError(msg);
+      toast.error(msg);
     } finally {
       setWithdrawing(false);
     }
@@ -412,16 +416,58 @@ const ProfilePage = () => {
               </Link>
             </div>
 
-            <div className="mt-8 flex justify-end">
+            <div className="mt-14 flex justify-start border-t border-[#F4F4F4] pt-8">
               <button
                 type="button"
-                onClick={handleWithdraw}
+                onClick={() => setWithdrawModalOpen(true)}
                 disabled={withdrawing}
-                className="text-[10px] font-extralight lowercase tracking-tight text-gray-400 hover:text-red-500 disabled:opacity-50"
+                className="text-[11px] font-light text-gray-400 transition-colors hover:text-gray-600 disabled:opacity-50"
               >
                 회원 탈퇴
               </button>
             </div>
+
+            {withdrawModalOpen && (
+              <div
+                className="fixed inset-0 z-[300] flex items-center justify-center bg-black/45 p-4"
+                role="presentation"
+                onClick={() => !withdrawing && setWithdrawModalOpen(false)}
+              >
+                <div
+                  role="dialog"
+                  aria-modal="true"
+                  aria-labelledby="withdraw-dialog-title"
+                  className="w-full max-w-md border border-[#E5E5E5] bg-white p-6 shadow-[0_12px_40px_rgba(0,0,0,0.15)]"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <h2 id="withdraw-dialog-title" className="text-[13px] font-medium text-[#1A1A1A]">
+                    회원 탈퇴
+                  </h2>
+                  <p className="mt-4 text-[12px] leading-relaxed text-[#444444] break-keep">
+                    정말 탈퇴하시겠습니까? 탈퇴 시 개인정보는 지체 없이 파기되나, 전자상거래법에 따라 기존 결제 및
+                    주문 내역은 5년간 보관됩니다.
+                  </p>
+                  <div className="mt-8 flex justify-end gap-3">
+                    <button
+                      type="button"
+                      disabled={withdrawing}
+                      onClick={() => setWithdrawModalOpen(false)}
+                      className="border border-[#1A1A1A] bg-white px-4 py-2 text-[11px] font-medium text-[#1A1A1A] transition-colors hover:bg-[#F8F8F8] disabled:opacity-50"
+                    >
+                      취소
+                    </button>
+                    <button
+                      type="button"
+                      disabled={withdrawing}
+                      onClick={handleWithdrawConfirm}
+                      className="border border-[#1A1A1A] bg-[#1A1A1A] px-4 py-2 text-[11px] font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+                    >
+                      {withdrawing ? '처리 중…' : '탈퇴하기'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </>
         )}
       </div>
