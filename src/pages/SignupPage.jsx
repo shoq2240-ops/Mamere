@@ -149,7 +149,7 @@ const SignupPage = () => {
 
   return (
     <div className="min-h-screen bg-white antialiased">
-      <div className="mx-auto w-full max-w-[420px] px-4 pb-32 pt-20">
+      <div className="mx-auto w-full max-w-[420px] px-4 pb-32 pt-24 md:pt-28">
         <h1 className="mb-8 text-[15px] font-medium text-[#1A1A1A]">회원가입</h1>
 
         <form onSubmit={handleSubmit}>

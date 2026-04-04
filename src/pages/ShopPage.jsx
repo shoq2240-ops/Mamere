@@ -115,9 +115,11 @@ const ShopPage = ({ category }) => {
   const categoryTitle =
     categoryNorm === 'body_hair'
       ? 'BODY & HAIR'
-      : categoryNorm === 'skincare'
-        ? 'DEEP CARE'
-        : 'SHOP ALL';
+      : categoryNorm === 'household_items'
+        ? 'HOUSEHOLD ITEMS'
+        : categoryNorm === 'skincare'
+          ? 'DEEP CARE'
+          : 'SHOP ALL';
   const filterSectionTitleClass = 'mb-3 text-[10px] font-medium uppercase tracking-[0.2em] text-[#AAAAAA]';
   const filterBtnClass = (active) =>
     `text-[11px] underline-offset-4 transition-colors ${
@@ -260,24 +262,19 @@ const ShopPage = ({ category }) => {
             <a
               href="https://www.instagram.com/official_mamere/"
               target="_blank"
-              rel="noreferrer"
-              aria-label="마메르 인스타그램"
-              className="mt-1 inline-block text-[11px] font-light leading-[1.8] text-[#777777] hover:text-[#1A1A1A]"
+              rel="noopener noreferrer"
+              aria-label="Mamere on Instagram (opens in new tab)"
+              className="mt-1 inline-block transition-opacity hover:opacity-80"
             >
-              인스타그램
-            </a>
-            <a
-              href="https://www.instagram.com/official_mamere/"
-              target="_blank"
-              rel="noreferrer"
-              aria-hidden
-              className="mt-3 inline-flex text-[#B5B5B5] hover:text-[#1A1A1A]"
-            >
-              <svg className="h-4 w-4 text-[#B5B5B5]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1">
-                <rect x="4" y="4" width="16" height="16" rx="4" />
-                <circle cx="12" cy="12" r="4" />
-                <circle cx="17.5" cy="6.5" r="0.75" fill="currentColor" stroke="none" />
-              </svg>
+              <img
+                src="/instagram.png"
+                alt=""
+                width={20}
+                height={20}
+                className="h-5 w-auto max-w-[120px] object-contain object-left"
+                loading="lazy"
+                decoding="async"
+              />
             </a>
           </div>
         </div>

@@ -101,7 +101,7 @@ const LoginPage = () => {
 
   return (
     <div className="min-h-[calc(100dvh-100px)] bg-white antialiased">
-      <div className="mx-auto w-full max-w-[420px] px-4 pt-20">
+      <div className="mx-auto w-full max-w-[420px] px-4 pt-24 md:pt-28">
         <h1 className="mb-8 text-[15px] font-medium text-[#1A1A1A]">로그인</h1>
 
         <form onSubmit={handleSubmit}>

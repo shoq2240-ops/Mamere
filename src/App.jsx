@@ -92,6 +92,8 @@ const AnimatedRoutes = () => {
         <Route path="/shop/makeup" element={<Navigate to="/shop" replace />} />
         <Route path="/shop/skincare" element={<PageWrapper><ShopPage category="skincare" /></PageWrapper>} />
         <Route path="/shop/body-hair" element={<PageWrapper><ShopPage category="body_hair" /></PageWrapper>} />
+        <Route path="/shop/household" element={<PageWrapper><ShopPage category="household_items" /></PageWrapper>} />
+        <Route path="/shop/household-items" element={<Navigate to="/shop/household" replace />} />
         </Routes>
         </AnimatePresence>
       </Suspense>
@@ -131,10 +133,14 @@ function AppContent() {
   }, [pathname]);
 
   const isAdmin = pathname.startsWith('/admin');
-  // 관리자 페이지: 헤더 항상 다크
-  const headerBgClass = isAdmin
-    ? 'bg-[#000000] border-b border-white/10'
-    : 'bg-[#2D3A2D] border-b border-[#F9F7F2]/10';
+
+  const headerBgClass = isAdmin ? 'bg-[#000000] border-b border-white/10' : '';
+
+  const customerHeaderClass =
+    'fixed top-0 left-0 w-full z-50 flex flex-col transition-all duration-300';
+
+  /** 고객 페이지: 홈과 동일하게 본문을 상단부터 깔아 fixed 헤더(마키+글래스 네비)가 항상 같은 오버레이로 동작 */
+  const mainPaddingTop = isAdmin ? 'pt-20' : 'pt-0';
 
   return (
     <>
@@ -144,22 +150,42 @@ function AppContent() {
       >
         <meta name="description" content={DEFAULT_META.description} />
       </Helmet>
-      <header
-        className={`sticky top-0 z-[150] flex flex-col flex-none shrink-0 transition-all duration-300 ${headerBgClass}`}
-      >
-        {!isAdmin && <Marquee text="3만원 이상 구매 시 무료배송" />}
-        <Navbar isScrolled={isScrolled} isMobileMenuOpen={isMobileMenuOpen} onMobileMenuChange={setIsMobileMenuOpen} />
-      </header>
+      {isAdmin ? (
+        <header className={`sticky top-0 z-[150] flex w-full flex-none shrink-0 flex-col ${headerBgClass}`}>
+          <Navbar
+            isScrolled={isScrolled}
+            isMobileMenuOpen={isMobileMenuOpen}
+            onMobileMenuChange={setIsMobileMenuOpen}
+          />
+        </header>
+      ) : (
+        <header className={customerHeaderClass}>
+          <div className="border-b border-white/10 bg-[#2A1B38]">
+            <Marquee
+              text="🌿 30,000원 이상 구매 시 무료배송 + NATURE SOAP MAMÈRE 🌿"
+              speed={168}
+              textClassName="text-white"
+            />
+          </div>
+          <div className="border-b border-white/10 bg-black/20 backdrop-blur-md supports-[backdrop-filter]:bg-gray-900/30 supports-[backdrop-filter]:backdrop-blur-[8px]">
+            <Navbar
+              isScrolled={isScrolled}
+              isMobileMenuOpen={isMobileMenuOpen}
+              onMobileMenuChange={setIsMobileMenuOpen}
+            />
+          </div>
+        </header>
+      )}
       <main
         ref={mainScrollRef}
         onScroll={handleScroll}
         id="main-scroll"
-        className="flex min-h-0 flex-1 flex-col overflow-y-auto overflow-x-hidden bg-white text-[#333333]"
+        className={`flex min-h-0 flex-1 flex-col overflow-y-auto overflow-x-hidden bg-white text-[#333333] ${mainPaddingTop}`}
       >
         <AnimatedRoutes />
         <Footer />
         {!isAdmin && (
-          <div className="fixed bottom-8 right-8 z-50 flex flex-col items-end gap-3">
+          <div className="fixed bottom-8 right-8 z-40 flex flex-col items-end gap-3">
             <ScrollToTopButton />
             {pathname !== '/' && <FloatingRecentlyViewed />}
           </div>

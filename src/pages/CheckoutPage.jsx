@@ -582,6 +582,29 @@ const response = await window.PortOne.requestPayment({
             </button>
           </div>
         </motion.form>
+
+        <div className="mt-8 flex justify-end">
+          <button
+            type="button"
+            onClick={() =>
+              window.open(
+                'https://mark.inicis.com/mark/popup_v3.php?mid=MOI7024148',
+                'mark',
+                'scrollbars=no,resizable=no,width=565,height=683'
+              )
+            }
+            className="border-0 bg-transparent p-0 cursor-pointer"
+            aria-label="클릭하시면 이니시스 결제시스템의 유효성을 확인하실 수 있습니다."
+          >
+            <img
+              src="https://image.inicis.com/mkt/certmark/inipay/inipay_74x74_color.png"
+              alt="클릭하시면 이니시스 결제시스템의 유효성을 확인하실 수 있습니다."
+              width={74}
+              height={74}
+              className="block border-0"
+            />
+          </button>
+        </div>
       </div>
     </div>
   );

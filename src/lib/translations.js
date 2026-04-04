@@ -271,8 +271,8 @@ export const translations = {
       skinSensitive: 'sensitive',
       recentlyViewed: 'recently viewed',
       customerService: 'customer service',
-      faq: 'faq',
-      faqViewAll: 'view all faq',
+      FAQ: 'FAQ',
+      faqViewAll: 'view all FAQ',
       dbError: 'database connection failed',
     },
     cart: {

@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 // [이미지 교체] 브랜드 로고: public 폴더의 brand.logo2.png 사용
@@ -56,7 +56,10 @@ const Navbar = ({ isScrolled = false, isMobileMenuOpen = false, onMobileMenuChan
   const [accountOpen, setAccountOpen] = useState(false);
   const [accountDropdownRect, setAccountDropdownRect] = useState(null);
   const accountButtonRef = useRef(null);
-  const [searchInput, setSearchInput] = useState("");
+  const searchButtonRef = useRef(null);
+  const searchInputRef = useRef(null);
+  const [searchPanelRect, setSearchPanelRect] = useState(null);
+  const [searchInput, setSearchInput] = useState('');
   const [isCartOpen, setIsCartOpen] = useState(false);
   const { cartCount } = useCart();
   const { wishlist } = useWishlist();
@@ -89,12 +92,55 @@ const Navbar = ({ isScrolled = false, isMobileMenuOpen = false, onMobileMenuChan
 
   const handleSearch = (e) => {
     e.preventDefault();
-    if (searchInput.trim()) {
-      navigate(`/shop?search=${searchInput}`);
+    const q = searchInput.trim();
+    if (q) {
+      navigate(`/shop?search=${encodeURIComponent(q)}`);
       setIsSearchOpen(false);
-      setSearchInput("");
+      setSearchInput('');
     }
   };
+
+  const closeSearch = useCallback(() => {
+    setIsSearchOpen(false);
+    setSearchInput('');
+  }, []);
+
+  const updateSearchPanelRect = useCallback(() => {
+    if (searchButtonRef.current) {
+      setSearchPanelRect(searchButtonRef.current.getBoundingClientRect());
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!isSearchOpen) {
+      setSearchPanelRect(null);
+      return undefined;
+    }
+    updateSearchPanelRect();
+    const t = requestAnimationFrame(() => updateSearchPanelRect());
+    window.addEventListener('scroll', updateSearchPanelRect, true);
+    window.addEventListener('resize', updateSearchPanelRect);
+    return () => {
+      cancelAnimationFrame(t);
+      window.removeEventListener('scroll', updateSearchPanelRect, true);
+      window.removeEventListener('resize', updateSearchPanelRect);
+    };
+  }, [isSearchOpen, updateSearchPanelRect]);
+
+  useEffect(() => {
+    if (!isSearchOpen) return undefined;
+    const onKey = (ev) => {
+      if (ev.key === 'Escape') closeSearch();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [isSearchOpen, closeSearch]);
+
+  useEffect(() => {
+    if (isSearchOpen && searchPanelRect) {
+      searchInputRef.current?.focus();
+    }
+  }, [isSearchOpen, searchPanelRect]);
 
   // 마이페이지 드롭다운 위치 (포털용) — 열릴 때 버튼 기준으로 계산, 스크롤/리사이즈 시 갱신
   const updateAccountDropdownRect = () => {
@@ -146,34 +192,39 @@ const Navbar = ({ isScrolled = false, isMobileMenuOpen = false, onMobileMenuChan
   const navLinks = [
     { label: 'skincare', path: '/shop/skincare' },
     { label: 'body & hair', path: '/shop/body-hair' },
+    { label: 'household items', path: '/shop/household' },
     { label: 'brand story', path: '/brand-story' },
   ];
 
   return (
-    <div className="antialiased" onMouseLeave={() => setHoveredMenu(null)}>
-      <nav className="relative w-full z-[150] bg-[#2D3A2D] text-[#F9F7F2] transition-all duration-300 overflow-x-hidden">
-        <div className="relative mx-auto grid h-12 w-full max-w-[1800px] grid-cols-[minmax(5.5rem,1fr)_auto_minmax(5.5rem,1fr)] items-center gap-2 px-5 py-0 md:h-16 md:px-6">
+    <div className="bg-transparent antialiased" onMouseLeave={() => setHoveredMenu(null)}>
+      <nav className="relative z-[150] w-full overflow-x-hidden bg-transparent text-white transition-all duration-300">
+        <div className="relative isolate mx-auto grid h-12 w-full max-w-[1800px] grid-cols-[minmax(5.5rem,1fr)_auto_minmax(5.5rem,1fr)] items-center gap-2 px-5 py-0 md:h-16 md:px-6">
 
           <div className="pointer-events-none absolute inset-0 z-0" aria-hidden>
-            <div className="absolute left-[8%] top-1/2 -translate-y-1/2 text-[#F9F7F2]/15 animate-leaf-float">
+            <div className="absolute left-[8%] top-1/2 -translate-y-1/2 text-white/15 animate-leaf-float">
               <LeafIcon1 className="w-5 h-8 md:w-4 md:h-7" />
             </div>
-            <div className="absolute left-[15%] top-2/3 text-[#A8B894]/20 animate-leaf-sway-slow" style={{ animationDelay: '0.8s' }}>
+            <div className="absolute left-[15%] top-2/3 text-white/12 animate-leaf-sway-slow" style={{ animationDelay: '0.8s' }}>
               <LeafIcon2 className="w-3 h-5 md:w-2.5 md:h-4" />
             </div>
-            <div className="absolute right-[12%] top-1/3 text-[#F9F7F2]/15 animate-leaf-float-slow" style={{ animationDelay: '1.2s' }}>
+            <div className="absolute right-[12%] top-1/3 text-white/15 animate-leaf-float-slow" style={{ animationDelay: '1.2s' }}>
               <LeafIcon3 className="w-4 h-6 md:w-3.5 md:h-5" />
             </div>
-            <div className="absolute right-[6%] top-1/2 -translate-y-1/2 text-[#A8B894]/20 animate-leaf-sway" style={{ animationDelay: '0.3s' }}>
+            <div className="absolute right-[6%] top-1/2 -translate-y-1/2 text-white/12 animate-leaf-sway" style={{ animationDelay: '0.3s' }}>
               <LeafIcon4 className="w-3 h-5 md:w-2.5 md:h-4" />
             </div>
           </div>
 
-          {/* 좌: 햄버거(모바일) / GNB(데스크톱) — 우측과 동일 최소폭으로 로고 기하학적 중앙 */}
-          <div className="z-10 flex min-w-0 items-center justify-start">
-            <div className="hidden h-full items-center gap-6 text-sm font-medium tracking-[0.12em] md:flex lg:gap-8 font-sans">
+          {/* 좌: 햄버거(모바일) / GNB(데스크톱) — z-index를 로고보다 위로 두어 링크 클릭이 가로채이지 않게 함 */}
+          <div className="relative z-[30] flex min-w-0 items-center justify-start">
+            <div className="hidden h-full items-center gap-3 text-sm font-medium tracking-[0.12em] md:flex lg:gap-5 xl:gap-6 font-sans">
               {navLinks.map((link) => (
-                <Link key={link.path} to={link.path} className="whitespace-nowrap text-[#F9F7F2] transition-all hover:opacity-80 font-sans">
+                <Link
+                  key={link.path}
+                  to={link.path}
+                  className="relative whitespace-nowrap text-white transition-all hover:opacity-80 font-sans"
+                >
                   {link.label}
                 </Link>
               ))}
@@ -184,13 +235,13 @@ const Navbar = ({ isScrolled = false, isMobileMenuOpen = false, onMobileMenuChan
               className="flex h-9 w-9 shrink-0 flex-col items-center justify-center gap-[5px] md:hidden"
               aria-label={activeMenuOpen ? '메뉴 닫기' : '메뉴 열기'}
             >
-              <motion.span animate={activeMenuOpen ? { rotate: 45, y: 5.5, backgroundColor: '#F9F7F2' } : { rotate: 0, y: 0, backgroundColor: '#F9F7F2' }} className="block h-px w-4" />
-              <motion.span animate={activeMenuOpen ? { opacity: 0 } : { opacity: 1 }} className="block h-px w-4 bg-[#F9F7F2]" />
-              <motion.span animate={activeMenuOpen ? { rotate: -45, y: -5.5, backgroundColor: '#F9F7F2' } : { rotate: 0, y: 0, backgroundColor: '#F9F7F2' }} className="block h-px w-4" />
+              <motion.span animate={activeMenuOpen ? { rotate: 45, y: 5.5, backgroundColor: '#FFFFFF' } : { rotate: 0, y: 0, backgroundColor: '#FFFFFF' }} className="block h-px w-4" />
+              <motion.span animate={activeMenuOpen ? { opacity: 0 } : { opacity: 1 }} className="block h-px w-4 bg-white" />
+              <motion.span animate={activeMenuOpen ? { rotate: -45, y: -5.5, backgroundColor: '#FFFFFF' } : { rotate: 0, y: 0, backgroundColor: '#FFFFFF' }} className="block h-px w-4" />
             </button>
           </div>
 
-          <div className="z-20 flex items-center justify-center">
+          <div className="relative z-10 flex items-center justify-center">
             <Link
               to="/"
               onClick={handleLogoClick}
@@ -200,16 +251,30 @@ const Navbar = ({ isScrolled = false, isMobileMenuOpen = false, onMobileMenuChan
               <img
                 src={brandLogo}
                 alt="마메르 로고"
-                className="block h-full max-h-[72px] w-auto bg-transparent object-contain mix-blend-multiply md:max-h-[80px]"
+                className="block h-full max-h-[72px] w-auto bg-transparent object-contain md:max-h-[80px]"
                 decoding="async"
               />
             </Link>
           </div>
 
-          {/* 우: 언어 / 검색 / 계정 / 장바구니 — gap-4 균형 */}
-          <div className="z-10 flex min-w-0 items-center justify-end gap-4">
-            <button onClick={() => { setIsSearchOpen(true); handleMenuToggle(false); }} className="w-7 h-7 md:w-9 md:h-9 flex items-center justify-center hover:opacity-80 transition-colors text-[#F9F7F2]">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" /></svg>
+          {/* 우: 검색 / 계정 / 장바구니 — 로고보다 위로 두어 클릭 영역 유지 */}
+          <div className="relative z-[30] flex min-w-0 items-center justify-end gap-4">
+            <button
+              ref={searchButtonRef}
+              type="button"
+              onClick={() => {
+                handleMenuToggle(false);
+                setIsSearchOpen((open) => !open);
+              }}
+              className="flex h-7 w-7 items-center justify-center text-white transition-colors hover:opacity-80 md:h-9 md:w-9"
+              aria-label="검색"
+              aria-expanded={isSearchOpen}
+              aria-haspopup="dialog"
+            >
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24" aria-hidden>
+                <circle cx="11" cy="11" r="8" />
+                <path d="m21 21-4.35-4.35" />
+              </svg>
             </button>
             <div className="hidden md:block relative">
               {isLoggedIn ? (
@@ -218,7 +283,7 @@ const Navbar = ({ isScrolled = false, isMobileMenuOpen = false, onMobileMenuChan
                     ref={accountButtonRef}
                     type="button"
                     onClick={() => setAccountOpen(!accountOpen)}
-                    className="flex h-10 w-10 items-center justify-center text-[#F9F7F2] transition-colors hover:opacity-80"
+                    className="flex h-10 w-10 items-center justify-center text-white transition-colors hover:opacity-80"
                     aria-label="마이페이지"
                     aria-expanded={accountOpen}
                     aria-haspopup="true"
@@ -252,7 +317,7 @@ const Navbar = ({ isScrolled = false, isMobileMenuOpen = false, onMobileMenuChan
                   )}
                 </>
               ) : (
-                <Link to="/login" className="flex items-center justify-center w-10 h-10 hover:opacity-80 transition-colors text-[#F9F7F2]">
+                <Link to="/login" className="flex items-center justify-center w-10 h-10 hover:opacity-80 transition-colors text-white">
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="1.2" viewBox="0 0 24 24">
                     <circle cx="12" cy="8" r="3.5" stroke="currentColor" />
                     <path d="M6 21c0-4 2.5-7 6-7s6 3 6 7" stroke="currentColor" strokeLinecap="round" />
@@ -266,7 +331,7 @@ const Navbar = ({ isScrolled = false, isMobileMenuOpen = false, onMobileMenuChan
                 setIsCartOpen(true);
                 handleMenuToggle(false);
               }}
-              className="w-7 h-7 md:w-9 md:h-9 flex items-center justify-center relative hover:opacity-80 transition-colors text-[#F9F7F2]"
+              className="w-7 h-7 md:w-9 md:h-9 flex items-center justify-center relative hover:opacity-80 transition-colors text-white"
               aria-label="장바구니"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" /><path d="M3 6h18" /><path d="M16 10a4 4 0 0 1-8 0" /></svg>
@@ -274,7 +339,7 @@ const Navbar = ({ isScrolled = false, isMobileMenuOpen = false, onMobileMenuChan
                 {cartCount > 0 && (
                   <motion.span 
                     key={cartCount} initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 1.5, opacity: 0 }}
-                    className="absolute -top-1 -right-1 bg-[#A8B894] text-[8px] w-4 h-4 rounded-full flex items-center justify-center font-bold text-[#2D3A2D]"
+                    className="absolute -top-1 -right-1 bg-white text-[8px] w-4 h-4 rounded-full flex items-center justify-center font-bold text-neutral-900"
                   >
                     {cartCount}
                   </motion.span>
@@ -353,6 +418,16 @@ const Navbar = ({ isScrolled = false, isMobileMenuOpen = false, onMobileMenuChan
                     <section className="mb-8">
                       <button
                         type="button"
+                        onClick={() => handleMenuClick('/shop/household')}
+                        className="block w-full text-left text-2xl font-light tracking-[0.08em] text-[#333333] transition-opacity hover:opacity-75 font-sans"
+                      >
+                        household items
+                      </button>
+                    </section>
+
+                    <section className="mb-8">
+                      <button
+                        type="button"
                         onClick={() => handleMenuClick('/brand-story')}
                         className="block w-full text-left text-2xl font-light tracking-[0.08em] text-[#333333] transition-opacity hover:opacity-75 font-sans"
                       >
@@ -394,18 +469,73 @@ const Navbar = ({ isScrolled = false, isMobileMenuOpen = false, onMobileMenuChan
         document.body
       )}
 
-      {/* 검색 모달 (기존 로직 유지) */}
-      <AnimatePresence>
-        {isSearchOpen && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[300] flex flex-col items-center bg-[#FAF9F6] px-6 pt-40">
-            <form onSubmit={handleSearch} className="w-full max-w-2xl relative">
-              <input autoFocus type="text" value={searchInput} onChange={(e) => setSearchInput(e.target.value)} placeholder="search" className="w-full bg-transparent border-b border-[#3E2F28] py-4 text-3xl md:text-5xl font-medium lowercase outline-none text-[#3E2F28] placeholder:text-[#A8B894]/70" />
-              <button type="submit" className="hidden">Search</button>
-              <button onClick={() => setIsSearchOpen(false)} className="absolute right-0 top-1/2 -translate-y-1/2 text-[#3E2F28] font-medium text-[10px] uppercase tracking-widest">CLOSE</button>
-            </form>
-          </motion.div>
+      {/* 검색: 검색 아이콘 아래 작은 패널 (전체 화면 아님) */}
+      {typeof document !== 'undefined' &&
+        createPortal(
+          <AnimatePresence>
+            {isSearchOpen && searchPanelRect && (
+              <>
+                <motion.div
+                  key="search-backdrop"
+                  className="fixed inset-0 z-[190] bg-transparent"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.15 }}
+                  aria-hidden="true"
+                  onClick={closeSearch}
+                />
+                <motion.div
+                  key="search-panel"
+                  role="dialog"
+                  aria-modal="true"
+                  aria-label="상품 검색"
+                  className="fixed z-[191] w-[min(18rem,calc(100vw-1.5rem))] rounded-none border border-[#E5E5E5] bg-white/95 p-3 shadow-[0_8px_30px_rgba(0,0,0,0.08)] backdrop-blur-md font-sans sm:w-80"
+                  style={{
+                    top: searchPanelRect.bottom + 8,
+                    right: document.documentElement.clientWidth - searchPanelRect.right,
+                  }}
+                  initial={{ opacity: 0, y: -6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -4 }}
+                  transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <form onSubmit={handleSearch} className="flex flex-col gap-2">
+                    <div className="flex items-end gap-2 border-b border-gray-300 pb-2 focus-within:border-[#1A1A1A]">
+                      <input
+                        ref={searchInputRef}
+                        type="search"
+                        enterKeyHint="search"
+                        value={searchInput}
+                        onChange={(e) => setSearchInput(e.target.value)}
+                        placeholder="검색어를 입력하세요"
+                        className="min-w-0 flex-1 border-0 bg-transparent py-1 text-[13px] font-light tracking-tight text-[#1A1A1A] placeholder:text-[#9CA3AF] outline-none focus:ring-0"
+                      />
+                      <button
+                        type="button"
+                        onClick={closeSearch}
+                        className="shrink-0 p-1 text-[#1A1A1A] transition-opacity hover:opacity-40"
+                        aria-label="닫기"
+                      >
+                        <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" aria-hidden>
+                          <path d="M6 6l12 12M18 6L6 18" />
+                        </svg>
+                      </button>
+                    </div>
+                    <button
+                      type="submit"
+                      className="w-full rounded-none bg-[#1A1A1A] py-2 text-center text-[11px] font-medium tracking-wide text-white transition-opacity hover:opacity-90"
+                    >
+                      검색
+                    </button>
+                  </form>
+                </motion.div>
+              </>
+            )}
+          </AnimatePresence>,
+          document.body
         )}
-      </AnimatePresence>
       <CartDrawer open={isCartOpen} onClose={() => setIsCartOpen(false)} />
     </div>
   );
