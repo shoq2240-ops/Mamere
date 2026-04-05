@@ -336,7 +336,6 @@ const response = await window.PortOne.requestPayment({
             if (stockErr) throw stockErr;
           }
 
-          alert('서버 검증까지 최종 완료되었습니다!');
           clearCart();
           setOrderSuccessData({
             orderNumber: response.paymentId,
