@@ -4,14 +4,7 @@ import toast from 'react-hot-toast';
 import { useWishlist } from '../store/WishlistContext';
 import { useCart } from '../store/CartContext';
 import { publicTable } from '../lib/supabase';
-
-const formatPrice = (price) => {
-  if (typeof price === 'number') return `₩${price.toLocaleString()}`;
-  if (typeof price === 'string' && price.replace(/\D/g, '').length > 0) {
-    return `₩${parseInt(price.replace(/\D/g, ''), 10).toLocaleString()}`;
-  }
-  return price;
-};
+import ProductPriceDisplay from '../components/ProductPriceDisplay';
 
 const WishlistPage = () => {
   const { wishlist, toggleWishlist } = useWishlist();
@@ -107,9 +100,7 @@ const WishlistPage = () => {
                       {product.name}
                     </h3>
                   </Link>
-                  <p className="text-[11px] tracking-widest text-[#000000]/80">
-                    {formatPrice(product.price)}
-                  </p>
+                  <ProductPriceDisplay product={product} size="sm" className="text-[11px] tracking-widest text-[#000000]/80" />
                   <button
                     onClick={() => handleAddToCart(product)}
                     className="mt-3 w-full py-3 border border-[#E5E5E5] text-[10px] font-light tracking-[0.2em] uppercase text-[#666666] hover:bg-[#F9F9F9] hover:border-[#000000] hover:text-[#000000] transition-all"

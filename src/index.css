@@ -127,7 +127,7 @@
   display: block;
 }
 
-/* 상품 상세 이미지: 고화질 유지, 비율 유지, 선명 렌더링 */
+/* 상품 상세 이미지(레거시/기타): 사진·롱폼 상세는 crisp-edges가 업스케일 시 거칠게 보일 수 있어 auto 유지 */
 .product-detail-image {
   display: block;
   width: 100%;
@@ -135,8 +135,7 @@
   max-width: 100%;
   object-fit: contain;
   object-position: center;
-  -webkit-image-rendering: -webkit-optimize-contrast;
-  image-rendering: crisp-edges;
+  image-rendering: auto;
 }
 
 /* 영어 UI: 라틴 문자 소문자 (lang=en). .uppercase 유틸이 있으면 동일하게 소문자로 표시 */

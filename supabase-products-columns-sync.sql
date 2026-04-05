@@ -33,8 +33,15 @@ ALTER TABLE products ADD COLUMN IF NOT EXISTS key_ingredients JSONB DEFAULT '[]'
 -- 서브카테고리 (선택)
 ALTER TABLE products ADD COLUMN IF NOT EXISTS subcategory TEXT;
 
+-- 세일: 정가(할인 전). NULL이면 세일 표시 없음. 값이 있고 판매가(price)보다 크면 스트라이크 정가 + 판매가 강조
+ALTER TABLE products ADD COLUMN IF NOT EXISTS compare_at_price INTEGER;
+COMMENT ON COLUMN products.compare_at_price IS '정가(할인 전, 원). price보다 크면 세일 UI';
+
 -- 컬럼 확인 (실행 후 필요 시 아래 쿼리로 확인)
 -- SELECT column_name, data_type, column_default
 -- FROM information_schema.columns
 -- WHERE table_name = 'products'
 -- ORDER BY ordinal_position;
+
+-- PostgREST(API) 스키마 캐시 즉시 갱신 (컬럼 추가 후에도 "column 없음" 오류가 날 때 실행)
+NOTIFY pgrst, 'reload schema';

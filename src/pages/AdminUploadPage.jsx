@@ -23,6 +23,7 @@ import { useAuth } from '../store/AuthContext';
 import { parseDescription, serializeDescription } from '../lib/descriptionSections';
 import { isSoldOut } from '../lib/productStock';
 import { resizeAndCompressImage } from '../lib/imageOptimize';
+import { getDiscountPercentRounded, isProductOnSale } from '../lib/productPrice';
 
 // Supabase Storage 버킷 이름 (Dashboard > Storage에서 해당 이름으로 버킷 생성 필요)
 // 버킷이 없으면 업로드 시 data가 null로 반환되어 "Cannot read properties of null (reading 'path')" 발생
@@ -214,10 +215,13 @@ const AdminUploadPage = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [editingId, setEditingId] = useState(null);
+  /** 정가 기준 할인율(%) — UI 전용, 저장 필드 아님 */
+  const [discountPercentInput, setDiscountPercentInput] = useState('');
 
   const [form, setForm] = useState({
     name: '',
     price: '',
+    compareAtPrice: '',
     descDetails: '',
     descHowToUse: '',
     category: 'skincare',
@@ -532,6 +536,20 @@ const AdminUploadPage = () => {
       setError(`가격은 ${FORM_LIMITS.priceMax.toLocaleString()}원 이하로 입력해 주세요.`);
       return;
     }
+    const compareRaw = String(form.compareAtPrice ?? '').replace(/\D/g, '');
+    const compareAtParsed = compareRaw ? parseInt(compareRaw, 10) : null;
+    if (compareAtParsed != null && (!Number.isFinite(compareAtParsed) || compareAtParsed <= 0)) {
+      setError('정가(할인 전)는 0보다 큰 숫자로 입력하거나 비워 두세요.');
+      return;
+    }
+    if (compareAtParsed != null && compareAtParsed > FORM_LIMITS.priceMax) {
+      setError(`정가는 ${FORM_LIMITS.priceMax.toLocaleString()}원 이하로 입력해 주세요.`);
+      return;
+    }
+    if (compareAtParsed != null && compareAtParsed <= price) {
+      setError('정가(할인 전)는 판매가보다 커야 할인으로 표시됩니다. 세일을 끄려면 정가 칸을 비우세요.');
+      return;
+    }
     if (!FORM_LIMITS.categoryValues.includes(form.category)) {
       setError('유효한 카테고리를 선택해 주세요. (Skincare, Body & Hair, Household 중 하나)');
       return;
@@ -624,9 +642,13 @@ const AdminUploadPage = () => {
         }));
       const stockQty = Math.max(0, parseInt(String(form.stockQuantity || 0).replace(/\D/g, ''), 10) || 0);
 
+      const compareAtDb =
+        compareAtParsed != null && compareAtParsed > price ? compareAtParsed : null;
+
       const row = {
         name,
         price,
+        compare_at_price: compareAtDb,
         description: serializeDescription(form.descDetails, form.descHowToUse),
         category: form.category,
         volume: (form.volume || '').trim() || null,
@@ -720,9 +742,11 @@ const AdminUploadPage = () => {
       ? (imageList.find((it) => it.url === p.card_hover_image)?.id ?? null)
       : null;
     setEditingId(p.id);
+    setDiscountPercentInput('');
     setForm({
       name: p.name,
       price: p.price,
+      compareAtPrice: p.compare_at_price != null && p.compare_at_price !== '' ? String(p.compare_at_price) : '',
       descDetails: details,
       descHowToUse: howToUse,
       category: normalizeCategoryForForm(p.category),
@@ -838,9 +862,11 @@ const AdminUploadPage = () => {
 
   const resetForm = () => {
     setEditingId(null);
+    setDiscountPercentInput('');
     setForm({
       name: '',
       price: '',
+      compareAtPrice: '',
       descDetails: '',
       descHowToUse: '',
       category: 'skincare',
@@ -867,6 +893,35 @@ const AdminUploadPage = () => {
       ...f,
       skinConcern: f.skinConcern.includes(c) ? f.skinConcern.filter((x) => x !== c) : [...f.skinConcern, c],
     }));
+  };
+
+  const normalizeDiscountPercent = (v) => {
+    if (typeof v === 'number' && Number.isFinite(v)) return v;
+    const s = String(v ?? '').trim().replace(',', '.');
+    return parseFloat(s);
+  };
+
+  /** 정가(compareAtPrice)를 기준으로 판매가 필드를 할인율에 맞게 채움 (0 초과 ~ 100 이하, 소수 가능) */
+  const applyDiscountPercent = (percentOff) => {
+    const p = normalizeDiscountPercent(percentOff);
+    if (!Number.isFinite(p) || p <= 0 || p > 100) {
+      setError('할인율은 0보다 크고 100 이하의 숫자로 입력해 주세요.');
+      return;
+    }
+    const listRaw = String(form.compareAtPrice ?? '').replace(/\D/g, '');
+    const list = parseInt(listRaw, 10);
+    if (!list || list <= 0) {
+      setError('먼저 정가(할인 전 가격)를 입력해 주세요.');
+      return;
+    }
+    const factor = (100 - p) / 100;
+    const newPrice = Math.max(1, Math.round(list * factor));
+    setForm((f) => ({ ...f, price: String(newPrice) }));
+    setError('');
+  };
+
+  const applyDiscountFromInput = () => {
+    applyDiscountPercent(discountPercentInput);
   };
 
   if (authLoading || !isLoggedIn) return null;
@@ -936,6 +991,64 @@ const AdminUploadPage = () => {
                 className={inputClass}
                 required
               />
+            </div>
+
+            <div>
+              <label className="block text-[10px] font-medium tracking-[0.12em] uppercase text-[#666666] mb-2">
+                정가 (할인 전, 선택)
+              </label>
+              <input
+                type="text"
+                value={form.compareAtPrice}
+                onChange={(e) => setForm((f) => ({ ...f, compareAtPrice: e.target.value }))}
+                placeholder="비우면 정가 표시 없음 · 예: 120000"
+                className={inputClass}
+              />
+              <p className="mt-2 text-[10px] text-[#888888] leading-relaxed">
+                정가를 넣고 판매가가 더 낮으면 스토어에서 정가에 취소선이 들어가고 판매가가 강조됩니다.
+              </p>
+              <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
+                <div className="flex-1 min-w-[160px]">
+                  <label className="block text-[10px] font-medium tracking-[0.12em] uppercase text-[#666666] mb-1.5">
+                    정가 대비 할인율 (%)
+                  </label>
+                  <input
+                    type="text"
+                    inputMode="decimal"
+                    value={discountPercentInput}
+                    onChange={(e) => setDiscountPercentInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        applyDiscountFromInput();
+                      }
+                    }}
+                    placeholder="예: 35, 12.5"
+                    className={inputClass}
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={applyDiscountFromInput}
+                  className="w-full sm:w-auto px-4 py-3 text-[10px] font-medium tracking-[0.1em] uppercase border border-[#000000] bg-[#000000] text-white hover:bg-[#333333] transition-colors"
+                >
+                  판매가에 반영
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setForm((f) => ({ ...f, compareAtPrice: '' }));
+                    setDiscountPercentInput('');
+                    setError('');
+                  }}
+                  className="w-full sm:w-auto px-4 py-3 text-[10px] font-medium tracking-[0.1em] uppercase border border-[#E8E8E8] text-[#999999] hover:bg-[#FAFAFA] transition-colors"
+                >
+                  정가 비우기 (세일 끄기)
+                </button>
+              </div>
+              <p className="mt-2 text-[10px] text-[#AAAAAA]">
+                할인율은 정가 대비 깎이는 비율입니다. (예: 30 입력 → 판매가 = 정가 × 70%)
+              </p>
             </div>
 
             <div className="space-y-4">
@@ -1201,7 +1314,7 @@ const AdminUploadPage = () => {
                   {isDragActive ? '여기에 놓으세요' : '파일을 드래그하거나 클릭하여 여러 장 선택'}
                 </p>
                 <p className="text-[9px] text-[#999999] mt-1">
-                  JPEG, PNG, WebP, GIF · 최대 {MAX_IMAGE_SIZE_MB}MB · 업로드 전 1200px 리사이즈·압축
+                  JPEG, PNG, WebP, GIF · 최대 {MAX_IMAGE_SIZE_MB}MB · 한도 내 원본 화질 그대로 업로드
                 </p>
               </div>
 
@@ -1268,7 +1381,11 @@ const AdminUploadPage = () => {
             <p className="text-[#666666] text-sm">등록된 상품이 없습니다</p>
           ) : (
             <ul className="space-y-0 bg-white border border-[#E0E0E0] divide-y divide-[#E8E8E8]">
-              {products.map((p) => (
+              {products.map((p) => {
+                const saleRow = { price: p.price, compare_at_price: p.compare_at_price };
+                const onSaleRow = isProductOnSale(saleRow);
+                const pctRow = getDiscountPercentRounded(saleRow);
+                return (
                 <motion.li
                   key={p.id}
                   initial={{ opacity: 0 }}
@@ -1288,7 +1405,19 @@ const AdminUploadPage = () => {
                       )}
                     </div>
                     <p className="text-[11px] text-[#666666]">
-                      ₩{Number(p.price).toLocaleString()} · {getCategoryLabel(p.category)}
+                      {onSaleRow ? (
+                        <>
+                          <span className="line-through text-[#AAAAAA]">₩{Number(p.compare_at_price).toLocaleString()}</span>{' '}
+                          <span className="font-medium text-[#000000]">₩{Number(p.price).toLocaleString()}</span>
+                          {pctRow != null && (
+                            <span className="text-[#B91C1C]"> -{pctRow}%</span>
+                          )}
+                        </>
+                      ) : (
+                        <>₩{Number(p.price).toLocaleString()}</>
+                      )}
+                      {' · '}
+                      {getCategoryLabel(p.category)}
                       {p.volume && ` · ${p.volume}`}
                       {p.stock_quantity != null && ` · 재고 ${p.stock_quantity}개`}
                     </p>
@@ -1310,7 +1439,8 @@ const AdminUploadPage = () => {
                     </button>
                   </div>
                 </motion.li>
-              ))}
+              );
+              })}
             </ul>
           )}
         </section>

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { formatPrice } from '../lib/formatPrice';
 import { isSoldOut } from '../lib/productStock';
+import ProductPriceDisplay from './ProductPriceDisplay';
 
 const resolveProductImages = (product) => {
   if (!product) return [];
@@ -29,16 +29,6 @@ const resolveProductImages = (product) => {
     urls.push(product.image.trim());
   }
   return urls;
-};
-
-const gridCategoryLabel = (product) => {
-  const raw = product?.category ?? '';
-  let n = String(raw).toLowerCase().replace(/-/g, '_');
-  if (n === 'household_items') n = 'household';
-  if (n === 'skincare') return 'SKIN CARE';
-  if (n === 'body_hair') return 'BODY & HAIR';
-  if (n === 'household') return 'HOUSEHOLD';
-  return 'PRODUCT';
 };
 
 const ProductCard = ({ product, onAddToCart, variant = 'grid' }) => {
@@ -114,17 +104,12 @@ const ProductCard = ({ product, onAddToCart, variant = 'grid' }) => {
 
       <Link
         to={`/product/${product.id}`}
-        className="mt-3 flex w-full min-w-0 flex-col items-start text-left"
+        className="mt-4 flex w-full min-w-0 flex-col items-start text-left"
       >
-        <p className="mb-1 mt-4 text-[10px] font-extralight tracking-[0.15em] text-[#AAAAAA]">
-          {gridCategoryLabel(product)}
-        </p>
         <h3 className="line-clamp-2 text-[13px] font-normal leading-snug tracking-tight text-[#1A1A1A]">
           {product.name}
         </h3>
-        <p className="mt-1 text-[12px] font-light tabular-nums text-[#555555]">
-          {formatPrice(product.price)}
-        </p>
+        <ProductPriceDisplay product={product} size="sm" className="mt-2" />
       </Link>
     </div>
   );

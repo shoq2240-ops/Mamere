@@ -6,13 +6,23 @@ const STALE_TIME_MS = 60 * 1000; // 60초
 let productsCache = { data: null, formatted: null, timestamp: 0 };
 
 const getFormattedProducts = (data) =>
-  (data || []).map((product) => ({
-    ...product,
-    price:
-      typeof product.price === 'number'
-        ? `₩${product.price.toLocaleString()}`
-        : product.price,
-  }));
+  (data || []).map((product) => {
+    const cap = product.compare_at_price;
+    const compareNum =
+      cap != null && cap !== ''
+        ? Number(cap)
+        : null;
+    const compareOk =
+      compareNum != null && !Number.isNaN(compareNum) && compareNum > 0 ? compareNum : null;
+    return {
+      ...product,
+      price:
+        typeof product.price === 'number'
+          ? `₩${product.price.toLocaleString()}`
+          : product.price,
+      compare_at_price: compareOk,
+    };
+  });
 
 export const useProducts = () => {
   const [products, setProducts] = useState(() => productsCache.formatted ?? []);

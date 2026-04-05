@@ -7,8 +7,9 @@ import { useCart } from '../store/CartContext';
 import { useWishlist } from '../store/WishlistContext';
 import { useProducts } from '../hooks/useProducts';
 import { useRecentlyViewed } from '../hooks/useRecentlyViewed';
-import { formatPrice } from '../lib/formatPrice';
 import { isSoldOut, getStockQuantity } from '../lib/productStock';
+import ProductPriceDisplay from '../components/ProductPriceDisplay';
+import { parsePriceToNumber } from '../lib/productPrice';
 import { parseDescription } from '../lib/descriptionSections';
 import { getAbsoluteUrl } from '../lib/getAbsoluteUrl';
 
@@ -216,7 +217,7 @@ const ProductDetailPage = () => {
     image: (imageList.length ? imageList.map((i) => getAbsoluteUrl(i.url)).filter(Boolean) : absoluteImageUrl ? [absoluteImageUrl] : []),
     offers: {
       '@type': 'Offer',
-      price: product.price ?? 0,
+      price: parsePriceToNumber(product.price) ?? 0,
       priceCurrency: 'KRW',
       availability: soldOut ? 'https://schema.org/OutOfStock' : 'https://schema.org/InStock',
       url: canonicalUrl,
@@ -257,9 +258,11 @@ const ProductDetailPage = () => {
                         key={idx}
                         src={img.url}
                         alt="상세이미지"
-                        className="m-0 block w-full p-0"
+                        className="m-0 block h-auto w-full max-w-full p-0 [image-rendering:auto]"
+                        sizes="(max-width: 768px) 100vw, min(100vw - 3rem, 1200px)"
                         loading={idx === 0 ? 'eager' : 'lazy'}
                         decoding="async"
+                        fetchPriority={idx === 0 ? 'high' : undefined}
                         onError={idx === 0 ? () => setImgError(true) : undefined}
                       />
                     ))}
@@ -290,9 +293,7 @@ const ProductDetailPage = () => {
               <p className="mt-2 text-[10px] font-light tracking-[0.1em] text-[#5C4A42]">{volume}</p>
             )}
             <div className="mt-3">
-              <p className="font-serif text-2xl font-normal tracking-[0.06em] text-[#333333]">
-                {formatPrice(product.price)}
-              </p>
+              <ProductPriceDisplay product={product} size="lg" />
             </div>
             {!soldOut && maxQty > 0 && (
               <div className="mt-8 flex items-center gap-3">

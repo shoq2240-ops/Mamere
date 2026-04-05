@@ -14,13 +14,12 @@ export const ProductCardSkeleton = ({ variant = 'default' }) => (
     <div
       className={
         variant === 'compact'
-          ? 'mt-4 space-y-1 px-1'
-          : 'mt-2.5 flex min-w-0 flex-col items-start gap-0.5 text-left sm:mt-3'
+          ? 'mt-4 flex flex-col items-start gap-2 px-1 text-left'
+          : 'mt-4 flex min-w-0 flex-col items-start gap-2 text-left'
       }
     >
-      <div className="h-[7px] w-1/3 animate-pulse rounded-sm bg-black/[0.06]" />
-      <div className="h-[11px] w-[88%] animate-pulse rounded-sm bg-black/[0.08]" style={{ animationDelay: '0.05s' }} />
-      <div className="h-[9px] w-1/4 animate-pulse rounded-sm bg-black/[0.05]" style={{ animationDelay: '0.1s' }} />
+      <div className="h-[11px] w-[88%] animate-pulse rounded-sm bg-black/[0.08]" />
+      <div className="h-[9px] w-1/4 animate-pulse rounded-sm bg-black/[0.05]" style={{ animationDelay: '0.05s' }} />
     </div>
   </div>
 );
