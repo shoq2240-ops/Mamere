@@ -11,7 +11,6 @@ import { formatPrice } from '../lib/formatPrice';
 import { isSoldOut, getStockQuantity } from '../lib/productStock';
 import { parseDescription } from '../lib/descriptionSections';
 import { getAbsoluteUrl } from '../lib/getAbsoluteUrl';
-import { publicTable } from '../lib/supabase';
 
 const toArray = (v) => {
   if (Array.isArray(v)) return v;
@@ -99,16 +98,6 @@ const SUSTAINABILITY_ITEMS = [
 const SHIPPING_RETURNS_TEXT = `배송은 결제 완료 후 2–3 영업일 내 출고됩니다. 도서·산간 지역은 1–2일 추가 소요될 수 있습니다.
 반품·교환은 수령일로부터 7일 이내, 미개봉 제품에 한해 가능합니다. 단순 변심 시 왕복 배송비는 고객 부담입니다.`;
 
-const formatDateDot = (iso) => {
-  if (!iso) return '';
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return '';
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  return `${y}.${m}.${day}`;
-};
-
 const ProductDetailPage = () => {
   const { id } = useParams();
   const location = useLocation();
@@ -117,11 +106,8 @@ const ProductDetailPage = () => {
   const { toggleWishlist, isInWishlist } = useWishlist();
   const { addRecentlyViewed } = useRecentlyViewed();
   const [imgError, setImgError] = useState(false);
-  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [addQty, setAddQty] = useState(1);
   const [accordionOpen, setAccordionOpen] = useState(null);
-  const [qaItems, setQaItems] = useState([]);
-  const [loadingQa, setLoadingQa] = useState(false);
 
   const product = products.find((p) => String(p.id) === String(id));
   const soldOut = isSoldOut(product);
@@ -131,8 +117,8 @@ const ProductDetailPage = () => {
   const imageList = images.length > 0
     ? images.map((img) => (typeof img === 'string' ? { url: img, isMain: false } : { url: img?.url || img?.src, isMain: !!img?.isMain })).filter((i) => i.url)
     : product?.image ? [{ url: product.image, isMain: true }] : [];
-  const mainImageUrl = imageList[selectedImageIndex]?.url || product?.image;
-  const showPlaceholder = product && !mainImageUrl;
+  const detailImages = imageList.filter((i) => i?.url);
+  const showPlaceholder = product && (detailImages.length === 0 || imgError);
 
   const { details, howToUse } = product?.description ? parseDescription(product.description) : { details: '', howToUse: '' };
   const keyIngredients = toArray(product?.key_ingredients || product?.keyIngredients || []);
@@ -152,26 +138,8 @@ const ProductDetailPage = () => {
   }, [product?.id, addRecentlyViewed]);
 
   useEffect(() => {
-    if (!product?.id) return;
-    const productId = String(product.id);
-
-    const fetchQa = async () => {
-      try {
-        setLoadingQa(true);
-        const { data: qaData } = await publicTable('product_questions')
-          .select('*')
-          .eq('product_id', productId)
-          .order('created_at', { ascending: false });
-        setQaItems(qaData || []);
-      } catch (e) {
-        if (import.meta.env.DEV) console.error('Q&A 불러오기 오류:', e);
-      } finally {
-        setLoadingQa(false);
-      }
-    };
-
-    fetchQa();
-  }, [product?.id]);
+    setImgError(false);
+  }, [id]);
 
   const handleAddToCart = (e) => {
     e.preventDefault();
@@ -272,63 +240,49 @@ const ProductDetailPage = () => {
       <div className="max-w-[1200px] mx-auto px-6 md:px-12">
         {/* 768px 초과: 2컬럼(좌 이미지 | 우 구매정보), 768px 이하: column 위아래 쌓임 */}
         <div className="flex flex-col md:flex-row gap-8 md:gap-[100px] md:items-start">
-          {/* 왼쪽: 상세 이미지 4개 세로 연속 배치 (image-section, 갭 없음) */}
-          <div className="flex flex-col gap-4 min-w-0 md:flex-1">
+          {/* 왼쪽: 상세 이미지 전체 세로 폭포수 스크롤 (틈 없음) */}
+          <div className="flex min-w-0 flex-col md:flex-1">
             <div className="relative w-full overflow-visible">
               {showPlaceholder ? (
-                <div className="flex items-center justify-center p-6 bg-white min-h-[280px]">
-                  <span className="text-[10px] font-medium tracking-[0.1em] text-[#7A6B63] text-center line-clamp-4">
+                <div className="flex min-h-[280px] items-center justify-center bg-white p-6">
+                  <span className="line-clamp-4 text-center text-[10px] font-medium tracking-[0.1em] text-[#7A6B63]">
                     {product.name || 'No Image'}
                   </span>
                 </div>
               ) : (
-                <div className="image-section">
-                  {(imageList.length ? imageList.slice(0, 4) : (mainImageUrl ? [{ url: mainImageUrl }] : [])).filter((i) => i?.url).map((img, idx) => (
-                    <img
-                      key={idx}
-                      src={typeof img === 'string' ? img : img.url}
-                      alt={idx === 0 ? `${product.name} 정면 패키지` : `${product.name} 상세 이미지 ${idx + 1}`}
-                      className="product-detail-image"
-                      loading={idx === 0 ? 'eager' : 'lazy'}
-                      decoding="async"
-                      onError={idx === 0 ? () => setImgError(true) : undefined}
-                    />
-                  ))}
-                </div>
-              )}
-              {!showPlaceholder && imageList.length > 0 && (
-                <button
-                  type="button"
-                  onClick={handleWishlistClick}
-                  className="absolute right-3 top-3 z-10 p-2 text-[#7A6B63] hover:text-[#3E2F28] transition-colors bg-white rounded-full backdrop-blur-sm"
-                  aria-label={isInWishlist(product.id) ? '위시리스트에서 제거' : '위시리스트에 추가'}
-                >
-                  <svg className="w-5 h-5" fill={isInWishlist(product.id) ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
-                  </svg>
-                </button>
+                <>
+                  <div className="w-full flex flex-col leading-none m-0 p-0">
+                    {detailImages.map((img, idx) => (
+                      <img
+                        key={idx}
+                        src={img.url}
+                        alt="상세이미지"
+                        className="m-0 block w-full p-0"
+                        loading={idx === 0 ? 'eager' : 'lazy'}
+                        decoding="async"
+                        onError={idx === 0 ? () => setImgError(true) : undefined}
+                      />
+                    ))}
+                  </div>
+                  {detailImages.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={handleWishlistClick}
+                      className="absolute right-3 top-3 z-10 rounded-full bg-white p-2 text-[#7A6B63] backdrop-blur-sm transition-colors hover:text-[#3E2F28]"
+                      aria-label={isInWishlist(product.id) ? '위시리스트에서 제거' : '위시리스트에 추가'}
+                    >
+                      <svg className="h-5 w-5" fill={isInWishlist(product.id) ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
+                      </svg>
+                    </button>
+                  )}
+                </>
               )}
             </div>
-            {imageList.length > 4 && (
-              <div className="flex gap-2 overflow-x-auto pb-1">
-                {imageList.map((img, idx) => (
-                  <button
-                    key={idx}
-                    type="button"
-                    onClick={() => setSelectedImageIndex(idx)}
-                    className={`flex-shrink-0 w-16 h-20 md:w-20 md:h-24 overflow-hidden border-2 transition-colors ${
-                      selectedImageIndex === idx ? 'border-[#1a1a1a]' : 'border-[#E8E4DF] hover:border-[#8B8B8B]'
-                    }`}
-                  >
-                    <img src={img.url} alt={`${product.name} 상세 이미지 ${idx + 1} 썸네일`} className="w-full h-full object-cover" loading="lazy" />
-                  </button>
-                ))}
-              </div>
-            )}
           </div>
 
           {/* 오른쪽: 구매 정보 박스 (이미지 두 번째 조각쯤·약 200px 아래부터 시작, 스티키로 스크롤 시 따라옴) */}
-          <div className="flex flex-col w-full max-w-[380px] mx-auto md:mx-0 md:pt-16 md:sticky md:top-[50px] md:h-fit md:max-h-[calc(100vh-100px)] md:overflow-y-auto md:overscroll-contain md:pb-20 md:scrollbar-hide px-5 py-5 md:px-6 md:py-6 border border-[#E8E4DF] rounded-sm shadow-[0_2px_12px_rgba(62,47,40,0.06)] bg-white">
+          <div className="mx-auto flex w-full max-w-[380px] flex-col border border-[#E8E4DF] bg-white px-5 py-5 shadow-[0_2px_12px_rgba(62,47,40,0.06)] md:mx-0 md:sticky md:top-24 md:self-start md:px-6 md:py-6 md:pt-16 rounded-sm">
             <h1 className="font-serif text-2xl font-normal leading-snug tracking-[0.06em] text-[#333333] md:text-[1.65rem]">
               {product.name}
             </h1>
@@ -473,58 +427,6 @@ const ProductDetailPage = () => {
               </AccordionItem>
             </div>
           </div>
-        </div>
-
-        {/* Q&A */}
-        <section className="mt-16 md:mt-20 scroll-mt-24 border-t border-[#E8E4DF] pt-10">
-          <h2 className="mb-6 text-[10px] font-medium uppercase tracking-[0.16em] text-[#3E2F28]">Q&A</h2>
-          <div className="space-y-4">
-              {loadingQa && (
-                <p className="text-[11px] text-[#7A6B63]">Q&A를 불러오는 중입니다…</p>
-              )}
-              {!loadingQa && qaItems.length === 0 && (
-                <p className="text-[11px] text-[#7A6B63]">등록된 Q&A가 없습니다.</p>
-              )}
-              {!loadingQa &&
-                qaItems.map((qa) => (
-                  <div
-                    key={qa.id}
-                    className="border border-[#E8E4DF] bg-white/40 p-4 md:p-5 flex flex-col gap-1"
-                  >
-                    <div className="flex items-center justify-between gap-3">
-                      <span className="text-[11px] font-medium tracking-[0.12em] uppercase text-[#3E2F28]">
-                        {qa.title || '문의'}
-                      </span>
-                      <span className="text-[10px] text-[#999999]">
-                        {formatDateDot(qa.created_at)}
-                      </span>
-                    </div>
-                    <p className="text-[11px] text-[#5C4A42] whitespace-pre-wrap">
-                      {qa.content}
-                    </p>
-                    {qa.answer && (
-                      <div className="mt-2 border-t border-dashed border-[#E8E4DF] pt-2">
-                        <p className="text-[10px] font-medium tracking-[0.12em] uppercase text-[#5C4A42] mb-1">
-                          Answer
-                        </p>
-                        <p className="text-[11px] text-[#5C4A42] whitespace-pre-wrap">
-                          {qa.answer}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                ))}
-          </div>
-        </section>
-
-        {/* 페이지 맨 하단: 쇼핑으로 돌아가기 */}
-        <div className="mt-16 md:mt-20 flex justify-center">
-          <Link
-            to="/shop"
-            className="text-[10px] tracking-[0.12em] uppercase text-[#5C4A42] border-b border-[#A8B894] hover:text-[#3E2F28] transition-colors"
-          >
-            쇼핑으로 돌아가기
-          </Link>
         </div>
       </div>
     </div>

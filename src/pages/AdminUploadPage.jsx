@@ -154,22 +154,30 @@ function SortableThumb({ item, onDelete, onSetMain, onSetHover, onCrop, isMain, 
         </div>
       )}
       {isHover && (
-        <div className="absolute top-0 left-0 bg-[#000000]/80 text-[8px] text-white px-1.5 py-0.5 font-medium">
-          호버
+        <div className="absolute left-0 top-0 bg-[#000000]/80 px-1.5 py-0.5 text-[8px] font-medium text-white">
+          목록 호버
         </div>
       )}
-      {isMain && (
-        <div className="absolute bottom-0 left-0 right-0 bg-[#000000] text-[9px] text-white text-center py-0.5 font-medium">
-          대표
-        </div>
-      )}
-      <button
-        type="button"
-        onClick={(e) => { e.preventDefault(); e.stopPropagation(); onSetHover(item.id); }}
-        className="absolute bottom-6 left-0 right-0 py-0.5 bg-black/50 text-[8px] text-white text-center hover:bg-black/80"
-      >
-        호버로
-      </button>
+      <div className="absolute bottom-0 left-0 right-0 flex border-t border-white/20">
+        <button
+          type="button"
+          onClick={(e) => { e.preventDefault(); e.stopPropagation(); onSetHover(item.id); }}
+          className={`flex-1 py-1 text-[7px] text-white text-center transition-colors ${
+            isHover ? 'bg-[#2a2a2a] font-semibold' : 'bg-black/55 hover:bg-black/75'
+          }`}
+        >
+          목록 호버
+        </button>
+        <button
+          type="button"
+          onClick={(e) => { e.preventDefault(); e.stopPropagation(); onSetMain(item.id); }}
+          className={`flex-1 py-1 text-[7px] text-white text-center border-l border-white/20 transition-colors ${
+            isMain ? 'bg-[#2a2a2a] font-semibold' : 'bg-black/55 hover:bg-black/75'
+          }`}
+        >
+          상세 대표
+        </button>
+      </div>
       <button
         type="button"
         onClick={(e) => { e.preventDefault(); e.stopPropagation(); onDelete(item.id); }}
@@ -177,13 +185,6 @@ function SortableThumb({ item, onDelete, onSetMain, onSetHover, onCrop, isMain, 
         aria-label="삭제"
       >
         ×
-      </button>
-      <button
-        type="button"
-        onClick={(e) => { e.preventDefault(); e.stopPropagation(); onSetMain(item.id); }}
-        className="absolute bottom-6 left-0 right-0 py-0.5 bg-black/60 text-[8px] text-white text-center hover:bg-black/80"
-      >
-        대표로
       </button>
       <button
         type="button"
@@ -349,6 +350,15 @@ const AdminUploadPage = () => {
       const list = [...prev.imageList];
       if (list.length === 0 && newItems.length > 0) newItems[0].isMain = true;
       const merged = [...list, ...newItems].map((item, idx) => ({ ...item, priority: idx }));
+      const mains = merged.filter((m) => m.isMain);
+      if (mains.length > 1) {
+        const keepId = mains[0].id;
+        merged.forEach((m) => {
+          m.isMain = m.id === keepId;
+        });
+      } else if (mains.length === 0 && merged.length > 0) {
+        merged[0].isMain = true;
+      }
       return { ...prev, imageList: merged };
     });
   }, [form.imageList]);
@@ -442,9 +452,13 @@ const AdminUploadPage = () => {
   }, []);
 
   const getMainImageUrl = useCallback(() => {
+    if (form.cardMainImageId) {
+      const card = form.imageList.find((i) => i.id === form.cardMainImageId);
+      if (card?.url) return card.url;
+    }
     const main = form.imageList.find((i) => i.isMain);
     return main?.url ?? form.imageList[0]?.url ?? null;
-  }, [form.imageList]);
+  }, [form.imageList, form.cardMainImageId]);
 
   const addOrReplaceThumbnailFromFile = useCallback((file) => {
     const newUrl = URL.createObjectURL(file);
@@ -595,6 +609,7 @@ const AdminUploadPage = () => {
         : null;
       const cardImageUrl = cardMainItem?.url ?? null;
       const cardHoverImageUrl = cardHoverItem?.url ?? null;
+      const detailMainId = list.find((i) => i.isMain)?.id ?? list[0]?.id;
       const finalList = list
         .filter((item) => {
           // 호버 전용 이미지(대표와 다른 경우)는 상세용 images 배열에서는 제외
@@ -605,7 +620,7 @@ const AdminUploadPage = () => {
         .map((item, idx) => ({
           url: item.url,
           priority: idx,
-          isMain: item.isMain,
+          isMain: item.id === detailMainId,
         }));
       const stockQty = Math.max(0, parseInt(String(form.stockQuantity || 0).replace(/\D/g, ''), 10) || 0);
 
@@ -1078,11 +1093,15 @@ const AdminUploadPage = () => {
                           type="button"
                           onClick={(e) => {
                             e.stopPropagation();
-                            setForm((prev) => ({
-                              ...prev,
-                              cardMainImageId: null,
-                              imageList: prev.imageList.map((item) => ({ ...item, isMain: false })),
-                            }));
+                            setForm((prev) => {
+                              const list = prev.imageList.map((item) => ({ ...item, isMain: false }));
+                              if (list.length > 0) list[0].isMain = true;
+                              return {
+                                ...prev,
+                                cardMainImageId: null,
+                                imageList: list,
+                              };
+                            });
                           }}
                           className="absolute top-2 right-2 w-6 h-6 rounded-full bg-black/60 text-white text-[11px] flex items-center justify-center hover:bg-black/80"
                           aria-label="대표 이미지 제거"
@@ -1189,10 +1208,10 @@ const AdminUploadPage = () => {
               {form.imageList.length > 0 && (
                 <div className="mt-4">
                   <p className="text-[9px] uppercase tracking-widest text-[#666666] mb-1">
-                    썸네일 순서 변경(드래그) · \'대표로\' 클릭 시 상세 대표 이미지 · \'호버로\' 클릭 시 카드 호버 이미지 · 편집으로 자르기
+                    썸네일 순서 변경(드래그) · 아래 「상세 대표」는 상세/DB 대표 · 「목록 호버」는 쇼핑 목록에서 마우스 오버 시만
                   </p>
                   <p className="text-[9px] text-[#999999] mb-2">
-                    대표 이미지는 상품 상세와 카드 기본 이미지에 사용되며, \'호버\'로 표시된 이미지는 상품 카드에서 마우스 오버 시 노출됩니다.
+                    위 「목록용 대표 이미지」는 카드 기본 썸네일이고, 미지정 시 상세 대표와 동일하게 저장됩니다. 호버 이미지는 기본 썸네일과 다른 사진을 쓰는 것을 권장합니다.
                   </p>
                   <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
                     <SortableContext items={form.imageList.map((i) => i.id)}>

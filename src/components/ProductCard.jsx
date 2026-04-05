@@ -46,8 +46,17 @@ const ProductCard = ({ product, onAddToCart, variant = 'grid' }) => {
   const [imgError, setImgError] = useState(false);
 
   const imageUrls = resolveProductImages(product);
-  const primaryImage = product.card_image || imageUrls[0] || product.image;
-  const hoverImage = product.card_hover_image || (imageUrls.length > 1 ? imageUrls[1] : null);
+  const hoverUrl = (product.card_hover_image || '').trim() || null;
+  let primaryImage =
+    (product.card_image || product.image || imageUrls[0] || '').trim() || null;
+  if (hoverUrl && primaryImage === hoverUrl) {
+    primaryImage =
+      imageUrls.find((u) => u !== hoverUrl) || (product.image && product.image !== hoverUrl ? product.image : null) || imageUrls[0] || null;
+  }
+  const hoverImage =
+    hoverUrl && hoverUrl !== primaryImage
+      ? hoverUrl
+      : imageUrls.filter((u) => u && u !== primaryImage)[0] || null;
   const showPlaceholder = !primaryImage || imgError;
 
   return (
