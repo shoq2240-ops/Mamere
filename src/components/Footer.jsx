@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import ContactModal from './ContactModal';
 
-/** 모바일: 히어로 블록 하단 글래스 오버레이(LandingPage 내부) / md+: 뷰포트 하단 플로팅 */
+/** 모바일: 히어로 아래 일반 흐름(스크롤 시 노출) / md+: 히어로 하단 절대배치 오버레이 */
 export const LandingFloatingFooter = () => {
   const [isContactOpen, setIsContactOpen] = useState(false);
 
@@ -11,7 +11,7 @@ export const LandingFloatingFooter = () => {
       <ContactModal isOpen={isContactOpen} onClose={() => setIsContactOpen(false)} />
 
       <footer
-        className="pointer-events-none absolute bottom-0 left-0 z-20 w-full border-t border-white/30 bg-white/40 py-6 backdrop-blur-md md:fixed md:bottom-0 md:left-0 md:z-10 md:w-full md:border-t-0 md:bg-transparent md:p-0 md:backdrop-blur-none"
+        className="relative z-auto w-full shrink-0 border-t border-[#E8E8E8] bg-white py-6 text-gray-800 pointer-events-auto md:pointer-events-none md:absolute md:bottom-0 md:left-0 md:right-0 md:z-10 md:border-t-0 md:bg-transparent md:py-0 md:backdrop-blur-none"
         aria-label="Footer"
       >
         <div
@@ -111,17 +111,159 @@ export const LandingFloatingFooter = () => {
   );
 };
 
+/** 쇼핑 등 서브 페이지 공통 푸터 (랜딩 `/` 제외) */
 const Footer = () => {
   const { pathname } = useLocation();
+  const [isContactOpen, setIsContactOpen] = useState(false);
 
-  if (pathname === '/') {
+  if (pathname === '/' || pathname.startsWith('/admin')) {
     return null;
   }
 
+  const linkClass =
+    'text-center text-[11px] font-light leading-snug text-gray-500 transition-colors hover:text-[#1A1A1A]';
+
   return (
-    <footer className="mt-auto w-full border-t border-[#EEEEEE] bg-white px-6 py-4 text-center text-[10px] font-light text-[#888888]">
-      © 2026 mamere. all rights reserved.
-    </footer>
+    <>
+      <ContactModal isOpen={isContactOpen} onClose={() => setIsContactOpen(false)} />
+
+      <footer
+        className="w-full shrink-0 border-t border-[#EEEEEE] bg-white text-[#1A1A1A] md:px-8 md:pb-10 md:pt-10"
+        aria-label="사이트 푸터"
+      >
+        <div className="mx-auto w-full max-w-[1440px]">
+          {/* 모바일: 2×2 그리드 */}
+          <div className="md:hidden">
+            <div className="grid grid-cols-2 gap-x-4 gap-y-10 px-6 pt-10 pb-4">
+              <div className="flex min-w-0 flex-col items-center gap-2 text-center">
+                <h3 className="text-[13px] font-bold text-gray-800">법적 고지</h3>
+                <Link to="/terms" className={linkClass}>
+                  이용약관
+                </Link>
+                <Link to="/privacy" className={linkClass}>
+                  개인정보 방침
+                </Link>
+                <Link to="/faq" className={linkClass}>
+                  자주 묻는 질문
+                </Link>
+              </div>
+
+              <div className="flex min-w-0 flex-col items-center gap-2 text-center">
+                <h3 className="text-[13px] font-bold text-gray-800">서비스</h3>
+                <Link to="/shipping" className={linkClass}>
+                  배송정보
+                </Link>
+                <Link to="/returns" className={linkClass}>
+                  반품 및 교환 요청하기
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => setIsContactOpen(true)}
+                  className={`${linkClass} border-0 bg-transparent p-0 text-center`}
+                >
+                  문의하기
+                </button>
+              </div>
+
+              <div className="flex min-w-0 flex-col items-center gap-2 text-center">
+                <h3 className="text-[13px] font-bold text-gray-800">고객 센터</h3>
+                <p className="text-[11px] font-light leading-snug text-gray-500">10:00 ~ 19:00</p>
+                <p className="text-[11px] font-light leading-snug text-gray-500">주말 및 공휴일 휴무</p>
+              </div>
+
+              <div className="flex min-w-0 flex-col items-center gap-2 text-center">
+                <h3 className="text-[13px] font-bold text-gray-800">소셜</h3>
+                <a
+                  href="https://www.instagram.com/official_mamere/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Mamere 인스타그램 (새 탭)"
+                  className="inline-flex h-10 w-10 shrink-0 items-center justify-center transition-opacity hover:opacity-80"
+                >
+                  <span className="flex h-6 w-6 items-center justify-center">
+                    <img
+                      src="/instagram.png"
+                      alt=""
+                      width={24}
+                      height={24}
+                      className="max-h-6 max-w-6 object-contain"
+                      loading="lazy"
+                      decoding="async"
+                    />
+                  </span>
+                </a>
+              </div>
+            </div>
+
+            <p className="mt-8 w-full text-center text-[10px] text-gray-400">
+              © 2026 mamere. all rights reserved.
+            </p>
+            <div className="h-10 shrink-0" aria-hidden />
+          </div>
+
+          {/* 태블릿·데스크톱: 기존 다열 그리드 */}
+          <div className="hidden w-full md:grid md:grid-cols-2 lg:grid-cols-4">
+            <div className="px-6 py-6 lg:border-r lg:border-[#EEEEEE]">
+              <h3 className="mb-2 text-[13px] font-medium text-[#1A1A1A]">고객 센터</h3>
+              <p className="mt-1 text-[11px] font-light leading-[1.8] text-[#777777]">10:00 ~ 19:00</p>
+              <p className="mt-1 text-[11px] font-light leading-[1.8] text-[#777777]">주말 및 공휴일 휴무</p>
+            </div>
+            <div className="px-6 py-6 lg:border-r lg:border-[#EEEEEE]">
+              <h3 className="mb-2 text-[13px] font-medium text-[#1A1A1A]">법적 고지</h3>
+              <Link to="/terms" className="mt-1 block text-[11px] font-light leading-[1.8] text-[#777777] hover:text-[#1A1A1A]">
+                이용약관
+              </Link>
+              <Link to="/privacy" className="mt-1 block text-[11px] font-light leading-[1.8] text-[#777777] hover:text-[#1A1A1A]">
+                개인정보 방침
+              </Link>
+              <Link to="/faq" className="mt-1 block text-[11px] font-light leading-[1.8] text-[#777777] hover:text-[#1A1A1A]">
+                자주 묻는 질문
+              </Link>
+            </div>
+            <div className="px-6 py-6 lg:border-r lg:border-[#EEEEEE]">
+              <h3 className="mb-2 text-[13px] font-medium text-[#1A1A1A]">서비스</h3>
+              <Link to="/shipping" className="mt-1 block text-[11px] font-light leading-[1.8] text-[#777777] hover:text-[#1A1A1A]">
+                배송정보
+              </Link>
+              <Link to="/returns" className="mt-1 block text-[11px] font-light leading-[1.8] text-[#777777] hover:text-[#1A1A1A]">
+                반품 및 교환 요청하기
+              </Link>
+              <button
+                type="button"
+                onClick={() => setIsContactOpen(true)}
+                className="mt-1 block w-full border-0 bg-transparent p-0 text-left text-[11px] font-light leading-[1.8] text-[#777777] hover:text-[#1A1A1A]"
+              >
+                문의하기
+              </button>
+            </div>
+            <div className="px-6 py-6">
+              <h3 className="mb-2 text-[13px] font-medium text-[#1A1A1A]">소셜</h3>
+              <a
+                href="https://www.instagram.com/official_mamere/"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Mamere on Instagram (opens in new tab)"
+                className="mt-1 inline-block transition-opacity hover:opacity-80"
+              >
+                <img
+                  src="/instagram.png"
+                  alt=""
+                  width={20}
+                  height={20}
+                  className="h-5 w-auto max-w-[120px] object-contain object-left"
+                  loading="lazy"
+                  decoding="async"
+                />
+              </a>
+            </div>
+          </div>
+
+          <p className="hidden text-center text-[10px] font-light text-[#888888] md:mt-8 md:block">
+            © 2026 mamere. all rights reserved.
+          </p>
+        </div>
+      </footer>
+    </>
   );
 };
 

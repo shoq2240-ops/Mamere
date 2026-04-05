@@ -66,11 +66,18 @@ export const useProducts = () => {
 export const useProductsByCategory = (category) => {
   const { products, loading, error, refetch } = useProducts();
   
-  const filteredProducts = category 
-    ? products.filter(p => {
-        const c = (category || '').toLowerCase();
+  const normCat = (x) => {
+    const n = String(x || '')
+      .toLowerCase()
+      .replace(/-/g, '_');
+    return n === 'household_items' ? 'household' : n;
+  };
+
+  const filteredProducts = category
+    ? products.filter((p) => {
+        const c = normCat(category);
         if (c === 'men' || c === 'women') return (p.gender || '').toLowerCase() === c;
-        return (p.category || '').toLowerCase() === c;
+        return normCat(p.category) === c;
       })
     : products;
 

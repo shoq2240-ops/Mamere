@@ -2,7 +2,6 @@ import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import { Link, useSearchParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useCart } from '../store/CartContext';
-import ContactModal from '../components/ContactModal';
 import { useProducts } from '../hooks/useProducts';
 import { ProductGridSkeleton } from '../components/ProductSkeleton';
 import ProductCard from '../components/ProductCard';
@@ -12,6 +11,12 @@ const SKIN_CONCERNS = ['보습', '진정', '트러블', '미백', '탄력'];
 const PAGE_SIZE = 12;
 
 const normalizeCategory = (c) => (c || '').toLowerCase().replace(/-/g, '_');
+
+/** 레거시 DB 값 household_items → household */
+const canonicalCategory = (c) => {
+  const n = normalizeCategory(c);
+  return n === 'household_items' ? 'household' : n;
+};
 const toArray = (v) => {
   if (Array.isArray(v)) return v;
   if (typeof v === 'string') {
@@ -27,7 +32,6 @@ const toArray = (v) => {
 
 const ShopPage = ({ category }) => {
   const { addToCart } = useCart();
-  const [isContactOpen, setIsContactOpen] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
 
   const [searchParams, setSearchParams] = useSearchParams();
@@ -44,7 +48,7 @@ const ShopPage = ({ category }) => {
       products
         .filter((product) => {
           if (!categoryNorm) return true;
-          return normalizeCategory(product.category) === categoryNorm;
+          return canonicalCategory(product.category) === categoryNorm;
         })
         .filter((product) => {
           if (!showSkinFilters || !skinTypeParam) return true;
@@ -115,8 +119,8 @@ const ShopPage = ({ category }) => {
   const categoryTitle =
     categoryNorm === 'body_hair'
       ? 'BODY & HAIR'
-      : categoryNorm === 'household_items'
-        ? 'HOUSEHOLD ITEMS'
+      : categoryNorm === 'household'
+        ? 'HOUSEHOLD'
         : categoryNorm === 'skincare'
           ? 'DEEP CARE'
           : 'SHOP ALL';
@@ -131,7 +135,6 @@ const ShopPage = ({ category }) => {
 
   return (
     <div className="min-h-screen bg-white pt-24 pb-16 antialiased text-[#1A1A1A]">
-      <ContactModal isOpen={isContactOpen} onClose={() => setIsContactOpen(false)} />
       <div className="w-full border-b border-[#EEEEEE] bg-white">
         <div className="mx-auto flex w-full max-w-[1440px] items-center justify-between px-8 py-4">
           <h2 className="text-[13px] font-light tracking-widest text-[#1A1A1A]">{categoryTitle}</h2>
@@ -191,7 +194,7 @@ const ShopPage = ({ category }) => {
         </div>
       </div>
 
-      <div className="mx-auto mt-10 w-full max-w-[1440px] px-8">
+      <div className="mx-auto mt-10 mb-16 w-full max-w-[1440px] px-8 md:mb-24">
         {loading && (
           <div>
             <ProductGridSkeleton count={12} columnsClass="grid-cols-2 lg:grid-cols-4" gapClass="gap-x-4 gap-y-24" />
@@ -222,62 +225,6 @@ const ShopPage = ({ category }) => {
             )}
           </>
         )}
-
-        <div className="mt-24 grid w-full grid-cols-1 border-t border-[#EEEEEE] bg-white md:grid-cols-2 lg:grid-cols-4">
-          <div className="px-6 py-6 lg:border-r lg:border-[#EEEEEE]">
-            <h3 className="mb-2 mt-2 text-[13px] font-medium text-[#1A1A1A]">고객 센터</h3>
-            <p className="mt-1 text-[11px] font-light leading-[1.8] text-[#777777]">10:00 ~ 19:00</p>
-            <p className="mt-1 text-[11px] font-light leading-[1.8] text-[#777777]">주말 및 공휴일 휴무</p>
-          </div>
-          <div className="px-6 py-6 lg:border-r lg:border-[#EEEEEE]">
-            <h3 className="mb-2 mt-2 text-[13px] font-medium text-[#1A1A1A]">법적 고지</h3>
-            <Link to="/terms" className="mt-1 block text-[11px] font-light leading-[1.8] text-[#777777] hover:text-[#1A1A1A]">
-              이용약관
-            </Link>
-            <Link to="/privacy" className="mt-1 block text-[11px] font-light leading-[1.8] text-[#777777] hover:text-[#1A1A1A]">
-              개인정보 방침
-            </Link>
-            <Link to="/faq" className="mt-1 block text-[11px] font-light leading-[1.8] text-[#777777] hover:text-[#1A1A1A]">
-              자주 묻는 질문
-            </Link>
-          </div>
-          <div className="px-6 py-6 lg:border-r lg:border-[#EEEEEE]">
-            <h3 className="mb-2 mt-2 text-[13px] font-medium text-[#1A1A1A]">서비스</h3>
-            <Link to="/shipping" className="mt-1 block text-[11px] font-light leading-[1.8] text-[#777777] hover:text-[#1A1A1A]">
-              배송정보
-            </Link>
-            <Link to="/returns" className="mt-1 block text-[11px] font-light leading-[1.8] text-[#777777] hover:text-[#1A1A1A]">
-              반품 및 교환 요청하기
-            </Link>
-            <button
-              type="button"
-              onClick={() => setIsContactOpen(true)}
-              className="mt-1 block text-left text-[11px] font-light leading-[1.8] text-[#777777] hover:text-[#1A1A1A]"
-            >
-              문의하기
-            </button>
-          </div>
-          <div className="px-6 py-6">
-            <h3 className="mb-2 mt-2 text-[13px] font-medium text-[#1A1A1A]">소셜</h3>
-            <a
-              href="https://www.instagram.com/official_mamere/"
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="Mamere on Instagram (opens in new tab)"
-              className="mt-1 inline-block transition-opacity hover:opacity-80"
-            >
-              <img
-                src="/instagram.png"
-                alt=""
-                width={20}
-                height={20}
-                className="h-5 w-auto max-w-[120px] object-contain object-left"
-                loading="lazy"
-                decoding="async"
-              />
-            </a>
-          </div>
-        </div>
       </div>
 
     </div>

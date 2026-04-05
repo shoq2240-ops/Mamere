@@ -39,7 +39,7 @@ const FORM_LIMITS = {
   descHowToUseMaxLength: 3000,
   volumeMaxLength: 50,
   keyIngredientsMaxLength: 500,
-  categoryValues: ['skincare', 'body_hair'],
+  categoryValues: ['skincare', 'body_hair', 'household'],
 };
 
 /** products 관련 Supabase 에러 → 사용자 안내 메시지 */
@@ -64,23 +64,29 @@ const productErrorMessage = (err) => {
 const CATEGORIES = [
   { value: 'skincare', label: 'Skincare' },
   { value: 'body_hair', label: 'Body & Hair' },
+  { value: 'household', label: 'Household' },
 ];
 
 const SKIN_TYPES = ['건성', '지성', '복합성', '민감성'];
 const SKIN_CONCERNS = ['보습', '진정', '트러블', '미백', '탄력'];
 
-/** DB에 best / makeup가 남아 있으면 폼에서는 스킨케어로 표시·저장 유도 */
+/** DB에 best / makeup가 남아 있으면 폼에서는 스킨케어로 표시·저장 유도. 레거시 household_items → household */
 const normalizeCategoryForForm = (c) => {
   if (!c || c === 'best' || c === 'makeup') return 'skincare';
-  return FORM_LIMITS.categoryValues.includes(c) ? c : 'skincare';
+  const n = String(c).toLowerCase().replace(/-/g, '_');
+  const v = n === 'household_items' ? 'household' : n;
+  return FORM_LIMITS.categoryValues.includes(v) ? v : 'skincare';
 };
 
 const getCategoryLabel = (val) => {
   if (!val || val.trim() === '') return '—';
-  if (val === 'best') return 'Best (레거시)';
-  if (val === 'makeup') return 'Makeup (레거시)';
-  const found = CATEGORIES.find((c) => c.value === val);
-  return found ? found.label : val;
+  const raw = String(val).trim();
+  if (raw === 'best') return 'Best (레거시)';
+  if (raw === 'makeup') return 'Makeup (레거시)';
+  const n = raw.toLowerCase().replace(/-/g, '_');
+  const v = n === 'household_items' ? 'household' : n;
+  const found = CATEGORIES.find((c) => c.value === v);
+  return found ? found.label : raw;
 };
 
 const createImageId = () => `img-${Date.now()}-${Math.random().toString(36).slice(2)}`;
@@ -513,7 +519,7 @@ const AdminUploadPage = () => {
       return;
     }
     if (!FORM_LIMITS.categoryValues.includes(form.category)) {
-      setError('유효한 카테고리를 선택해 주세요. (Skincare, Body & Hair 중 하나)');
+      setError('유효한 카테고리를 선택해 주세요. (Skincare, Body & Hair, Household 중 하나)');
       return;
     }
     const descDetailsLen = (form.descDetails ?? '').length;

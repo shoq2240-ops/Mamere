@@ -22,7 +22,7 @@ const LandingPage = () => {
         <meta property="og:site_name" content="마메르(mamère)" />
       </Helmet>
 
-      {/* 풀높이 히어로 + 글래스 푸터를 같은 relative 블록 하단에 겹침 */}
+      {/* 모바일: 히어로 100dvh 전체 → 푸터는 다음 블록(일반 흐름). md+: 푸터만 히어로 하단에 absolute 오버레이 */}
       <div className="relative w-full shrink-0">
         <section
           className="relative m-0 flex h-[100dvh] min-h-[100dvh] w-full shrink-0 flex-col overflow-hidden bg-neutral-900 md:h-auto md:min-h-screen"

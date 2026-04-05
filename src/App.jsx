@@ -60,7 +60,7 @@ const AnimatedRoutes = () => {
   const location = useLocation();
 
   return (
-    <div className="flex min-h-0 w-full min-w-0 flex-1 flex-col">
+    <div className="flex w-full min-w-0 min-h-0 flex-col">
       <Suspense fallback={<PageLoadFallback />}>
         <AnimatePresence mode="wait">
           <Routes location={location} key={location.pathname}>
@@ -92,7 +92,7 @@ const AnimatedRoutes = () => {
         <Route path="/shop/makeup" element={<Navigate to="/shop" replace />} />
         <Route path="/shop/skincare" element={<PageWrapper><ShopPage category="skincare" /></PageWrapper>} />
         <Route path="/shop/body-hair" element={<PageWrapper><ShopPage category="body_hair" /></PageWrapper>} />
-        <Route path="/shop/household" element={<PageWrapper><ShopPage category="household_items" /></PageWrapper>} />
+        <Route path="/shop/household" element={<PageWrapper><ShopPage category="household" /></PageWrapper>} />
         <Route path="/shop/household-items" element={<Navigate to="/shop/household" replace />} />
         </Routes>
         </AnimatePresence>
@@ -108,7 +108,7 @@ const PageWrapper = ({ children }) => (
     animate={{ opacity: 1 }}
     exit={{ opacity: 0.4 }}
     transition={{ duration: 0.25, ease: 'easeOut' }}
-    className="relative flex min-h-0 w-full flex-1 flex-col"
+    className="relative flex min-h-0 w-full flex-col"
   >
     {children}
   </motion.div>
@@ -180,14 +180,21 @@ function AppContent() {
         ref={mainScrollRef}
         onScroll={handleScroll}
         id="main-scroll"
-        className={`relative flex min-h-0 flex-1 flex-col overflow-y-auto overflow-x-hidden bg-white text-[#333333] ${mainPaddingTop}`}
+        className={`relative min-h-0 flex-1 overflow-y-auto overflow-x-hidden bg-white text-[#333333] ${mainPaddingTop}`}
       >
-        <AnimatedRoutes />
-        <Footer />
+        {/* flex+mt-auto 조합 대신: min-h-full로 스크롤 영역 높이를 명확히 하고 푸터는 일반 흐름으로 포함 (모바일 WebKit 스크롤 이슈 완화) */}
+        <div className="flex min-h-full w-full flex-col">
+          <div className="flex w-full min-w-0 flex-1 flex-col">
+            <AnimatedRoutes />
+          </div>
+          <Footer />
+        </div>
         {!isAdmin && (
-          <div className="fixed bottom-8 right-8 z-40 flex flex-col items-end gap-3">
-            <ScrollToTopButton />
-            {pathname !== '/' && <FloatingRecentlyViewed />}
+          <div className="pointer-events-none fixed bottom-8 right-8 z-40 flex flex-col items-end gap-3">
+            <div className="pointer-events-auto flex flex-col items-end gap-3">
+              <ScrollToTopButton />
+              {pathname !== '/' && <FloatingRecentlyViewed />}
+            </div>
           </div>
         )}
       </main>
@@ -210,7 +217,7 @@ function App() {
         <Router>
           <WithdrawnToast />
           <ScrollToTop />
-          <div className="flex flex-col h-screen max-h-[100dvh] bg-white text-[#333333] antialiased overflow-hidden flex font-sans tracking-wide leading-loose">
+          <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-white font-sans tracking-wide leading-loose text-[#333333] antialiased">
             <Toaster
               position="top-center"
               toastOptions={{

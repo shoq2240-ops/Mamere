@@ -43,7 +43,7 @@ const CartDrawer = ({ open, onClose }) => {
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
             transition={{ duration: 0.25, ease: 'easeOut' }}
-            className="fixed right-0 top-0 z-[221] flex h-[100dvh] w-[320px] max-w-full flex-col bg-white sm:w-[340px]"
+            className="fixed right-0 top-0 z-[221] flex h-[100dvh] w-[min(17.5rem,calc(100vw-1.5rem))] max-w-full flex-col bg-white sm:w-[18.5rem] md:w-[19.5rem]"
             aria-label="cart drawer"
           >
             <div className="flex justify-end border-b border-[#EEEEEE] px-3.5 py-3.5">

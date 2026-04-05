@@ -33,9 +33,11 @@ const resolveProductImages = (product) => {
 
 const gridCategoryLabel = (product) => {
   const raw = product?.category ?? '';
-  const n = String(raw).toLowerCase().replace(/-/g, '_');
+  let n = String(raw).toLowerCase().replace(/-/g, '_');
+  if (n === 'household_items') n = 'household';
   if (n === 'skincare') return 'SKIN CARE';
   if (n === 'body_hair') return 'BODY & HAIR';
+  if (n === 'household') return 'HOUSEHOLD';
   return 'PRODUCT';
 };
 

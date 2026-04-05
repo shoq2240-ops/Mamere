@@ -216,7 +216,7 @@ const Navbar = ({ isScrolled = false, isMobileMenuOpen = false, onMobileMenuChan
   const navLinks = [
     { label: 'skincare', path: '/shop/skincare' },
     { label: 'body & hair', path: '/shop/body-hair' },
-    { label: 'household items', path: '/shop/household' },
+    { label: 'household', path: '/shop/household' },
     { label: 'brand story', path: '/brand-story' },
   ];
 
@@ -282,7 +282,7 @@ const Navbar = ({ isScrolled = false, isMobileMenuOpen = false, onMobileMenuChan
           </div>
 
           {/* 우: 검색 / 계정 / 장바구니 — 로고보다 위로 두어 클릭 영역 유지 */}
-          <div className="relative z-[30] flex min-w-0 items-center justify-end gap-4 overflow-visible">
+          <div className="relative z-[30] flex min-w-0 items-center justify-end gap-2 overflow-visible md:gap-4">
             <button
               ref={searchButtonRef}
               type="button"
@@ -346,7 +346,7 @@ const Navbar = ({ isScrolled = false, isMobileMenuOpen = false, onMobileMenuChan
                 setIsCartOpen(true);
                 handleMenuToggle(false);
               }}
-              className="w-7 h-7 md:w-9 md:h-9 flex items-center justify-center relative hover:opacity-80 transition-colors text-white"
+              className="relative flex h-7 w-7 items-center justify-center text-white transition-colors hover:opacity-80 md:mr-0 md:h-9 md:w-9 -mr-4"
               aria-label="장바구니"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" /><path d="M3 6h18" /><path d="M16 10a4 4 0 0 1-8 0" /></svg>
@@ -378,18 +378,18 @@ const Navbar = ({ isScrolled = false, isMobileMenuOpen = false, onMobileMenuChan
             initial={{ opacity: 0, y: -6 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.18 }}
-            className="fixed z-[250] w-48 max-w-[min(12rem,calc(100vw-1rem))] overflow-hidden border border-white/40 bg-white/50 shadow-lg backdrop-blur-md [-webkit-tap-highlight-color:transparent]"
+            className="fixed z-[250] w-40 max-w-[min(10rem,calc(100vw-1rem))] overflow-hidden border border-white/40 bg-white/50 shadow-lg backdrop-blur-md [-webkit-tap-highlight-color:transparent]"
             style={{
               top: accountDropdownRect.bottom + 8,
-              right: Math.max(8, document.documentElement.clientWidth - accountDropdownRect.right),
+              left: Math.max(8, accountDropdownRect.left + accountDropdownRect.width / 2 - 80),
             }}
           >
-            <div className="flex flex-col py-3 px-4 text-center text-gray-800 text-[11px] tracking-wider">
+            <div className="flex flex-col gap-1 py-2 px-3 text-center text-xs tracking-wider text-gray-800">
               <Link
                 to="/wishlist"
                 role="menuitem"
                 onClick={() => setAccountOpen(false)}
-                className="block rounded-sm py-2.5 transition-colors hover:bg-white/20 active:bg-white/25"
+                className="block rounded-sm py-1.5 transition-colors hover:bg-white/20 active:bg-white/25"
               >
                 wishlist
               </Link>
@@ -397,7 +397,7 @@ const Navbar = ({ isScrolled = false, isMobileMenuOpen = false, onMobileMenuChan
                 to="/orders"
                 role="menuitem"
                 onClick={() => setAccountOpen(false)}
-                className="block rounded-sm py-2.5 transition-colors hover:bg-white/20 active:bg-white/25"
+                className="block rounded-sm py-1.5 transition-colors hover:bg-white/20 active:bg-white/25"
               >
                 orders
               </Link>
@@ -405,7 +405,7 @@ const Navbar = ({ isScrolled = false, isMobileMenuOpen = false, onMobileMenuChan
                 to="/profile"
                 role="menuitem"
                 onClick={() => setAccountOpen(false)}
-                className="block rounded-sm py-2.5 transition-colors hover:bg-white/20 active:bg-white/25"
+                className="block rounded-sm py-1.5 transition-colors hover:bg-white/20 active:bg-white/25"
               >
                 profile
               </Link>
@@ -416,7 +416,7 @@ const Navbar = ({ isScrolled = false, isMobileMenuOpen = false, onMobileMenuChan
                   handleLogout();
                   setAccountOpen(false);
                 }}
-                className="block w-full rounded-sm py-2.5 transition-colors hover:bg-white/20 active:bg-white/25"
+                className="block w-full rounded-sm py-1.5 transition-colors hover:bg-white/20 active:bg-white/25"
               >
                 logout
               </button>
@@ -486,7 +486,7 @@ const Navbar = ({ isScrolled = false, isMobileMenuOpen = false, onMobileMenuChan
                     onClick={() => handleMenuClick('/shop/household')}
                     className="text-xl font-light tracking-[0.08em] text-gray-800 transition-opacity hover:opacity-75 font-sans"
                   >
-                    household items
+                    household
                   </button>
                   <div>
                     <button
@@ -516,7 +516,7 @@ const Navbar = ({ isScrolled = false, isMobileMenuOpen = false, onMobileMenuChan
               <>
                 <motion.div
                   key="search-backdrop"
-                  className="fixed inset-0 z-[190] bg-transparent"
+                  className="fixed inset-0 z-[240] bg-transparent"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
@@ -529,11 +529,19 @@ const Navbar = ({ isScrolled = false, isMobileMenuOpen = false, onMobileMenuChan
                   role="dialog"
                   aria-modal="true"
                   aria-label="상품 검색"
-                  className="fixed z-[191] w-[min(18rem,calc(100vw-1.5rem))] rounded-none border border-[#E5E5E5] bg-white/95 p-3 shadow-[0_8px_30px_rgba(0,0,0,0.08)] backdrop-blur-md font-sans sm:w-80"
-                  style={{
-                    top: searchPanelRect.bottom + 8,
-                    right: document.documentElement.clientWidth - searchPanelRect.right,
-                  }}
+                  className="fixed z-[241] rounded-none border border-[#E5E5E5] bg-white/95 p-3 shadow-[0_8px_30px_rgba(0,0,0,0.08)] backdrop-blur-md font-sans"
+                  style={(() => {
+                    const vw = document.documentElement.clientWidth;
+                    const panelW = Math.min(288, vw - 16);
+                    let left = searchPanelRect.left;
+                    if (left + panelW > vw - 8) left = Math.max(8, vw - panelW - 8);
+                    if (left < 8) left = 8;
+                    return {
+                      top: searchPanelRect.bottom + 6,
+                      left,
+                      width: panelW,
+                    };
+                  })()}
                   initial={{ opacity: 0, y: -6 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -4 }}
