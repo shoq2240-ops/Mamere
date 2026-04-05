@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
@@ -21,6 +21,9 @@ const parsePrice = (price) => {
 };
 
 const isValidEmail = (s) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test((s ?? '').trim());
+
+/** 주문 완료 화면 일러스트 (public 루트 정적 파일) */
+const ORDER_SUCCESS_IMAGE_URLS = ['/bro.jpg', '/delivery.png'];
 
 const buildOrderNumber = () => {
   const now = new Date(); // 로컬 시간 기준
@@ -53,6 +56,11 @@ const CheckoutPage = () => {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [orderSuccessData, setOrderSuccessData] = useState(null);
+
+  const orderSuccessIllustrationSrc = useMemo(() => {
+    const i = Math.floor(Math.random() * ORDER_SUCCESS_IMAGE_URLS.length);
+    return ORDER_SUCCESS_IMAGE_URLS[i];
+  }, [orderSuccessData?.orderNumber]);
 
   // 클라이언트 기준 표시용: 소계 + 배송비 (3만원 이상 무료)
   const displaySubtotal = cart.reduce((sum, item) => sum + parsePrice(item.price) * item.quantity, 0);
@@ -366,18 +374,26 @@ const response = await window.PortOne.requestPayment({
           <h1 className="text-4xl font-semibold tracking-tight uppercase mb-2">
             주문 완료
           </h1>
-          <p className="text-[10px] text-[#999999] tracking-widest uppercase mb-10">
+          <p className="text-[10px] text-[#999999] tracking-widest uppercase mb-8">
             결제가 정상적으로 완료되었습니다
           </p>
+          <div className="mb-8 flex justify-center">
+            <img
+              src={orderSuccessIllustrationSrc}
+              alt="주문 완료 일러스트"
+              className="h-auto max-w-[300px] w-full object-contain"
+              decoding="async"
+            />
+          </div>
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             className="border border-[#F0F0F0] p-8 mb-8"
           >
-            <p className="text-[10px] font-bold tracking-widest uppercase text-[#666666] mb-2">
+            <p className="mb-1 text-[9px] font-medium uppercase tracking-[0.2em] text-[#BBBBBB]">
               주문 번호
             </p>
-            <p className="text-3xl font-semibold tracking-tight text-[#000000] mb-6 break-all">
+            <p className="mb-6 break-all text-[11px] font-light tracking-tight text-[#AAAAAA]">
               {orderSuccessData.orderNumber}
             </p>
             <p className="text-[11px] text-[#666666] leading-relaxed">
