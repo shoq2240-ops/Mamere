@@ -448,13 +448,10 @@ const response = await window.PortOne.requestPayment({
   return (
     <div className="pt-32 pb-20 px-6 min-h-screen bg-[#FFFFFF] text-[#000000] antialiased">
       <div className="max-w-2xl mx-auto">
-        <h1 className="text-4xl font-semibold tracking-tight uppercase mb-2">
-          Checkout
-        </h1>
         <p className="text-[10px] text-[#999999] tracking-widest uppercase mb-10">
           {isGuest
             ? '게스트로 결제합니다. 이메일과 배송지를 입력해주세요.'
-            : '배송지 정보를 확인하고 결제를 완료하세요'}
+            : '배송지 정보를 확인하여 주세요.'}
         </p>
 
         <motion.form
