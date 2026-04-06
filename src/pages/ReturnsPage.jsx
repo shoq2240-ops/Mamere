@@ -88,6 +88,27 @@ const ReturnsPage = () => {
     }
     setSubmitting(true);
     try {
+      // [보안] 로그인 회원은 본인 주문번호로만 반품/교환 신청 가능
+      if (user?.id) {
+        const { data: ownedOrder, error: ownedOrderErr } = await publicTable('orders')
+          .select('id')
+          .eq('user_id', user.id)
+          .eq('order_number', orderNumber)
+          .limit(1)
+          .maybeSingle();
+        if (ownedOrderErr) {
+          if (import.meta.env.DEV) console.error('주문 소유 검증 실패:', ownedOrderErr);
+          toast.error('주문 정보 확인에 실패했습니다. 잠시 후 다시 시도해 주세요.');
+          setSubmitting(false);
+          return;
+        }
+        if (!ownedOrder) {
+          toast.error('로그인한 계정의 주문번호만 신청할 수 있습니다.');
+          setSubmitting(false);
+          return;
+        }
+      }
+
       let attachmentUrls = null;
       if (form.attachments?.length > 0) {
         try {

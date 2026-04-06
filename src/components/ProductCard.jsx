@@ -31,7 +31,7 @@ const resolveProductImages = (product) => {
   return urls;
 };
 
-const ProductCard = ({ product, onAddToCart, variant = 'grid' }) => {
+const ProductCard = ({ product, onAddToCart, isAdding = false, variant = 'grid' }) => {
   const soldOut = isSoldOut(product);
   const [imgError, setImgError] = useState(false);
 
@@ -80,19 +80,28 @@ const ProductCard = ({ product, onAddToCart, variant = 'grid' }) => {
         </Link>
 
         {!soldOut && onAddToCart && (
-          <div className="pointer-events-none absolute inset-0 z-30 flex items-end justify-center p-2">
-            <button
-              type="button"
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                onAddToCart(product, e);
-              }}
-              className="pointer-events-auto w-full rounded-[8px] border border-[#CFCFCF] bg-transparent px-5 py-3 text-[12px] font-light text-[#1A1A1A] font-sans opacity-0 transition-opacity duration-300 ease-out group-hover/card:opacity-100"
-            >
-              장바구니 담기
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              if (isAdding) return;
+              onAddToCart(product, e);
+            }}
+            aria-label="장바구니 담기"
+            disabled={isAdding}
+            className="absolute top-3 right-3 z-30 flex h-8 w-8 items-center justify-center rounded-full bg-white/80 text-gray-900 shadow-sm backdrop-blur-sm opacity-0 transition-opacity duration-300 ease-out group-hover/card:opacity-100 disabled:cursor-not-allowed disabled:opacity-100"
+          >
+            {isAdding ? (
+              <span className="inline-block h-3.5 w-3.5 animate-spin rounded-full border border-gray-900/50 border-t-transparent" aria-hidden="true" />
+            ) : (
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
+                <path d="M3 6h18" />
+                <path d="M16 10a4 4 0 0 1-8 0" />
+              </svg>
+            )}
+          </button>
         )}
 
         {soldOut && (

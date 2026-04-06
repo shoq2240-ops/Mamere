@@ -32,6 +32,7 @@ const toArray = (v) => {
 
 const ShopPage = ({ category }) => {
   const { addToCart } = useCart();
+  const [addingById, setAddingById] = useState({});
   const [showFilters, setShowFilters] = useState(false);
 
   const [searchParams, setSearchParams] = useSearchParams();
@@ -107,13 +108,24 @@ const ShopPage = ({ category }) => {
   };
 
   const handleAddToCart = (product) => {
+    const idKey = String(product?.id ?? '');
+    if (!idKey) return;
+    if (addingById[idKey]) return;
+    setAddingById((prev) => ({ ...prev, [idKey]: true }));
+
     const added = addToCart(product, 1);
     if (!added) {
       const stock = product?.stock_quantity ?? product?.stock ?? 0;
       toast.error(`최대 구매 가능 수량은 ${stock}개입니다.`);
+      setTimeout(() => {
+        setAddingById((prev) => ({ ...prev, [idKey]: false }));
+      }, 350);
       return;
     }
     toast.success('장바구니에 담았습니다.');
+    setTimeout(() => {
+      setAddingById((prev) => ({ ...prev, [idKey]: false }));
+    }, 500);
   };
 
   const categoryTitle =
@@ -212,7 +224,13 @@ const ShopPage = ({ category }) => {
             <div className="grid w-full grid-cols-2 gap-x-4 gap-y-24 lg:grid-cols-4">
               {filteredProducts.length > 0 ? (
                 displayedProducts.map((product) => (
-                  <ProductCard key={product.id} product={product} onAddToCart={handleAddToCart} variant="grid" />
+                  <ProductCard
+                    key={product.id}
+                    product={product}
+                    onAddToCart={handleAddToCart}
+                    isAdding={!!addingById[String(product.id)]}
+                    variant="grid"
+                  />
                 ))
               ) : (
                 <div className="col-span-full py-32 text-center text-[10px] font-extralight uppercase tracking-[0.2em] text-[#CCCCCC]">

@@ -109,6 +109,7 @@ const ProductDetailPage = () => {
   const [imgError, setImgError] = useState(false);
   const [addQty, setAddQty] = useState(1);
   const [accordionOpen, setAccordionOpen] = useState(null);
+  const [isAddingToCart, setIsAddingToCart] = useState(false);
 
   const product = products.find((p) => String(p.id) === String(id));
   const soldOut = isSoldOut(product);
@@ -144,22 +145,28 @@ const ProductDetailPage = () => {
 
   const handleAddToCart = (e) => {
     e.preventDefault();
+    if (isAddingToCart) return;
     if (!product) return;
+    setIsAddingToCart(true);
     if (soldOut) {
       toast.error('품절된 상품입니다.');
+      setTimeout(() => setIsAddingToCart(false), 300);
       return;
     }
     const qty = Math.max(1, Math.min(maxQty, Math.floor(addQty) || 1));
     if (qty <= 0) {
       toast.error('최대 구매 가능 수량은 0개입니다.');
+      setTimeout(() => setIsAddingToCart(false), 300);
       return;
     }
     const added = addToCart(product, qty);
     if (!added) {
       toast.error(`최대 구매 가능 수량은 ${stockQty}개입니다.`);
+      setTimeout(() => setIsAddingToCart(false), 300);
       return;
     }
     toast.success(`장바구니에 ${qty}개 추가되었습니다.`);
+    setTimeout(() => setIsAddingToCart(false), 500);
   };
 
   const handleWishlistClick = (e) => {
@@ -334,14 +341,14 @@ const ProductDetailPage = () => {
               <button
                 type="button"
                 onClick={handleAddToCart}
-                disabled={soldOut}
+                disabled={soldOut || isAddingToCart}
                 className={`w-full py-4 text-[10px] font-medium tracking-[0.12em] uppercase transition-colors ${
-                  soldOut
-                    ? 'bg-white text-[#7A6B63] cursor-not-allowed border border-[#A8B894]/40'
+                  soldOut || isAddingToCart
+                    ? 'bg-white text-[#7A6B63] cursor-not-allowed border border-[#A8B894]/40 opacity-80'
                     : 'bg-[#A8B894] text-[#2D3A2D] hover:opacity-90 border border-[#A8B894]'
                 }`}
               >
-                {soldOut ? 'SOLD OUT' : '장바구니에 담기'}
+                {soldOut ? 'SOLD OUT' : isAddingToCart ? '처리 중...' : '장바구니에 담기'}
               </button>
             </div>
 

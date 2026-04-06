@@ -16,6 +16,7 @@ import ScrollToTopButton from './components/ScrollToTopButton';
 import RequireAdmin from './components/RequireAdmin';
 import RequireAuth from './components/RequireAuth';
 import CookieBanner from './components/CookieBanner';
+import AppErrorBoundary from './components/AppErrorBoundary';
 
 // 라우트별 코드 스플리팅 (Lazy Loading) — 초기 번들 축소
 const LandingPage = lazy(() => import('./pages/LandingPage'));
@@ -25,6 +26,7 @@ const ProductDetailPage = lazy(() => import('./pages/ProductDetailPage'));
 const WishlistPage = lazy(() => import('./pages/WishlistPage'));
 const LoginPage = lazy(() => import('./pages/LoginPage'));
 const SignupPage = lazy(() => import('./pages/SignupPage'));
+const CartPage = lazy(() => import('./pages/CartPage'));
 const ProfilePage = lazy(() => import('./pages/ProfilePage'));
 const CheckoutPage = lazy(() => import('./pages/CheckoutPage'));
 const OrdersPage = lazy(() => import('./pages/OrdersPage'));
@@ -73,7 +75,8 @@ const AnimatedRoutes = () => {
         <Route path="/login" element={<PageWrapper><LoginPage /></PageWrapper>} />
         <Route path="/signup" element={<PageWrapper><SignupPage /></PageWrapper>} />
         <Route path="/profile" element={<PageWrapper><RequireAuth><ProfilePage /></RequireAuth></PageWrapper>} />
-        <Route path="/checkout" element={<PageWrapper><CheckoutPage /></PageWrapper>} />
+        <Route path="/cart" element={<PageWrapper><RequireAuth><CartPage /></RequireAuth></PageWrapper>} />
+        <Route path="/checkout" element={<PageWrapper><RequireAuth><CheckoutPage /></RequireAuth></PageWrapper>} />
         <Route path="/orders" element={<PageWrapper><RequireAuth><OrdersPage /></RequireAuth></PageWrapper>} />
         <Route path="/order-lookup" element={<PageWrapper><OrderLookupPage /></PageWrapper>} />
         {/* 관리자 전용: RequireAdmin이 로그인 + profiles.is_admin 확인 후 허용, 미충족 시 /login 또는 / 리다이렉트. 데이터는 .env의 Supabase(products/orders) 및 Storage(product-images) 사용 */}
@@ -162,7 +165,7 @@ function AppContent() {
         <header className={customerHeaderClass}>
           <div className="border-b border-white/10 bg-[#2A1B38]">
             <Marquee
-              text="🌿 30,000원 이상 구매 시 무료배송 + NATURE SOAP MAMÈRE 🌿"
+              text="🌿 30,000원 이상 구매 시 무료배송 + nature mamère 🌿"
               speed={168}
               textClassName="text-white"
             />
@@ -231,7 +234,9 @@ function App() {
                 success: { iconTheme: { primary: '#A8B894' } },
               }}
             />
-            <AppContent />
+            <AppErrorBoundary>
+              <AppContent />
+            </AppErrorBoundary>
             <CookieBanner />
           </div>
         </Router>

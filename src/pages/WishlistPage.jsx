@@ -11,6 +11,7 @@ const WishlistPage = () => {
   const { addToCart } = useCart();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [addingById, setAddingById] = useState({});
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -39,13 +40,24 @@ const WishlistPage = () => {
   }, [wishlist]);
 
   const handleAddToCart = (product) => {
+    const idKey = String(product?.id ?? '');
+    if (!idKey) return;
+    if (addingById[idKey]) return;
+    setAddingById((prev) => ({ ...prev, [idKey]: true }));
+
     const added = addToCart(product, 1);
     if (!added) {
       const stock = product?.stock_quantity ?? product?.stock ?? 0;
       toast.error(`최대 구매 가능 수량은 ${stock}개입니다.`);
+      setTimeout(() => {
+        setAddingById((prev) => ({ ...prev, [idKey]: false }));
+      }, 350);
       return;
     }
     toast.success('장바구니에 담았습니다.');
+    setTimeout(() => {
+      setAddingById((prev) => ({ ...prev, [idKey]: false }));
+    }, 500);
   };
 
   return (
@@ -103,9 +115,10 @@ const WishlistPage = () => {
                   <ProductPriceDisplay product={product} size="sm" className="text-[11px] tracking-widest text-[#000000]/80" />
                   <button
                     onClick={() => handleAddToCart(product)}
-                    className="mt-3 w-full py-3 border border-[#E5E5E5] text-[10px] font-light tracking-[0.2em] uppercase text-[#666666] hover:bg-[#F9F9F9] hover:border-[#000000] hover:text-[#000000] transition-all"
+                    disabled={!!addingById[String(product.id)]}
+                    className="mt-3 w-full py-3 border border-[#E5E5E5] text-[10px] font-light tracking-[0.2em] uppercase text-[#666666] hover:bg-[#F9F9F9] hover:border-[#000000] hover:text-[#000000] transition-all disabled:opacity-60 disabled:cursor-not-allowed"
                   >
-                    장바구니 담기
+                    {addingById[String(product.id)] ? '처리 중...' : '장바구니 담기'}
                   </button>
                   </div>
                 </div>

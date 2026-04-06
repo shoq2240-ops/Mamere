@@ -14,7 +14,7 @@ const MarqueeItem = ({ text, textClassName }) => (
  * 끊김 없는 무한 마키 (CSS linear + 이중 스트립, translateX -50% 루프)
  */
 const Marquee = ({
-  text = 'NATURE SOAP MAMÈRE',
+  text = 'naturemamère',
   speed = 160,
   className = '',
   textClassName,

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase, getAuthRedirectUrl } from '../lib/supabase';
+import toast from 'react-hot-toast';
 
 const SAVED_EMAIL_KEY = 'dn_saved_email';
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -48,32 +49,57 @@ const LoginPage = () => {
     }
     setLoading(true);
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email: trimmedEmail,
-      password: password.slice(0, PASSWORD_MAX_LENGTH),
-    });
-
-    setLoading(false);
-    if (error) {
-      setError('회원 정보가 없습니다');
-      return;
-    }
     try {
-      if (saveEmail) localStorage.setItem(SAVED_EMAIL_KEY, email);
-      else localStorage.removeItem(SAVED_EMAIL_KEY);
-    } catch (_) {}
-    navigate('/', { replace: true });
+      const { error } = await supabase.auth.signInWithPassword({
+        email: trimmedEmail,
+        password: password.slice(0, PASSWORD_MAX_LENGTH),
+      });
+
+      setLoading(false);
+      if (error) {
+        setError('회원 정보가 없습니다');
+        toast.error('로그인에 실패했습니다. 입력 정보를 확인해 주세요.');
+        return;
+      }
+      try {
+        if (saveEmail) localStorage.setItem(SAVED_EMAIL_KEY, email);
+        else localStorage.removeItem(SAVED_EMAIL_KEY);
+      } catch (_) {}
+      navigate('/', { replace: true });
+    } catch (err) {
+      setLoading(false);
+      setError('일시적인 오류가 발생했습니다.');
+      toast.error('일시적인 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.');
+      if (import.meta.env.DEV) console.error('[Login] signInWithPassword 예외:', err);
+    }
   };
 
   const handleOAuthSignIn = async (provider) => {
     setError('');
     setLoading(true);
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider,
-      options: { redirectTo: getAuthRedirectUrl('/') },
-    });
-    setLoading(false);
-    if (error) setError('로그인에 실패했습니다. 이메일과 비밀번호를 확인해 주세요.');
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider,
+        options: { redirectTo: getAuthRedirectUrl('/') },
+      });
+      setLoading(false);
+      if (error) {
+        const msg = String(error.message || '').toLowerCase();
+        const isCanceled = msg.includes('cancel') || msg.includes('access_denied');
+        if (isCanceled) {
+          setError('로그인이 취소되었습니다.');
+          toast('로그인이 취소되었습니다.');
+        } else {
+          setError('로그인에 실패했습니다. 잠시 후 다시 시도해 주세요.');
+          toast.error('일시적인 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.');
+        }
+      }
+    } catch (err) {
+      setLoading(false);
+      setError('일시적인 오류가 발생했습니다.');
+      toast.error('일시적인 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.');
+      if (import.meta.env.DEV) console.error('[Login] OAuth 예외:', err);
+    }
   };
 
   const handleForgotPassword = async (e) => {
@@ -84,15 +110,24 @@ const LoginPage = () => {
     }
     setError('');
     setLoading(true);
-    const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-      redirectTo: getAuthRedirectUrl('/login?reset=success'),
-    });
-    setLoading(false);
-    if (error) {
-      setError('요청 처리에 실패했습니다. 이메일을 확인 후 다시 시도해주세요.');
-      return;
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+        redirectTo: getAuthRedirectUrl('/login?reset=success'),
+      });
+      setLoading(false);
+      if (error) {
+        setError('요청 처리에 실패했습니다. 이메일을 확인 후 다시 시도해주세요.');
+        toast.error('요청 처리 중 오류가 발생했습니다.');
+        return;
+      }
+      setResetSent(true);
+      toast.success('비밀번호 재설정 메일을 발송했습니다.');
+    } catch (err) {
+      setLoading(false);
+      setError('일시적인 오류가 발생했습니다.');
+      toast.error('일시적인 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.');
+      if (import.meta.env.DEV) console.error('[Login] resetPassword 예외:', err);
     }
-    setResetSent(true);
   };
 
   const handleFindId = () => {
@@ -137,9 +172,16 @@ const LoginPage = () => {
           <button
             type="submit"
             disabled={loading}
-            className="mt-6 w-full rounded-none bg-black py-4 text-[13px] font-medium text-white disabled:opacity-60"
+            className="mt-6 w-full rounded-none bg-black py-4 text-[13px] font-medium text-white disabled:opacity-60 flex items-center justify-center gap-2"
           >
-            로그인
+            {loading ? (
+              <>
+                <span className="inline-block h-3.5 w-3.5 animate-spin rounded-full border border-white/60 border-t-transparent" aria-hidden="true" />
+                처리 중...
+              </>
+            ) : (
+              '로그인'
+            )}
           </button>
         </form>
 
@@ -173,10 +215,19 @@ const LoginPage = () => {
           disabled={loading}
           className="mt-10 flex w-full items-center justify-center gap-2 rounded-none border border-black bg-white py-4 text-[13px] font-medium text-black disabled:opacity-60"
         >
-          <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden>
-            <path d="M12 4C7.03 4 3 7.18 3 11.1c0 2.6 1.77 4.87 4.4 6.11l-.78 2.89 3.25-2.03c.7.11 1.42.17 2.13.17 4.97 0 9-3.18 9-7.1S16.97 4 12 4z" />
-          </svg>
-          카카오톡 로그인
+          {loading ? (
+            <>
+              <span className="inline-block h-3.5 w-3.5 animate-spin rounded-full border border-black/40 border-t-transparent" aria-hidden="true" />
+              처리 중...
+            </>
+          ) : (
+            <>
+              <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden>
+                <path d="M12 4C7.03 4 3 7.18 3 11.1c0 2.6 1.77 4.87 4.4 6.11l-.78 2.89 3.25-2.03c.7.11 1.42.17 2.13.17 4.97 0 9-3.18 9-7.1S16.97 4 12 4z" />
+              </svg>
+              카카오톡 로그인
+            </>
+          )}
         </button>
 
         <Link

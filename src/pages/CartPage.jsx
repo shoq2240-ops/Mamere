@@ -18,6 +18,8 @@ const CartPage = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [showOrderSuccess, setShowOrderSuccess] = useState(false);
+  const [qtyCooldownById, setQtyCooldownById] = useState({});
+  const [isProceedingCheckout, setIsProceedingCheckout] = useState(false);
   const { cart, removeFromCart, updateQuantity } = useCart();
   const { products } = useProducts();
   const subtotal = cart.reduce((sum, item) => sum + parsePrice(item.price) * item.quantity, 0);
@@ -45,10 +47,20 @@ const CartPage = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps -- clamp only when products load
   }, [products]);
 
+  const runQuantityUpdateWithCooldown = (itemId, delta, maxQty) => {
+    const key = String(itemId);
+    if (qtyCooldownById[key]) return;
+    setQtyCooldownById((prev) => ({ ...prev, [key]: true }));
+    updateQuantity(itemId, delta, maxQty);
+    window.setTimeout(() => {
+      setQtyCooldownById((prev) => ({ ...prev, [key]: false }));
+    }, 180);
+  };
+
   return (
-    <div className="pt-32 pb-20 px-6 min-h-screen bg-white text-[#3E2F28] antialiased">
+    <div className="pt-24 md:pt-28 pb-12 md:pb-16 px-4 md:px-5 min-h-screen bg-white text-[#3E2F28] antialiased">
       <div className="max-w-3xl mx-auto">
-        <h1 className="text-4xl font-semibold tracking-tight uppercase mb-12 text-[#3E2F28]">
+        <h1 className="text-4xl font-semibold tracking-tight uppercase mb-8 md:mb-10 text-[#3E2F28]">
           장바구니
         </h1>
 
@@ -69,32 +81,39 @@ const CartPage = () => {
             </Link>
           </div>
         ) : (
-          <div className="space-y-10">
+          <div className="space-y-4">
             {cart.map((item) => {
               const product = products?.find((p) => String(p.id) === String(item.id));
               const stock = product != null ? getStockQuantity(product) : (item.stock_quantity ?? 99);
               const maxQty = Math.max(0, stock);
               const atMax = item.quantity >= maxQty;
+              const isQtyCooling = !!qtyCooldownById[String(item.id)];
               return (
-                <div key={item.id} className="flex gap-6 border-b border-[#F0F0F0] pb-10">
-                  <div className="w-24 h-32 bg-white overflow-hidden">
-                    {item.image && <img src={item.image} alt={item.name} className="w-full h-full object-cover opacity-80" loading="lazy" decoding="async" />}
+                <div key={item.id} className="mb-2 flex gap-3 md:gap-4 rounded-xl bg-gray-50 p-3 md:p-4 shadow-sm">
+                  <div className="w-20 h-28 overflow-hidden rounded-lg bg-white">
+                    {item.image && <img src={item.image} alt={item.name} className="w-full h-full object-cover" loading="lazy" decoding="async" />}
                   </div>
                   <div className="flex-1 flex flex-col justify-between">
                     <div>
                       <div className="flex justify-between items-start">
-                        <h3 className="text-lg font-heading tracking-tight uppercase">{item.name}</h3>
-                        <button onClick={() => removeFromCart(item.id)} className="text-[10px] font-light uppercase text-[#7A6B63] hover:text-[#3E2F28]">삭제</button>
+                        <h3 className="text-base font-heading tracking-tight uppercase">{item.name}</h3>
+                        <button onClick={() => removeFromCart(item.id)} className="text-[9px] font-light uppercase text-[#7A6B63] hover:text-[#3E2F28]">삭제</button>
                       </div>
                       <p className="text-[#3E2F28] text-sm mt-1">₩{parsePrice(item.price).toLocaleString()}</p>
                     </div>
                     <div className="flex items-center gap-4 mt-4">
-                      <button onClick={() => updateQuantity(item.id, -1)} className="w-6 h-6 border border-[#A8B894]/50 flex items-center justify-center text-xs text-[#3E2F28]">-</button>
-                      <span className="text-sm font-light min-w-[1.5rem] text-center">{item.quantity}</span>
                       <button
-                        onClick={() => updateQuantity(item.id, 1, maxQty)}
-                        disabled={atMax}
-                        className="w-6 h-6 border border-[#A8B894]/50 flex items-center justify-center text-xs text-[#3E2F28] disabled:opacity-40 disabled:cursor-not-allowed"
+                        onClick={() => runQuantityUpdateWithCooldown(item.id, -1, maxQty)}
+                        disabled={isQtyCooling}
+                        className="w-5 h-5 border border-gray-200 flex items-center justify-center text-[11px] text-[#3E2F28] disabled:opacity-40 disabled:cursor-not-allowed"
+                      >
+                        -
+                      </button>
+                      <span className="text-xs font-light min-w-[1.5rem] text-center">{item.quantity}</span>
+                      <button
+                        onClick={() => runQuantityUpdateWithCooldown(item.id, 1, maxQty)}
+                        disabled={atMax || isQtyCooling}
+                        className="w-5 h-5 border border-gray-200 flex items-center justify-center text-[11px] text-[#3E2F28] disabled:opacity-40 disabled:cursor-not-allowed"
                       >
                         +
                       </button>
@@ -125,10 +144,15 @@ const CartPage = () => {
               </div>
               <button
                 type="button"
-                onClick={() => navigate('/checkout')}
-                className="block w-full bg-[#A8B894] text-[#2D3A2D] py-4 font-heading uppercase tracking-widest hover:opacity-90 transition-colors text-center"
+                onClick={() => {
+                  if (isProceedingCheckout) return;
+                  setIsProceedingCheckout(true);
+                  navigate('/checkout');
+                }}
+                disabled={isProceedingCheckout}
+                className="block w-full bg-[#A8B894] text-[#2D3A2D] py-4 font-heading uppercase tracking-widest hover:opacity-90 transition-colors text-center disabled:cursor-not-allowed disabled:opacity-70"
               >
-                결제하기
+                {isProceedingCheckout ? '처리 중...' : '결제하기'}
               </button>
             </div>
           </div>

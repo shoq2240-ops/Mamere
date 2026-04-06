@@ -591,9 +591,16 @@ const response = await window.PortOne.requestPayment({
             <button
               type="submit"
               disabled={submitting || (!isGuest && profileLoading)}
-              className="flex-1 bg-[#000000] text-[#FFFFFF] py-4 text-[11px] font-medium tracking-widest uppercase hover:opacity-90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 bg-[#000000] text-[#FFFFFF] py-4 text-[11px] font-medium tracking-widest uppercase hover:opacity-90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
-              {submitting ? '처리 중...' : '결제하기'}
+              {submitting ? (
+                <>
+                  <span className="inline-block h-3.5 w-3.5 animate-spin rounded-full border border-white/60 border-t-transparent" aria-hidden="true" />
+                  처리 중...
+                </>
+              ) : (
+                '결제하기'
+              )}
             </button>
           </div>
         </motion.form>
