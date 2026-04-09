@@ -14,14 +14,25 @@ const isValidProductId = (id) => {
 const sanitizeProduct = (product) => {
   if (!product || typeof product !== 'object' || !isValidProductId(product.id)) return null;
   const stock = Math.max(0, Math.floor(Number(product.stock_quantity ?? product.stock ?? 0)));
+  const selectedOptionString = typeof product.selected_option_string === 'string'
+    ? product.selected_option_string.slice(0, 200)
+    : null;
+  const selectedOptionAdditionalPrice = Math.max(
+    0,
+    Math.floor(Number(product.selected_option_additional_price ?? 0))
+  );
+  const optionKey = selectedOptionString || '__base__';
   return {
     id: product.id,
+    cart_item_key: `${String(product.id)}::${optionKey}`,
     name: typeof product.name === 'string' ? product.name.slice(0, 200) : String(product.name ?? '').slice(0, 200),
     price: product.price,
     image: typeof product.image === 'string' ? product.image.slice(0, 2048) : null,
     category: typeof product.category === 'string' ? product.category.slice(0, 50) : null,
     volume: typeof product.volume === 'string' ? product.volume.slice(0, 30) : null,
     stock_quantity: stock,
+    selected_option_string: selectedOptionString,
+    selected_option_additional_price: selectedOptionAdditionalPrice,
   };
 };
 
@@ -69,14 +80,14 @@ export const CartProvider = ({ children }) => {
 
     let added = false;
     setCart((prevCart) => {
-      if (prevCart.length >= MAX_CART_ITEMS && !prevCart.find((i) => i.id === safe.id)) return prevCart;
-      const existing = prevCart.find((item) => item.id === safe.id);
+      if (prevCart.length >= MAX_CART_ITEMS && !prevCart.find((i) => i.cart_item_key === safe.cart_item_key)) return prevCart;
+      const existing = prevCart.find((item) => item.cart_item_key === safe.cart_item_key);
       const currentQty = existing ? existing.quantity : 0;
       if (currentQty + qty > stock) return prevCart;
       added = true;
       if (existing) {
         return prevCart.map((item) =>
-          item.id === safe.id ? { ...item, quantity: item.quantity + qty, stock_quantity: stock } : item
+          item.cart_item_key === safe.cart_item_key ? { ...item, quantity: item.quantity + qty, stock_quantity: stock } : item
         );
       }
       return [...prevCart, { ...safe, quantity: qty }];
@@ -84,14 +95,16 @@ export const CartProvider = ({ children }) => {
     return added;
   };
 
-  const removeFromCart = (productId) => {
-    setCart((prevCart) => prevCart.filter((item) => item.id !== productId));
+  const removeFromCart = (itemKeyOrProductId) => {
+    setCart((prevCart) => prevCart.filter((item) => (
+      item.cart_item_key !== itemKeyOrProductId && item.id !== itemKeyOrProductId
+    )));
   };
 
-  const updateQuantity = (productId, amount, maxQty = null) => {
+  const updateQuantity = (itemKeyOrProductId, amount, maxQty = null) => {
     setCart((prevCart) =>
       prevCart.map((item) => {
-        if (item.id !== productId) return item;
+        if (item.cart_item_key !== itemKeyOrProductId && item.id !== itemKeyOrProductId) return item;
         const cap = maxQty != null ? Math.min(maxQty, MAX_QUANTITY) : MAX_QUANTITY;
         const next = Math.max(1, Math.min(cap, item.quantity + amount));
         return { ...item, quantity: next };

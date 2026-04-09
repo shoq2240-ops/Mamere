@@ -59,7 +59,8 @@ const productErrorMessage = (err) => {
     }
     return msg || '요청에 실패했습니다.';
   }
-  return msg || '요청에 실패했습니다.';
+  const detail = [err?.code, err?.details, err?.hint].filter(Boolean).join(' | ');
+  return msg || detail || '요청에 실패했습니다.';
 };
 
 const CATEGORIES = [
@@ -91,6 +92,7 @@ const getCategoryLabel = (val) => {
 };
 
 const createImageId = () => `img-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+const createVariantId = () => `var-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
 /** react-easy-crop용: crop 영역으로 이미지 blob 생성 */
 async function getCroppedImg(imageSrc, pixelCrop) {
@@ -235,6 +237,8 @@ const AdminUploadPage = () => {
     cardMainImageId: null,
     cardHoverImageId: null,
   });
+  const [optionTextInput, setOptionTextInput] = useState('');
+  const [variantList, setVariantList] = useState([]);
 
   const thumbnailInputRef = useRef(null);
   const hoverInputRef = useRef(null);
@@ -258,7 +262,7 @@ const AdminUploadPage = () => {
   const fetchProducts = async () => {
     try {
       setLoading(true);
-      const { data, err } = await publicTable('products')
+      const { data, error: err } = await publicTable('products')
         .select('*')
         .order('created_at', { ascending: false });
       if (err) throw err;
@@ -517,6 +521,36 @@ const AdminUploadPage = () => {
     });
   }, []);
 
+  const handleGenerateVariants = () => {
+    const optionNames = String(optionTextInput || '')
+      .split(',')
+      .map((v) => v.trim())
+      .filter(Boolean);
+    if (optionNames.length === 0) {
+      setVariantList([]);
+      return;
+    }
+    const prevMap = new Map((variantList || []).map((v) => [v.optionString, v]));
+    const next = optionNames.map((optionString) => {
+      const old = prevMap.get(optionString);
+      return {
+        id: old?.id || createVariantId(),
+        optionString,
+        additionalPrice: Number(old?.additionalPrice || 0),
+        stockQuantity: Number(old?.stockQuantity || 0),
+      };
+    });
+    setVariantList(next);
+  };
+
+  const updateVariantRow = (id, patch) => {
+    setVariantList((prev) => prev.map((row) => (row.id === id ? { ...row, ...patch } : row)));
+  };
+
+  const removeVariantRow = (id) => {
+    setVariantList((prev) => prev.filter((row) => row.id !== id));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
@@ -645,6 +679,24 @@ const AdminUploadPage = () => {
       const compareAtDb =
         compareAtParsed != null && compareAtParsed > price ? compareAtParsed : null;
 
+      const generatedFromText = String(optionTextInput || '')
+        .split(',')
+        .map((v) => v.trim())
+        .filter(Boolean)
+        .map((optionString) => ({
+          id: createVariantId(),
+          optionString,
+          additionalPrice: 0,
+          stockQuantity: 0,
+        }));
+      const finalVariantList = (variantList && variantList.length > 0) ? variantList : generatedFromText;
+      const optionVariantsForSave = finalVariantList.map((variant) => ({
+        id: variant.id,
+        optionString: String(variant.optionString || ''),
+        additionalPrice: Math.max(0, parseInt(String(variant.additionalPrice || 0).replace(/\D/g, ''), 10) || 0),
+        stockQuantity: Math.max(0, parseInt(String(variant.stockQuantity || 0).replace(/\D/g, ''), 10) || 0),
+      }));
+
       const row = {
         name,
         price,
@@ -661,14 +713,21 @@ const AdminUploadPage = () => {
         is_manual_soldout: form.isManualSoldout,
         card_image: cardImageUrl,
         card_hover_image: cardHoverImageUrl,
+        option_groups: [],
+        option_variants: optionVariantsForSave,
       };
 
       // insert/update 시 서버가 최신 세션으로 인식하도록 세션 갱신
       await supabase.auth.getSession();
 
       if (editingId) {
-        const { error: err } = await publicTable('products').update(row).eq('id', editingId);
+        const { data: updatedRow, error: err } = await publicTable('products')
+          .update(row)
+          .eq('id', editingId)
+          .select('id, option_groups, option_variants')
+          .single();
         if (err) throw err;
+        if (!updatedRow) throw new Error('수정 후 데이터를 확인하지 못했습니다. 잠시 후 다시 시도해 주세요.');
 
         // 업데이트 후 더 이상 사용하지 않는 이전 이미지 정리
         if (prevProduct) {
@@ -699,8 +758,12 @@ const AdminUploadPage = () => {
 
         setSuccess('상품이 수정되었습니다.');
       } else {
-        const { error: err } = await publicTable('products').insert(row);
+        const { data: insertedRow, error: err } = await publicTable('products')
+          .insert(row)
+          .select('id, option_groups, option_variants')
+          .single();
         if (err) throw err;
+        if (!insertedRow) throw new Error('등록 후 데이터를 확인하지 못했습니다. 잠시 후 다시 시도해 주세요.');
         setSuccess('상품이 등록되었습니다.');
       }
       resetForm();
@@ -741,6 +804,19 @@ const AdminUploadPage = () => {
     const cardHoverImageId = p.card_hover_image
       ? (imageList.find((it) => it.url === p.card_hover_image)?.id ?? null)
       : null;
+    const savedVariantsRaw = Array.isArray(p.option_variants)
+      ? p.option_variants
+      : typeof p.option_variants === 'string'
+        ? (() => {
+            try { return JSON.parse(p.option_variants); } catch { return []; }
+          })()
+        : [];
+    const nextVariantList = (Array.isArray(savedVariantsRaw) ? savedVariantsRaw : []).map((v) => ({
+      id: String(v?.id || createVariantId()),
+      optionString: String(v?.optionString || v?.key || ''),
+      additionalPrice: Number(v?.additionalPrice ?? v?.additional_price ?? 0),
+      stockQuantity: Number(v?.stockQuantity ?? v?.stock_quantity ?? 0),
+    }));
     setEditingId(p.id);
     setDiscountPercentInput('');
     setForm({
@@ -760,6 +836,8 @@ const AdminUploadPage = () => {
       cardMainImageId,
       cardHoverImageId,
     });
+    setOptionTextInput(nextVariantList.map((v) => v.optionString).filter(Boolean).join(', '));
+    setVariantList(nextVariantList);
     setSuccess('');
     setError('');
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -880,6 +958,8 @@ const AdminUploadPage = () => {
       cardMainImageId: null,
       cardHoverImageId: null,
     });
+    setOptionTextInput('');
+    setVariantList([]);
   };
 
   const toggleSkinType = (t) => {
@@ -1147,6 +1227,84 @@ const AdminUploadPage = () => {
               />
             </div>
 
+            {/* 상품 옵션 단일 리스트형 */}
+            <div className="pt-6 border-t border-gray-200">
+              <label className="block text-[10px] font-medium tracking-[0.12em] uppercase text-[#666666] mb-2">
+                선택 옵션 (쉼표로 구분하여 입력)
+              </label>
+              <input
+                type="text"
+                value={optionTextInput}
+                onChange={(e) => setOptionTextInput(e.target.value)}
+                placeholder="예: 미스트, 괄사 비누, 100ml"
+                className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm text-[#333333] outline-none focus:border-gray-300"
+              />
+
+              <button
+                type="button"
+                onClick={handleGenerateVariants}
+                className="mt-4 px-4 py-2 rounded-lg bg-black text-white text-sm hover:bg-[#222222]"
+              >
+                옵션 품목 만들기
+              </button>
+
+              {variantList.length > 0 && (
+                <div className="mt-6 rounded-lg border border-gray-200 bg-white overflow-hidden">
+                  <div className="px-4 py-3 border-b border-gray-200">
+                    <p className="text-sm text-[#333333]">옵션 품목 테이블</p>
+                  </div>
+                  <div className="overflow-x-auto">
+                    <table className="w-full min-w-[760px]">
+                      <thead>
+                        <tr className="bg-[#FAFAFA]">
+                          <th className="text-left text-xs font-medium text-[#666] px-4 py-2 border-b border-gray-200">옵션 조합</th>
+                          <th className="text-left text-xs font-medium text-[#666] px-4 py-2 border-b border-gray-200">추가 금액(원)</th>
+                          <th className="text-left text-xs font-medium text-[#666] px-4 py-2 border-b border-gray-200">재고 수량(개)</th>
+                          <th className="text-left text-xs font-medium text-[#666] px-4 py-2 border-b border-gray-200">삭제</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {variantList.map((row) => (
+                          <tr key={row.id}>
+                            <td className="px-4 py-2 border-b border-gray-100 text-sm text-[#333]">{row.optionString}</td>
+                            <td className="px-4 py-2 border-b border-gray-100">
+                              <input
+                                type="text"
+                                inputMode="numeric"
+                                value={row.additionalPrice}
+                                onChange={(e) => updateVariantRow(row.id, { additionalPrice: e.target.value })}
+                                className="w-32 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-[#333] outline-none focus:border-gray-300"
+                                placeholder="0"
+                              />
+                            </td>
+                            <td className="px-4 py-2 border-b border-gray-100">
+                              <input
+                                type="text"
+                                inputMode="numeric"
+                                value={row.stockQuantity}
+                                onChange={(e) => updateVariantRow(row.id, { stockQuantity: e.target.value })}
+                                className="w-32 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-[#333] outline-none focus:border-gray-300"
+                                placeholder="0"
+                              />
+                            </td>
+                            <td className="px-4 py-2 border-b border-gray-100">
+                              <button
+                                type="button"
+                                onClick={() => removeVariantRow(row.id)}
+                                className="px-2.5 py-1.5 rounded border border-gray-200 text-xs text-[#666666] hover:bg-[#FAFAFA]"
+                              >
+                                삭제
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+            </div>
+
             <div className="space-y-4 pt-6 mt-6 border-t border-[#E8E8E8]">
               <p className="text-[10px] font-medium tracking-widest uppercase text-[#666666]">재고 및 품절</p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -1358,7 +1516,7 @@ const AdminUploadPage = () => {
               disabled={submitting}
               className="px-8 py-3.5 bg-[#000000] text-white text-[11px] font-medium tracking-[0.12em] uppercase hover:bg-[#333333] disabled:opacity-50 transition-colors"
             >
-              {submitting ? '처리 중...' : editingId ? '수정' : '등록'}
+              {submitting ? '상품을 추가 중입니다' : editingId ? '수정' : '등록'}
             </button>
             {editingId && (
               <button

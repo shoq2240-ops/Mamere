@@ -37,6 +37,12 @@ ALTER TABLE products ADD COLUMN IF NOT EXISTS subcategory TEXT;
 ALTER TABLE products ADD COLUMN IF NOT EXISTS compare_at_price INTEGER;
 COMMENT ON COLUMN products.compare_at_price IS '정가(할인 전, 원). price보다 크면 세일 UI';
 
+-- 상품 옵션: 옵션 그룹/조합 (JSONB)
+ALTER TABLE products ADD COLUMN IF NOT EXISTS option_groups JSONB DEFAULT '[]';
+ALTER TABLE products ADD COLUMN IF NOT EXISTS option_variants JSONB DEFAULT '[]';
+COMMENT ON COLUMN products.option_groups IS '옵션 그룹 목록: [{name, values[]}]';
+COMMENT ON COLUMN products.option_variants IS '옵션 조합 목록: [{key, options, additional_price, stock_quantity}]';
+
 -- 컬럼 확인 (실행 후 필요 시 아래 쿼리로 확인)
 -- SELECT column_name, data_type, column_default
 -- FROM information_schema.columns

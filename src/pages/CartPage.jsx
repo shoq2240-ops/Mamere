@@ -41,17 +41,17 @@ const CartPage = () => {
       const product = products.find((p) => String(p.id) === String(item.id));
       const stock = product != null ? getStockQuantity(product) : item.stock_quantity;
       if (stock != null && item.quantity > stock) {
-        updateQuantity(item.id, stock - item.quantity, stock);
+        updateQuantity(item.cart_item_key || item.id, stock - item.quantity, stock);
       }
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps -- clamp only when products load
   }, [products]);
 
-  const runQuantityUpdateWithCooldown = (itemId, delta, maxQty) => {
-    const key = String(itemId);
+  const runQuantityUpdateWithCooldown = (itemKey, delta, maxQty) => {
+    const key = String(itemKey);
     if (qtyCooldownById[key]) return;
     setQtyCooldownById((prev) => ({ ...prev, [key]: true }));
-    updateQuantity(itemId, delta, maxQty);
+    updateQuantity(itemKey, delta, maxQty);
     window.setTimeout(() => {
       setQtyCooldownById((prev) => ({ ...prev, [key]: false }));
     }, 180);
@@ -87,9 +87,10 @@ const CartPage = () => {
               const stock = product != null ? getStockQuantity(product) : (item.stock_quantity ?? 99);
               const maxQty = Math.max(0, stock);
               const atMax = item.quantity >= maxQty;
-              const isQtyCooling = !!qtyCooldownById[String(item.id)];
+              const rowKey = item.cart_item_key || item.id;
+              const isQtyCooling = !!qtyCooldownById[String(rowKey)];
               return (
-                <div key={item.id} className="mb-2 flex gap-3 md:gap-4 rounded-xl bg-gray-50 p-3 md:p-4 shadow-sm">
+                <div key={rowKey} className="mb-2 flex gap-3 md:gap-4 rounded-xl bg-gray-50 p-3 md:p-4 shadow-sm">
                   <div className="w-20 h-28 overflow-hidden rounded-lg bg-white">
                     {item.image && <img src={item.image} alt={item.name} className="w-full h-full object-cover" loading="lazy" decoding="async" />}
                   </div>
@@ -97,13 +98,13 @@ const CartPage = () => {
                     <div>
                       <div className="flex justify-between items-start">
                         <h3 className="text-base font-heading tracking-tight uppercase">{item.name}</h3>
-                        <button onClick={() => removeFromCart(item.id)} className="text-[9px] font-light uppercase text-[#7A6B63] hover:text-[#3E2F28]">삭제</button>
+                        <button onClick={() => removeFromCart(rowKey)} className="text-[9px] font-light uppercase text-[#7A6B63] hover:text-[#3E2F28]">삭제</button>
                       </div>
                       <p className="text-[#3E2F28] text-sm mt-1">₩{parsePrice(item.price).toLocaleString()}</p>
                     </div>
                     <div className="flex items-center gap-4 mt-4">
                       <button
-                        onClick={() => runQuantityUpdateWithCooldown(item.id, -1, maxQty)}
+                        onClick={() => runQuantityUpdateWithCooldown(rowKey, -1, maxQty)}
                         disabled={isQtyCooling}
                         className="w-5 h-5 border border-gray-200 flex items-center justify-center text-[11px] text-[#3E2F28] disabled:opacity-40 disabled:cursor-not-allowed"
                       >
@@ -111,7 +112,7 @@ const CartPage = () => {
                       </button>
                       <span className="text-xs font-light min-w-[1.5rem] text-center">{item.quantity}</span>
                       <button
-                        onClick={() => runQuantityUpdateWithCooldown(item.id, 1, maxQty)}
+                        onClick={() => runQuantityUpdateWithCooldown(rowKey, 1, maxQty)}
                         disabled={atMax || isQtyCooling}
                         className="w-5 h-5 border border-gray-200 flex items-center justify-center text-[11px] text-[#3E2F28] disabled:opacity-40 disabled:cursor-not-allowed"
                       >

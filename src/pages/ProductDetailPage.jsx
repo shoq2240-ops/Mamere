@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Link, useParams, useLocation } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -21,6 +21,19 @@ const toArray = (v) => {
       return Array.isArray(p) ? p : [v];
     } catch {
       return v ? [v] : [];
+    }
+  }
+  return [];
+};
+
+const parseJsonArray = (value) => {
+  if (Array.isArray(value)) return value;
+  if (typeof value === 'string') {
+    try {
+      const parsed = JSON.parse(value);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
     }
   }
   return [];
@@ -110,11 +123,11 @@ const ProductDetailPage = () => {
   const [addQty, setAddQty] = useState(1);
   const [accordionOpen, setAccordionOpen] = useState(null);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
+  const [selectedVariantValue, setSelectedVariantValue] = useState('');
 
   const product = products.find((p) => String(p.id) === String(id));
   const soldOut = isSoldOut(product);
   const stockQty = getStockQuantity(product);
-  const maxQty = product ? Math.min(99, Math.max(0, stockQty)) : 0;
   const images = product?.images ? toArray(product.images) : [];
   const imageList = images.length > 0
     ? images.map((img) => (typeof img === 'string' ? { url: img, isMain: false } : { url: img?.url || img?.src, isMain: !!img?.isMain })).filter((i) => i.url)
@@ -126,6 +139,54 @@ const ProductDetailPage = () => {
   const keyIngredients = toArray(product?.key_ingredients || product?.keyIngredients || []);
   const keyIngredientsSet = new Set(keyIngredients.map((k) => (typeof k === 'string' ? k : k?.name ?? k?.label ?? String(k)).trim().toLowerCase()));
   const volume = product?.volume;
+  const optionGroups = useMemo(() => {
+    const groups = parseJsonArray(product?.option_groups);
+    return groups
+      .map((g) => ({
+        name: typeof g?.name === 'string' ? g.name.trim() : '',
+        values: Array.isArray(g?.values)
+          ? g.values.map((v) => String(v).trim()).filter(Boolean)
+          : String(g?.values || '').split(',').map((v) => v.trim()).filter(Boolean),
+      }))
+      .filter((g) => g.name && g.values.length > 0);
+  }, [product?.option_groups]);
+
+  const optionVariants = useMemo(() => {
+    const variants = parseJsonArray(product?.option_variants);
+    const parsed = variants
+      .map((v, idx) => ({
+        selectValue: String(v?.id || v?.optionString || v?.key || `variant-${idx}`),
+        key: typeof v?.key === 'string' ? v.key : '',
+        optionString: String(v?.optionString || ''),
+        options: v?.options && typeof v.options === 'object' ? v.options : {},
+        additionalPrice: Number(v?.additionalPrice ?? v?.additional_price ?? 0),
+        stockQuantity: Number(v?.stockQuantity ?? v?.stock_quantity ?? 0),
+      }))
+      .filter((v) => v.optionString || v.key || Object.keys(v.options).length > 0);
+    if (parsed.length > 0) return parsed;
+
+    // fallback: legacy option_groups만 있는 데이터는 값 목록을 단일 옵션 목록으로 보여준다.
+    const flattened = optionGroups.flatMap((g) => g.values || []);
+    return flattened.map((value, idx) => ({
+      selectValue: `fallback-${idx}-${value}`,
+      key: '',
+      optionString: String(value),
+      options: {},
+      additionalPrice: 0,
+      stockQuantity: stockQty,
+    }));
+  }, [product?.option_variants, optionGroups, stockQty]);
+
+  const selectedVariant = useMemo(() => {
+    if (optionVariants.length === 0 || !selectedVariantValue) return null;
+    return optionVariants.find((variant) => variant.selectValue === selectedVariantValue) || null;
+  }, [optionVariants, selectedVariantValue]);
+
+  const additionalPrice = Math.max(0, Number(selectedVariant?.additionalPrice || 0));
+  const variantStockQty = selectedVariant ? Math.max(0, Number(selectedVariant.stockQuantity || 0)) : null;
+  const effectiveStockQty = variantStockQty != null ? Math.min(stockQty, variantStockQty) : stockQty;
+  const effectiveMaxQty = product ? Math.min(99, Math.max(0, effectiveStockQty)) : 0;
+  const isUnavailable = soldOut || effectiveMaxQty <= 0;
 
   const ingredientsList = (() => {
     const raw = product?.ingredients ?? product?.ingredients_text ?? '';
@@ -138,6 +199,12 @@ const ProductDetailPage = () => {
   useEffect(() => {
     if (product) addRecentlyViewed(product);
   }, [product?.id, addRecentlyViewed]);
+
+  useEffect(() => {
+    if (!product) return;
+    setSelectedVariantValue('');
+    setAddQty(1);
+  }, [product?.id, optionGroups.length, optionVariants.length]);
 
   useEffect(() => {
     setImgError(false);
@@ -153,15 +220,26 @@ const ProductDetailPage = () => {
       setTimeout(() => setIsAddingToCart(false), 300);
       return;
     }
-    const qty = Math.max(1, Math.min(maxQty, Math.floor(addQty) || 1));
+    if (optionVariants.length > 0 && !selectedVariant) {
+      toast.error('옵션을 선택해 주세요.');
+      setTimeout(() => setIsAddingToCart(false), 300);
+      return;
+    }
+    const qty = Math.max(1, Math.min(effectiveMaxQty, Math.floor(addQty) || 1));
     if (qty <= 0) {
       toast.error('최대 구매 가능 수량은 0개입니다.');
       setTimeout(() => setIsAddingToCart(false), 300);
       return;
     }
-    const added = addToCart(product, qty);
+    const cartProduct = {
+      ...product,
+      price: (parseInt(String(product.price || 0).replace(/\D/g, ''), 10) || 0) + additionalPrice,
+      selected_option_string: selectedVariant?.optionString || null,
+      selected_option_additional_price: additionalPrice,
+    };
+    const added = addToCart(cartProduct, qty);
     if (!added) {
-      toast.error(`최대 구매 가능 수량은 ${stockQty}개입니다.`);
+      toast.error(`최대 구매 가능 수량은 ${effectiveStockQty}개입니다.`);
       setTimeout(() => setIsAddingToCart(false), 300);
       return;
     }
@@ -296,13 +374,39 @@ const ProductDetailPage = () => {
             <h1 className="font-serif text-2xl font-normal leading-snug tracking-[0.06em] text-[#333333] md:text-[1.65rem]">
               {product.name}
             </h1>
-            {volume && (
-              <p className="mt-2 text-[10px] font-light tracking-[0.1em] text-[#5C4A42]">{volume}</p>
-            )}
             <div className="mt-3">
               <ProductPriceDisplay product={product} size="lg" />
             </div>
-            {!soldOut && maxQty > 0 && (
+            {optionVariants.length > 0 && (
+              <div className="mt-6 space-y-2">
+                <div className="relative">
+                  <select
+                    value={selectedVariantValue}
+                    onChange={(e) => setSelectedVariantValue(e.target.value)}
+                    className="w-full appearance-none rounded-lg border border-gray-200 bg-[#FCFCFC] px-3 py-2.5 pr-9 text-sm text-[#333333] outline-none transition-colors focus:border-gray-300"
+                  >
+                    <option value="">옵션을 선택하세요</option>
+                    {optionVariants.map((variant) => {
+                      const label = variant.optionString || Object.values(variant.options || {}).join(' / ');
+                      return (
+                        <option key={variant.selectValue} value={variant.selectValue}>
+                          {label}
+                        </option>
+                      );
+                    })}
+                  </select>
+                  <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-gray-400" aria-hidden>
+                    <svg className="h-4 w-4" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5">
+                      <path d="m5 7 5 6 5-6" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </span>
+                </div>
+                {selectedVariant && additionalPrice > 0 && (
+                  <p className="text-xs text-[#5C4A42]">옵션 추가금액: +{additionalPrice.toLocaleString()}원</p>
+                )}
+              </div>
+            )}
+            {!soldOut && effectiveMaxQty > 0 && (
               <div className="mt-8 flex items-center gap-3">
                 <span className="text-[10px] font-medium tracking-widest uppercase text-[#5C4A42]">수량</span>
                 <div className="flex items-center border border-[#E8E4DF]">
@@ -317,18 +421,18 @@ const ProductDetailPage = () => {
                   <input
                     type="number"
                     min={1}
-                    max={maxQty}
+                    max={effectiveMaxQty}
                     value={addQty}
                     onChange={(e) => {
                       const v = parseInt(e.target.value, 10);
-                      if (!Number.isNaN(v)) setAddQty(Math.max(1, Math.min(maxQty, v)));
+                      if (!Number.isNaN(v)) setAddQty(Math.max(1, Math.min(effectiveMaxQty, v)));
                     }}
                     className="w-12 h-9 text-center text-[11px] bg-transparent border-x border-[#E8E4DF] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                   />
                   <button
                     type="button"
-                    onClick={() => setAddQty((q) => Math.min(maxQty, q + 1))}
-                    disabled={addQty >= maxQty}
+                    onClick={() => setAddQty((q) => Math.min(effectiveMaxQty, q + 1))}
+                    disabled={addQty >= effectiveMaxQty}
                     className={`w-9 h-9 flex items-center justify-center text-[#5C4A42] hover:text-[#3E2F28] disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:text-[#5C4A42]`}
                     aria-label="수량 늘리기"
                   >
@@ -341,14 +445,14 @@ const ProductDetailPage = () => {
               <button
                 type="button"
                 onClick={handleAddToCart}
-                disabled={soldOut || isAddingToCart}
+                disabled={isUnavailable || isAddingToCart}
                 className={`w-full py-4 text-[10px] font-medium tracking-[0.12em] uppercase transition-colors ${
-                  soldOut || isAddingToCart
+                  isUnavailable || isAddingToCart
                     ? 'bg-white text-[#7A6B63] cursor-not-allowed border border-[#A8B894]/40 opacity-80'
                     : 'bg-[#A8B894] text-[#2D3A2D] hover:opacity-90 border border-[#A8B894]'
                 }`}
               >
-                {soldOut ? 'SOLD OUT' : isAddingToCart ? '처리 중...' : '장바구니에 담기'}
+                {isUnavailable ? 'SOLD OUT' : isAddingToCart ? '처리 중...' : '장바구니에 담기'}
               </button>
             </div>
 

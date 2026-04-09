@@ -57,8 +57,10 @@ const CartDrawer = ({ open, onClose }) => {
                 <p className="py-10 text-[12px] font-light lowercase text-gray-500">cart is empty</p>
               ) : (
                 <div className="space-y-5">
-                  {cart.map((item) => (
-                    <div key={item.id} className="flex gap-3 border-b border-[#F1F1F1] pb-5">
+                  {cart.map((item) => {
+                    const rowKey = item.cart_item_key || item.id;
+                    return (
+                    <div key={rowKey} className="flex gap-3 border-b border-[#F1F1F1] pb-5">
                       <div className="h-[72px] w-[72px] shrink-0 overflow-hidden bg-[#F5F5F5]">
                         {item.image && <img src={item.image} alt={item.name} className="h-full w-full object-cover" loading="lazy" />}
                       </div>
@@ -67,7 +69,7 @@ const CartDrawer = ({ open, onClose }) => {
                           <p className="line-clamp-2 text-[12px] font-light text-[#1A1A1A]">{item.name}</p>
                           <button
                             type="button"
-                            onClick={() => removeFromCart(item.id)}
+                            onClick={() => removeFromCart(rowKey)}
                             className="shrink-0 text-[10px] font-extralight lowercase text-[#999999] hover:text-[#1A1A1A]"
                           >
                             remove
@@ -76,7 +78,7 @@ const CartDrawer = ({ open, onClose }) => {
                         <div className="mt-2 inline-flex items-center border border-[#E5E5E5]">
                           <button
                             type="button"
-                            onClick={() => updateQuantity(item.id, -1)}
+                            onClick={() => updateQuantity(rowKey, -1)}
                             className="h-7 w-7 text-[11px] font-light text-[#1A1A1A]"
                           >
                             -
@@ -86,7 +88,7 @@ const CartDrawer = ({ open, onClose }) => {
                           </span>
                           <button
                             type="button"
-                            onClick={() => updateQuantity(item.id, 1)}
+                            onClick={() => updateQuantity(rowKey, 1)}
                             className="h-7 w-7 text-[11px] font-light text-[#1A1A1A]"
                           >
                             +
@@ -99,7 +101,8 @@ const CartDrawer = ({ open, onClose }) => {
                         </div>
                       </div>
                     </div>
-                  ))}
+                  );
+                  })}
                 </div>
               )}
             </div>

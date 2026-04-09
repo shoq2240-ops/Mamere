@@ -173,7 +173,7 @@ const PrivacyPage = () => {
                 <span className="font-medium text-[#111111]">전화번호:</span> 010-9187-2250
               </li>
               <li>
-                <span className="font-medium text-[#111111]">이메일:</span> pjk6412@naver.com
+                <span className="font-medium text-[#111111]">이메일:</span> shox2240@gmail.com
               </li>
             </ul>
             <p className="pt-2">

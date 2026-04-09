@@ -152,7 +152,7 @@ const CheckoutPage = () => {
     // [보안] products 테이블에서 실제 가격·재고 조회 후 총액·품절 검증 (클라이언트 조작 방지)
     const cartIds = [...new Set(cart.map((i) => i.id))];
     const { data: serverProducts, error: productsError } = await publicTable('products')
-      .select('id, price, name, stock_quantity, is_manual_soldout')
+      .select('id, price, name, stock_quantity, is_manual_soldout, option_variants')
       .in('id', cartIds);
 
     if (productsError) {
@@ -174,6 +174,28 @@ const CheckoutPage = () => {
       (serverProducts ?? []).map((p) => [p.id, parseServerPrice(p.price)])
     );
     const productMap = Object.fromEntries((serverProducts ?? []).map((p) => [p.id, p]));
+    const parseOptionVariants = (value) => {
+      if (Array.isArray(value)) return value;
+      if (typeof value === 'string') {
+        try {
+          const parsed = JSON.parse(value);
+          return Array.isArray(parsed) ? parsed : [];
+        } catch {
+          return [];
+        }
+      }
+      return [];
+    };
+
+    const getAdditionalPriceFromServer = (product, selectedOptionString) => {
+      if (!selectedOptionString) return 0;
+      const variants = parseOptionVariants(product?.option_variants);
+      const matched = variants.find((v) => String(v?.optionString || v?.key || '') === String(selectedOptionString));
+      if (!matched) return null;
+      const price = Number(matched?.additionalPrice ?? matched?.additional_price ?? 0);
+      return Number.isFinite(price) ? Math.max(0, Math.floor(price)) : 0;
+    };
+
     const missingIds = cartIds.filter((id) => priceMap[id] == null);
     if (missingIds.length > 0) {
       setSubmitting(false);
@@ -208,16 +230,28 @@ const CheckoutPage = () => {
     }
 
     // 서버 가격 기준 소계 + 배송비 (3만원 이상 무료)
-    const subtotal = cart.reduce(
-      (sum, item) => sum + (priceMap[item.id] ?? 0) * Math.max(1, Math.min(MAX_QUANTITY, Math.floor(item.quantity || 1))),
-      0
-    );
+    let subtotal = 0;
+    for (const item of cart) {
+      const product = productMap[item.id];
+      const basePrice = priceMap[item.id] ?? 0;
+      const additionalPrice = getAdditionalPriceFromServer(product, item.selected_option_string);
+      if (item.selected_option_string && additionalPrice == null) {
+        setSubmitting(false);
+        setError(`'${item.name}' 옵션 정보가 유효하지 않습니다. 장바구니에서 삭제 후 다시 선택해 주세요.`);
+        return;
+      }
+      const unitPrice = basePrice + (additionalPrice || 0);
+      const qty = Math.max(1, Math.min(MAX_QUANTITY, Math.floor(item.quantity || 1)));
+      subtotal += unitPrice * qty;
+    }
 
     if (subtotal <= 0) {
       setSubmitting(false);
       setError('결제할 상품이 없습니다.');
       return;
     }
+    const serverShippingFee = getShippingFee(subtotal);
+    const serverTotal = subtotal + serverShippingFee;
 
     if (saveAsDefault && user?.id) {
       const { error: profileError } = await publicTable('profiles').upsert(
@@ -252,7 +286,7 @@ const response = await window.PortOne.requestPayment({
   channelKey: import.meta.env.VITE_PORTONE_CHANNEL_KEY,
   paymentId,
   orderName,
-  totalAmount: displayTotal,
+  totalAmount: serverTotal,
   currency: 'CURRENCY_KRW',
   payMethod: 'CARD',
   // 👇 이니시스가 애타게 찾던 바로 그 고객 정보 추가!
@@ -279,7 +313,7 @@ const response = await window.PortOne.requestPayment({
           },
           body: JSON.stringify({
             paymentId: response.paymentId,
-            expectedAmount: displayTotal,
+            expectedAmount: serverTotal,
           }),
         });
         const verifyJson = await verifyRes.json().catch(() => ({}));
@@ -297,7 +331,7 @@ const response = await window.PortOne.requestPayment({
             throw new Error('user_id 누락: 로그인 세션에서 사용자 식별자를 찾지 못했습니다.');
           }
 
-          const paidAmount = Number(rsp.paid_amount ?? rsp.amount ?? displayTotal);
+          const paidAmount = Number(rsp.paid_amount ?? rsp.amount ?? serverTotal);
           if (!Number.isFinite(paidAmount)) {
             throw new Error('결제 금액 변환 실패: paid_amount/amount 값이 유효하지 않습니다.');
           }
