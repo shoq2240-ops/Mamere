@@ -1,78 +1,41 @@
 /**
  * 포트원 V2 결제 검증 (Vercel Serverless)
- * POST JSON: { paymentId, expectedAmount? } — 금액은 PortOne 응답 amount.total 과 expectedAmount 일치 시 통과 (미전달 시 1000과 비교, 하위 호환)
+ * POST JSON: { paymentId, expectedAmount?, completeOrder? }
+ * completeOrder가 있으면 SUPABASE_SERVICE_ROLE_KEY로 주문 저장 + deduct_stock_by_id
+ *
+ * 환경 변수: PORTONE_API_SECRET, SUPABASE_URL(또는 VITE_SUPABASE_URL), SUPABASE_SERVICE_ROLE_KEY
+ * 선택: ALLOWED_ORIGINS(쉼표 구분), SITE_ORIGIN(단일 허용 오리진)
  */
 
+import { runVerifyPayment } from '../server/verify-payment-core.mjs';
+
 export default async function handler(req, res) {
-  if (req.method === 'OPTIONS') {
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-    return res.status(200).end();
-  }
+  const origin = req.headers.origin;
 
-  if (req.method !== 'POST') {
-    return res.status(405).json({ message: 'Method Not Allowed' });
-  }
-
-  try {
-    const body =
-      typeof req.body === 'string' ? JSON.parse(req.body || '{}') : req.body ?? {};
-    const { paymentId, expectedAmount } = body;
-
-    if (!paymentId) {
-      return res.status(400).json({ status: 'fail', message: 'paymentId가 없습니다.' });
-    }
-
-    const secret = process.env.PORTONE_API_SECRET;
-    if (!secret) {
-      console.error('[verify-payment] PORTONE_API_SECRET 미설정');
-      return res.status(500).json({ status: 'fail', message: '서버 설정 오류' });
-    }
-
-    const resPay = await fetch(
-      `https://api.portone.io/payments/${encodeURIComponent(paymentId)}`,
-      {
-        method: 'GET',
-        headers: {
-          Authorization: `PortOne ${secret}`,
-        },
+  let body = {};
+  if (req.method === 'POST') {
+    const raw = req.body;
+    if (typeof raw === 'string') {
+      try {
+        body = JSON.parse(raw || '{}');
+      } catch {
+        return res.status(400).json({ status: 'fail', message: '요청 본문이 유효한 JSON이 아닙니다.' });
       }
-    );
-
-    const data = await resPay.json().catch(() => null);
-    if (!resPay.ok || !data) {
-      console.error('[verify-payment] 조회 실패', resPay.status, data);
-      return res.status(500).json({
-        status: 'fail',
-        message: data?.message || '결제 조회에 실패했습니다.',
-      });
+    } else if (raw && typeof raw === 'object') {
+      body = raw;
     }
-
-    const portTotal = Number(data.amount?.total);
-    const expected =
-      expectedAmount != null && expectedAmount !== ''
-        ? Number(expectedAmount)
-        : 1000;
-    const paid =
-      data.status === 'PAID' &&
-      Number.isFinite(expected) &&
-      portTotal === expected;
-    if (paid) {
-      return res.status(200).json({ status: 'success', message: 'V2 검증 성공' });
-    }
-
-    console.error('[verify-payment] 검증 불일치', {
-      paymentId,
-      status: data.status,
-      total: data.amount?.total,
-    });
-    return res.status(400).json({
-      status: 'fail',
-      message: '금액 또는 결제 상태가 올바르지 않습니다.',
-    });
-  } catch (err) {
-    console.error('[verify-payment]', err);
-    return res.status(500).json({ status: 'fail', message: '서버 오류' });
   }
+
+  const out = await runVerifyPayment({
+    method: req.method,
+    origin,
+    authHeader: typeof req.headers.authorization === 'string' ? req.headers.authorization : undefined,
+    body,
+    env: process.env,
+  });
+
+  for (const [k, v] of Object.entries(out.headers ?? {})) {
+    if (v != null) res.setHeader(k, v);
+  }
+  return res.status(out.statusCode).json(out.body);
 }

@@ -350,8 +350,10 @@ BEGIN
 END;
 $$;
 
-GRANT EXECUTE ON FUNCTION deduct_stock(BIGINT, INTEGER) TO anon;
-GRANT EXECUTE ON FUNCTION deduct_stock(BIGINT, INTEGER) TO authenticated;
+REVOKE ALL ON FUNCTION deduct_stock(BIGINT, INTEGER) FROM PUBLIC;
+REVOKE ALL ON FUNCTION deduct_stock(BIGINT, INTEGER) FROM anon;
+REVOKE ALL ON FUNCTION deduct_stock(BIGINT, INTEGER) FROM authenticated;
+GRANT EXECUTE ON FUNCTION deduct_stock(BIGINT, INTEGER) TO service_role;
 
 CREATE OR REPLACE FUNCTION get_guest_order(p_guest_email TEXT, p_order_number TEXT)
 RETURNS SETOF orders

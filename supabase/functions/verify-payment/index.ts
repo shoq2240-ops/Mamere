@@ -1,27 +1,53 @@
 /**
  * 결제 검증 API (Supabase Edge Function)
  *
- * [환경 변수 설정]
- * Supabase Dashboard > Edge Functions > verify-payment > Secrets 에서 설정:
- * - PORTONE_API_KEY: 포트원(아임포트) REST API Key (콘솔에서 발급)
- * - PORTONE_API_SECRET: 포트원 REST API Secret (절대 클라이언트에 노출 금지)
- *
- * (선택) 서버에서 Supabase에 주문/재고 저장 시:
- * - SUPABASE_SERVICE_ROLE_KEY: 프로젝트 설정 > API > service_role key (RLS 우회용)
- *   Edge Function 기본 배포 시 프로젝트에 연결되어 있으면 자동 주입될 수 있음.
+ * Secrets:
+ * - PORTONE_API_KEY, PORTONE_API_SECRET (아임포트 REST)
+ * - SUPABASE_SERVICE_ROLE_KEY (선택, 주문/재고 처리)
+ * 선택: ALLOWED_ORIGINS (쉼표 구분), SITE_ORIGIN
  */
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+function resolveAllowedOrigin(origin: string | null): string | null {
+  const explicit = Deno.env.get('ALLOWED_ORIGINS')?.trim();
+  const list = explicit
+    ? explicit
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean)
+    : [];
+  if (list.length > 0) return origin && list.includes(origin) ? origin : null;
 
-// 포트원(아임포트) API: 결제 조회용 (서버 투 서버)
-const IAMPORT_GET_TOKEN_URL = 'https://api.iamport.kr/users/getToken';
-const IAMPORT_GET_PAYMENTS_URL = 'https://api.iamport.kr/payments';
+  const siteOrigin = Deno.env.get('SITE_ORIGIN')?.trim().replace(/\/$/, '');
+  if (siteOrigin && origin === siteOrigin) return origin;
+
+  const vercelUrl = Deno.env.get('VERCEL_URL');
+  if (vercelUrl && origin) {
+    const cand = [`https://${vercelUrl}`, `http://${vercelUrl}`];
+    if (cand.includes(origin)) return origin;
+  }
+
+  const prod = Deno.env.get('NODE_ENV') === 'production';
+  const onVercel = Deno.env.get('VERCEL') === '1';
+  if (!prod || !onVercel) {
+    if (!origin) return '*';
+    if (/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(origin)) return origin;
+    return '*';
+  }
+
+  return null;
+}
+
+function corsHeaders(allowOrigin: string | null) {
+  if (!allowOrigin) return {};
+  return {
+    'Access-Control-Allow-Origin': allowOrigin,
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+    Vary: 'Origin',
+  };
+}
 
 interface VerifyPaymentBody {
   paymentId: string;
@@ -41,14 +67,26 @@ interface VerifyPaymentBody {
 }
 
 Deno.serve(async (req) => {
+  const origin = req.headers.get('Origin');
+  const allowOrigin = resolveAllowedOrigin(origin);
+  const ch = corsHeaders(allowOrigin);
+
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders });
+    if (!allowOrigin) return new Response('Forbidden', { status: 403 });
+    return new Response('ok', { headers: ch });
+  }
+
+  if (!allowOrigin) {
+    return new Response(JSON.stringify({ error: '허용되지 않은 출처입니다. ALLOWED_ORIGINS 또는 SITE_ORIGIN을 설정하세요.' }), {
+      status: 403,
+      headers: { 'Content-Type': 'application/json' },
+    });
   }
 
   if (req.method !== 'POST') {
     return new Response(JSON.stringify({ error: 'Method not allowed' }), {
       status: 405,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      headers: { ...ch, 'Content-Type': 'application/json' },
     });
   }
 
@@ -58,7 +96,7 @@ Deno.serve(async (req) => {
   } catch {
     return new Response(JSON.stringify({ error: 'Invalid JSON body' }), {
       status: 400,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      headers: { ...ch, 'Content-Type': 'application/json' },
     });
   }
 
@@ -66,7 +104,7 @@ Deno.serve(async (req) => {
   if (!paymentId || expectedAmount == null || !orderPayload?.items?.length) {
     return new Response(JSON.stringify({ error: 'paymentId, expectedAmount, orderPayload required' }), {
       status: 400,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      headers: { ...ch, 'Content-Type': 'application/json' },
     });
   }
 
@@ -76,14 +114,13 @@ Deno.serve(async (req) => {
     console.error('PORTONE_API_KEY or PORTONE_API_SECRET not set');
     return new Response(JSON.stringify({ error: '결제 검증 설정이 없습니다.' }), {
       status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      headers: { ...ch, 'Content-Type': 'application/json' },
     });
   }
 
-  // 1) 포트원(아임포트) 액세스 토큰 발급
   let tokenRes: Response;
   try {
-    tokenRes = await fetch(IAMPORT_GET_TOKEN_URL, {
+    tokenRes = await fetch('https://api.iamport.kr/users/getToken', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ imp_key: apiKey, imp_secret: apiSecret }),
@@ -92,7 +129,7 @@ Deno.serve(async (req) => {
     console.error('PortOne getToken failed:', e);
     return new Response(JSON.stringify({ error: '결제 서버 조회 실패' }), {
       status: 502,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      headers: { ...ch, 'Content-Type': 'application/json' },
     });
   }
 
@@ -102,22 +139,24 @@ Deno.serve(async (req) => {
     console.error('PortOne token response:', tokenData);
     return new Response(JSON.stringify({ error: '결제 인증 실패' }), {
       status: 502,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      headers: { ...ch, 'Content-Type': 'application/json' },
     });
   }
 
-  // 2) 결제 건 조회 (merchant_uid = 우리가 보낸 paymentId)
   let payRes: Response;
   try {
-    payRes = await fetch(`${IAMPORT_GET_PAYMENTS_URL}?merchant_uid[]=${encodeURIComponent(paymentId)}`, {
-      method: 'GET',
-      headers: { Authorization: `Bearer ${accessToken}` },
-    });
+    payRes = await fetch(
+      `https://api.iamport.kr/payments?merchant_uid[]=${encodeURIComponent(paymentId)}`,
+      {
+        method: 'GET',
+        headers: { Authorization: `Bearer ${accessToken}` },
+      },
+    );
   } catch (e) {
     console.error('PortOne getPayments failed:', e);
     return new Response(JSON.stringify({ error: '결제 조회 실패' }), {
       status: 502,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      headers: { ...ch, 'Content-Type': 'application/json' },
     });
   }
 
@@ -129,24 +168,23 @@ Deno.serve(async (req) => {
   const status = payment?.status ?? payment?.paymentStatus;
 
   if (!payment || status !== 'paid') {
-    return new Response(
-      JSON.stringify({ error: '결제가 완료된 건이 아니거나 조회되지 않습니다.' }),
-      { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    return new Response(JSON.stringify({ error: '결제가 완료된 건이 아니거나 조회되지 않습니다.' }), {
+      status: 400,
+      headers: { ...ch, 'Content-Type': 'application/json' },
+    });
   }
 
-  // 3) 금액 일치 검증 (악의적 조작 방지)
   if (Number(actualAmount) !== Number(expectedAmount)) {
-    return new Response(
-      JSON.stringify({ error: '위조된 결제 시도' }),
-      { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    return new Response(JSON.stringify({ error: '위조된 결제 시도' }), {
+      status: 400,
+      headers: { ...ch, 'Content-Type': 'application/json' },
+    });
   }
 
-  // 4) 검증 성공 → DB 업데이트 뼈대: orders 저장 + 재고 차감
   const orderNumber = `DN-${Date.now().toString().slice(-10)}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
   const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
   const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+
   if (supabaseUrl && serviceRoleKey) {
     const supabase = createClient(supabaseUrl, serviceRoleKey);
     const orderRow = {
@@ -166,34 +204,34 @@ Deno.serve(async (req) => {
       shipping_address: orderPayload.shipping_address,
     };
     const { data: inserted, error: orderError } = await supabase.from('orders').insert(orderRow).select('id').single();
+
     if (orderError) {
       console.error('orders insert error:', orderError);
       return new Response(JSON.stringify({ error: '주문 저장에 실패했습니다.' }), {
         status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        headers: { ...ch, 'Content-Type': 'application/json' },
       });
     }
-    // 재고 차감: deduct_stock RPC 존재 시 호출 (뼈대)
+
     for (const item of orderPayload.items) {
       const qty = Math.max(1, Math.min(99, Number(item.quantity) || 1));
-      const { error: stockError } = await supabase.rpc('deduct_stock', {
-        p_product_id: item.id,
+      const { error: stockError } = await supabase.rpc('deduct_stock_by_id', {
+        p_product_id: String(item.id),
         p_quantity: qty,
       });
       if (stockError) {
-        console.error('deduct_stock error:', stockError);
+        console.error('deduct_stock_by_id error:', stockError);
         await supabase.from('orders').update({ status: '취소됨' }).eq('id', inserted?.id);
         return new Response(
           JSON.stringify({ error: '재고 반영 중 오류가 발생하여 주문이 취소되었습니다.' }),
-          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          { status: 500, headers: { ...ch, 'Content-Type': 'application/json' } },
         );
       }
     }
   }
-  // SUPABASE_SERVICE_ROLE_KEY 없으면 주문/재고 저장 생략 (검증만 수행)
 
-  return new Response(
-    JSON.stringify({ success: true, orderNumber }),
-    { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-  );
+  return new Response(JSON.stringify({ success: true, orderNumber }), {
+    status: 200,
+    headers: { ...ch, 'Content-Type': 'application/json' },
+  });
 });

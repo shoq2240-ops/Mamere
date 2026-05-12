@@ -306,14 +306,35 @@ const response = await window.PortOne.requestPayment({
       }
 
       try {
+        const { data: sessionData } = await supabase.auth.getSession();
+        const sessionUserId = sessionData?.session?.user?.id ?? null;
+        const accessToken = sessionData?.session?.access_token ?? null;
+        const resolvedUserId = isGuest ? null : user?.id ?? sessionUserId ?? null;
+        if (!isGuest && !resolvedUserId) {
+          toast.error('로그인 세션이 없습니다. 다시 로그인 후 결제해 주세요.');
+          return;
+        }
+
         const verifyRes = await fetch('/api/verify-payment', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
+            ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
           },
           body: JSON.stringify({
             paymentId: response.paymentId,
             expectedAmount: serverTotal,
+            completeOrder: {
+              isGuest,
+              guestEmail: (guestEmail ?? '').trim(),
+              userId: resolvedUserId,
+              shippingName,
+              shippingAddress,
+              shippingAddressDetail,
+              shippingZipCode,
+              shippingPhone,
+              cart,
+            },
           }),
         });
         const verifyJson = await verifyRes.json().catch(() => ({}));
@@ -322,69 +343,12 @@ const response = await window.PortOne.requestPayment({
           return;
         }
 
-        try {
-          const rsp = response || {};
-          const { data: sessionData } = await supabase.auth.getSession();
-          const sessionUserId = sessionData?.session?.user?.id ?? null;
-          const resolvedUserId = isGuest ? null : user?.id ?? sessionUserId ?? null;
-          if (!isGuest && !resolvedUserId) {
-            throw new Error('user_id 누락: 로그인 세션에서 사용자 식별자를 찾지 못했습니다.');
-          }
-
-          const paidAmount = Number(rsp.paid_amount ?? rsp.amount ?? serverTotal);
-          if (!Number.isFinite(paidAmount)) {
-            throw new Error('결제 금액 변환 실패: paid_amount/amount 값이 유효하지 않습니다.');
-          }
-
-          // orders 스키마 기준 매핑:
-          // merchant_uid -> order_number, imp_uid -> payment_id, paid_amount -> total_amount
-          const orderData = {
-            order_number: rsp.merchant_uid || rsp.paymentId,
-            payment_id: rsp.imp_uid || rsp.paymentId,
-            user_id: resolvedUserId,
-            is_guest: isGuest,
-            guest_email: isGuest ? (guestEmail ?? '').trim() : null,
-            total_amount: paidAmount,
-            customer_name: rsp.buyer_name || shippingName.trim(),
-            address: shippingAddress.trim() || null,
-            detail_address: shippingAddressDetail.trim() || null,
-            zip_code: shippingZipCode.trim() || null,
-            phone: shippingPhone,
-            status: 'paid',
-            items: cart,
-          };
-          console.log('전송할 주문 데이터:', orderData);
-          console.log('Order Insert Payload:', orderData);
-
-          const { error: orderErr } = await publicTable('orders').insert(orderData);
-
-          if (orderErr) throw orderErr;
-
-          const MAX_Q = 99;
-          for (const item of cart) {
-            const qty = Math.max(1, Math.min(MAX_Q, Math.floor(Number(item.quantity) || 1)));
-            const { error: stockErr } = await supabase.rpc('deduct_stock_by_id', {
-              p_product_id: String(item.id),
-              p_quantity: qty,
-            });
-            if (stockErr) throw stockErr;
-          }
-
-          clearCart();
-          setOrderSuccessData({
-            orderNumber: response.paymentId,
-            isGuest,
-            guestEmail: isGuest ? (guestEmail ?? '').trim() : undefined,
-          });
-        } catch (dbErr) {
-          // RLS 에러일 경우 프론트 수정으로 해결 불가: Supabase 대시보드에서 orders 테이블 INSERT 정책을 확인하세요.
-          console.error('Supabase 400 Error Details:', dbErr);
-          console.error('Supabase 400 Error Message:', dbErr?.message);
-          console.error('Supabase 400 Error Details Field:', dbErr?.details);
-          toast.error(
-            '결제는 완료되었으나 주문 내역 저장 중 오류가 발생했습니다. 고객센터로 문의해주세요.'
-          );
-        }
+        clearCart();
+        setOrderSuccessData({
+          orderNumber: verifyJson.orderNumber ?? response.paymentId,
+          isGuest,
+          guestEmail: isGuest ? (guestEmail ?? '').trim() : undefined,
+        });
       } catch (err) {
         if (import.meta.env.DEV) console.error(err);
         toast.error('서버와 통신하지 못했습니다. 잠시 후 주문 조회로 확인해 주세요.');

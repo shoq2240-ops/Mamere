@@ -4,7 +4,7 @@
 
 - **Edge Function 미배포**: `supabase functions deploy verify-payment` 로 배포했는지 확인하세요.
 - **Supabase URL/키**: `.env`의 `VITE_SUPABASE_URL`(예: `https://xxx.supabase.co`), `VITE_SUPABASE_ANON_KEY`(Supabase Dashboard > Settings > API 의 anon public 키)가 맞는지 확인하세요.
-- **CORS**: 이 함수는 `Access-Control-Allow-Origin: *` 및 `POST` 메서드를 허용합니다. 배포 후 재시도하세요.
+- **CORS**: `ALLOWED_ORIGINS`(쉼표 구분) 또는 `SITE_ORIGIN`으로 허용 오리진을 지정합니다. 미설정 시 로컬/비프로덕션에 가깝게 완화될 수 있으니 운영에서는 반드시 Secrets에 설정하세요.
 
 ## verify-payment (결제 검증 API)
 
@@ -39,7 +39,7 @@ npx supabase functions deploy verify-payment
 2. 포트원 API로 토큰 발급 → `GET /payments?merchant_uid[]=paymentId` 로 결제 조회
 3. `amount` === `expectedAmount` 이고 `status === 'paid'` 인지 검증
 4. 불일치 시 `400 { error: '위조된 결제 시도' }`
-5. 일치 시 `orders` 테이블에 저장, `deduct_stock` RPC로 재고 차감 후 `200 { success: true, orderNumber }` 반환
+5. 일치 시 `orders` 테이블에 저장, `deduct_stock_by_id` RPC(service_role 전용)로 재고 차감 후 `200 { success: true, orderNumber }` 반환
 
 ---
 

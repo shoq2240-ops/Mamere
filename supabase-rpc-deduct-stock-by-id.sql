@@ -30,6 +30,7 @@ $$;
 
 COMMENT ON FUNCTION deduct_stock_by_id(TEXT, INTEGER) IS '주문 확정 시 재고 차감. API 전용 단일 시그니처. 재고 부족 시 INSUFFICIENT_STOCK 예외';
 
-GRANT EXECUTE ON FUNCTION deduct_stock_by_id(TEXT, INTEGER) TO anon;
-GRANT EXECUTE ON FUNCTION deduct_stock_by_id(TEXT, INTEGER) TO authenticated;
+REVOKE ALL ON FUNCTION deduct_stock_by_id(TEXT, INTEGER) FROM PUBLIC;
+REVOKE ALL ON FUNCTION deduct_stock_by_id(TEXT, INTEGER) FROM anon;
+REVOKE ALL ON FUNCTION deduct_stock_by_id(TEXT, INTEGER) FROM authenticated;
 GRANT EXECUTE ON FUNCTION deduct_stock_by_id(TEXT, INTEGER) TO service_role;

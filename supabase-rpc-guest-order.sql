@@ -4,9 +4,9 @@
 -- Supabase Dashboard > SQL Editor에서 실행하세요.
 -- 실행 전: supabase-orders-guest.sql 적용 필요
 
--- 1. 재고 차감 RPC: deduct_stock (anon/authenticated 호출, 재고 부족 시 예외)
+-- 1. 재고 차감 RPC: deduct_stock (service_role만 호출, 재고 부족 시 예외)
 -- products 테이블은 anon이 UPDATE 불가하므로 SECURITY DEFINER로 정의
--- 재고가 부족하면 INSUFFICIENT_STOCK 예외 발생 → 클라이언트에서 결제 중단/알림 가능
+-- 재고가 부족하면 INSUFFICIENT_STOCK 예외 발생 → 서버 결제 검증(API) 단계에서 처리
 CREATE OR REPLACE FUNCTION deduct_stock(p_product_id BIGINT, p_quantity INTEGER)
 RETURNS VOID
 LANGUAGE plpgsql
@@ -39,8 +39,10 @@ $$;
 
 COMMENT ON FUNCTION deduct_stock(BIGINT, INTEGER) IS '주문 확정 시 재고 차감. 재고 부족 시 INSUFFICIENT_STOCK 예외';
 
-GRANT EXECUTE ON FUNCTION deduct_stock(BIGINT, INTEGER) TO anon;
-GRANT EXECUTE ON FUNCTION deduct_stock(BIGINT, INTEGER) TO authenticated;
+REVOKE ALL ON FUNCTION deduct_stock(BIGINT, INTEGER) FROM PUBLIC;
+REVOKE ALL ON FUNCTION deduct_stock(BIGINT, INTEGER) FROM anon;
+REVOKE ALL ON FUNCTION deduct_stock(BIGINT, INTEGER) FROM authenticated;
+GRANT EXECUTE ON FUNCTION deduct_stock(BIGINT, INTEGER) TO service_role;
 
 
 -- 2. 게스트 주문 조회 RPC (이메일 + 주문번호가 **동시에** 일치할 때만 1건 반환)

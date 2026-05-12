@@ -30,6 +30,7 @@ $$;
 
 COMMENT ON FUNCTION deduct_stock(TEXT, INTEGER) IS '주문 확정 시 재고 원자적 차감 (id를 TEXT로 전달, UUID/BIGINT 공통). 재고 부족 시 INSUFFICIENT_STOCK 예외';
 
-GRANT EXECUTE ON FUNCTION deduct_stock(TEXT, INTEGER) TO anon;
-GRANT EXECUTE ON FUNCTION deduct_stock(TEXT, INTEGER) TO authenticated;
+REVOKE ALL ON FUNCTION deduct_stock(TEXT, INTEGER) FROM PUBLIC;
+REVOKE ALL ON FUNCTION deduct_stock(TEXT, INTEGER) FROM anon;
+REVOKE ALL ON FUNCTION deduct_stock(TEXT, INTEGER) FROM authenticated;
 GRANT EXECUTE ON FUNCTION deduct_stock(TEXT, INTEGER) TO service_role;

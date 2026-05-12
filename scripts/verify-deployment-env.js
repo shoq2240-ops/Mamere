@@ -58,4 +58,17 @@ if (env.VITE_SUPABASE_URL && !env.VITE_SUPABASE_URL.startsWith('http')) {
 }
 
 if (failed) process.exit(1);
+
+const recommended = [
+  ['SUPABASE_SERVICE_ROLE_KEY', '결제 후 주문·재고 처리(Vercel api/verify-payment)'],
+  ['SUPABASE_URL', '서버에서 Supabase 호출 시(미설정이면 VITE_SUPABASE_URL 사용 가능)'],
+  ['SWEETTRACKER_API_KEY', '배송 추적 api/track-shipment (옛 VITE_SWEET_TRACKER_API_KEY 대체)'],
+  ['SITE_ORIGIN', '프로덕션 CORS(예: https://your-domain.com)'],
+];
+for (const [k, hint] of recommended) {
+  if (!env[k]?.trim()) {
+    console.warn(`⚠️  권장: ${k} — ${hint}`);
+  }
+}
+
 console.log('\n✅ 배포에 필요한 .env 변수가 모두 있습니다. (Vercel에도 동일 키로 설정하세요.)');
