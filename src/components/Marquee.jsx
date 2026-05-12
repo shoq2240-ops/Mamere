@@ -4,7 +4,7 @@ const MARQUEE_COPIES = 36;
 
 const MarqueeItem = ({ text, textClassName }) => (
   <span
-    className={`whitespace-nowrap text-[11px] font-medium tracking-widest uppercase antialiased select-none ${textClassName ?? 'text-white'}`}
+    className={`whitespace-nowrap text-[11px] font-medium tracking-widest uppercase antialiased select-none ${textClassName ?? 'text-gray-700'}`}
   >
     {text}
   </span>

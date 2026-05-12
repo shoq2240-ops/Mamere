@@ -163,11 +163,11 @@ function AppContent() {
         </header>
       ) : (
         <header className={customerHeaderClass}>
-          <div className="border-b border-white/10 bg-[#2A1B38]">
+          <div className="border-b border-gray-300/50 bg-gray-200">
             <Marquee
               text="🌿 30,000원 이상 구매 시 무료배송 + nature mamère 🌿"
               speed={168}
-              textClassName="text-white"
+              textClassName="text-gray-700"
             />
           </div>
           <div className="border-b border-white/10 bg-black/20 backdrop-blur-md supports-[backdrop-filter]:bg-gray-900/30 supports-[backdrop-filter]:backdrop-blur-[8px]">
