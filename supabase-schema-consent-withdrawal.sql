@@ -139,15 +139,27 @@ $$;
 -- ==========================================
 -- 6. 회원 탈퇴(Soft Delete) RPC 함수
 -- ==========================================
-CREATE OR REPLACE FUNCTION withdraw_user()
-RETURNS VOID
+CREATE OR REPLACE FUNCTION public.withdraw_user()
+RETURNS void
 LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = public
 AS $$
 BEGIN
-  UPDATE profiles
-  SET is_withdrawn = true, withdrawn_at = NOW()
-  WHERE id = auth.uid() AND (is_withdrawn IS NULL OR is_withdrawn = false);
+  IF auth.uid() IS NULL THEN
+    RAISE EXCEPTION 'Unauthorized: not authenticated';
+  END IF;
+
+  UPDATE public.profiles
+  SET
+    is_withdrawn = true,
+    withdrawn_at = NOW()
+  WHERE id = auth.uid()
+    AND (is_withdrawn IS NOT true);
 END;
 $$;
+
+REVOKE ALL ON FUNCTION public.withdraw_user() FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.withdraw_user() FROM anon;
+GRANT EXECUTE ON FUNCTION public.withdraw_user() TO authenticated;
+GRANT EXECUTE ON FUNCTION public.withdraw_user() TO service_role;

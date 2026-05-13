@@ -36,7 +36,9 @@ BEGIN
 END;
 $$;
 
--- anon key로 호출하지 않으므로 authenticated만 부여
+REVOKE ALL ON FUNCTION public.withdraw_user() FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.withdraw_user() FROM anon;
 GRANT EXECUTE ON FUNCTION public.withdraw_user() TO authenticated;
+GRANT EXECUTE ON FUNCTION public.withdraw_user() TO service_role;
 
 COMMENT ON FUNCTION public.withdraw_user() IS '회원 탈퇴(Soft Delete). profiles.is_withdrawn=true, withdrawn_at=NOW(). 호출 후 클라이언트에서 signOut() 필수.';

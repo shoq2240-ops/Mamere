@@ -18,10 +18,14 @@ COMMENT ON COLUMN orders.order_number IS '주문 번호 (예: DN-20250214-XXXX)'
 
 CREATE UNIQUE INDEX IF NOT EXISTS idx_orders_order_number ON orders(order_number) WHERE order_number IS NOT NULL;
 
--- 3. 게스트 주문 INSERT 허용 (anon)
+-- 3. 게스트 주문 INSERT (anon·authenticated: 비로그인 결제·로그인 없이 제출 시나리오)
 -- 기존: "Users can insert own orders" (authenticated, auth.uid() = user_id)
--- 추가: anon이 user_id NULL + is_guest true로만 INSERT 가능
+DROP POLICY IF EXISTS "Guest can insert guest orders" ON orders;
 CREATE POLICY "Guest can insert guest orders"
   ON orders FOR INSERT
-  TO anon
-  WITH CHECK (user_id IS NULL AND is_guest = true);
+  TO anon, authenticated
+  WITH CHECK (
+    user_id IS NULL
+    AND is_guest = true
+    AND guest_email IS NOT NULL
+  );

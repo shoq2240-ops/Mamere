@@ -51,15 +51,27 @@ CREATE TABLE IF NOT EXISTS inquiries (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- 로그인 사용자 문의 시 user_id 기록용 컬럼 (INSERT 정책보다 먼저 필요)
+ALTER TABLE inquiries ADD COLUMN IF NOT EXISTS user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL;
+
 ALTER TABLE inquiries ENABLE ROW LEVEL SECURITY;
 
--- 문의 제출: 비회원(anon)·회원(authenticated) 모두 가능
+-- 문의 제출: 비회원(anon)·회원(authenticated), 필드 길이·이메일 형식·user_id 무결성
 DROP POLICY IF EXISTS "Anyone can insert inquiry" ON inquiries;
-CREATE POLICY "Anyone can insert inquiry"
-  ON inquiries FOR INSERT TO anon, authenticated WITH CHECK (true);
-
--- 로그인 사용자 문의 시 user_id 기록용 컬럼
-ALTER TABLE inquiries ADD COLUMN IF NOT EXISTS user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL;
+DROP POLICY IF EXISTS "inquiries_insert_any" ON inquiries;
+DROP POLICY IF EXISTS "inquiries_insert_validated" ON inquiries;
+CREATE POLICY "inquiries_insert_validated"
+  ON inquiries FOR INSERT TO anon, authenticated
+  WITH CHECK (
+    char_length(trim(first_name)) BETWEEN 1 AND 50
+    AND char_length(trim(last_name)) BETWEEN 1 AND 50
+    AND char_length(trim(email)) BETWEEN 3 AND 254
+    AND trim(email) ~ '^[^[:space:]@]+@[^[:space:]@]+\.[^[:space:]@]+$'
+    AND (phone IS NULL OR char_length(trim(phone)) <= 20)
+    AND (subject IS NULL OR char_length(trim(subject)) <= 50)
+    AND (message IS NULL OR char_length(trim(message)) <= 1000)
+    AND (user_id IS NULL OR user_id = auth.uid())
+  );
 
 -- 문의 메시지 길이 제한 (1,000자). 기존에 1000자 초과 데이터가 있으면 먼저 수정 후 실행:
 -- UPDATE inquiries SET message = left(message, 1000) WHERE message IS NOT NULL AND char_length(message) > 1000;

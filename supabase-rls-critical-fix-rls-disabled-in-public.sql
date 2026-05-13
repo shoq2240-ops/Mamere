@@ -129,6 +129,26 @@ WITH CHECK (id = auth.uid() OR public.current_user_is_admin());
 -- ----- 4) orders -----
 ALTER TABLE public.orders ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Enable insert for authenticated users only" ON public.orders;
+DROP POLICY IF EXISTS "Enable insert for anon users only" ON public.orders;
+DROP POLICY IF EXISTS "Enable insert for all users" ON public.orders;
+
+DO $$
+DECLARE
+  r RECORD;
+BEGIN
+  FOR r IN
+    SELECT policyname
+    FROM pg_policies
+    WHERE schemaname = 'public'
+      AND tablename = 'orders'
+      AND cmd = 'INSERT'
+      AND replace(replace(lower(trim(coalesce(with_check::text, ''))), '(', ''), ')', '') = 'true'
+  LOOP
+    EXECUTE format('DROP POLICY IF EXISTS %I ON public.orders', r.policyname);
+  END LOOP;
+END $$;
+
 DROP POLICY IF EXISTS "Users can read own orders" ON public.orders;
 DROP POLICY IF EXISTS "Admin can read all orders" ON public.orders;
 DROP POLICY IF EXISTS "orders_select_own_or_admin" ON public.orders;
@@ -224,11 +244,21 @@ ALTER TABLE public.inquiries ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "Anyone can insert inquiry" ON public.inquiries;
 DROP POLICY IF EXISTS "inquiries_insert_any" ON public.inquiries;
-CREATE POLICY "inquiries_insert_any"
+DROP POLICY IF EXISTS "inquiries_insert_validated" ON public.inquiries;
+CREATE POLICY "inquiries_insert_validated"
 ON public.inquiries
 FOR INSERT
 TO anon, authenticated
-WITH CHECK (true);
+WITH CHECK (
+  char_length(trim(first_name)) BETWEEN 1 AND 50
+  AND char_length(trim(last_name)) BETWEEN 1 AND 50
+  AND char_length(trim(email)) BETWEEN 3 AND 254
+  AND trim(email) ~ '^[^[:space:]@]+@[^[:space:]@]+\.[^[:space:]@]+$'
+  AND (phone IS NULL OR char_length(trim(phone)) <= 20)
+  AND (subject IS NULL OR char_length(trim(subject)) <= 50)
+  AND (message IS NULL OR char_length(trim(message)) <= 1000)
+  AND (user_id IS NULL OR user_id = auth.uid())
+);
 
 DROP POLICY IF EXISTS "inquiries_select_own_or_admin" ON public.inquiries;
 CREATE POLICY "inquiries_select_own_or_admin"

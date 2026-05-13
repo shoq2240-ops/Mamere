@@ -1,12 +1,15 @@
 -- ============================================
--- Storage 버킷 product-images 업로드/읽기 정책
+-- Storage 버킷 product-images — INSERT만 (넓은 SELECT 없음)
 -- ============================================
--- "new row violates row-level security policy" 가 이미지 업로드 단계에서 나오면
--- Storage(storage.objects) 에 INSERT 정책이 없기 때문입니다.
+-- Public 버킷은 **객체 URL**(`/storage/v1/object/public/product-images/...`)로
+-- 이미지를 열 수 있으며, `storage.objects`에 **버킷 전체 SELECT** 정책이 있으면
+-- 클라이언트가 `.list()` 등으로 **버킷 내 모든 파일 목록**을 조회할 수 있어
+-- Supabase 린터가 취약점으로 지적합니다.
+--
+-- 따라서 여기서는 INSERT(업로드) 정책만 정의하고, 공개 읽기용 SELECT는 두지 않습니다.
 -- Supabase Dashboard > SQL Editor에서 실행하세요.
 -- ============================================
 
--- 기존 정책이 있으면 제거 후 재생성
 DROP POLICY IF EXISTS "Allow authenticated uploads to product-images" ON storage.objects;
 DROP POLICY IF EXISTS "Allow public read product-images" ON storage.objects;
 
@@ -14,8 +17,3 @@ DROP POLICY IF EXISTS "Allow public read product-images" ON storage.objects;
 CREATE POLICY "Allow authenticated uploads to product-images"
 ON storage.objects FOR INSERT TO authenticated
 WITH CHECK (bucket_id = 'product-images');
-
--- Public 버킷이면 모든 사용자가 읽기 허용
-CREATE POLICY "Allow public read product-images"
-ON storage.objects FOR SELECT TO public
-USING (bucket_id = 'product-images');

@@ -150,10 +150,25 @@ CREATE TABLE IF NOT EXISTS inquiries (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+ALTER TABLE inquiries ADD COLUMN IF NOT EXISTS user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL;
+
 ALTER TABLE inquiries ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Anyone can insert inquiry"
-  ON inquiries FOR INSERT TO anon, authenticated WITH CHECK (true);
+DROP POLICY IF EXISTS "Anyone can insert inquiry" ON inquiries;
+DROP POLICY IF EXISTS "inquiries_insert_any" ON inquiries;
+DROP POLICY IF EXISTS "inquiries_insert_validated" ON inquiries;
+CREATE POLICY "inquiries_insert_validated"
+  ON inquiries FOR INSERT TO anon, authenticated
+  WITH CHECK (
+    char_length(trim(first_name)) BETWEEN 1 AND 50
+    AND char_length(trim(last_name)) BETWEEN 1 AND 50
+    AND char_length(trim(email)) BETWEEN 3 AND 254
+    AND trim(email) ~ '^[^[:space:]@]+@[^[:space:]@]+\.[^[:space:]@]+$'
+    AND (phone IS NULL OR char_length(trim(phone)) <= 20)
+    AND (subject IS NULL OR char_length(trim(subject)) <= 50)
+    AND (message IS NULL OR char_length(trim(message)) <= 1000)
+    AND (user_id IS NULL OR user_id = auth.uid())
+  );
 
 -- ---------- 6. products 이미지 확장 ----------
 ALTER TABLE products ADD COLUMN IF NOT EXISTS images JSONB DEFAULT '[]';
@@ -181,9 +196,34 @@ ALTER TABLE orders ADD COLUMN IF NOT EXISTS guest_email TEXT;
 ALTER TABLE orders ADD COLUMN IF NOT EXISTS order_number TEXT;
 CREATE UNIQUE INDEX IF NOT EXISTS idx_orders_order_number ON orders(order_number) WHERE order_number IS NOT NULL;
 
+DROP POLICY IF EXISTS "Enable insert for authenticated users only" ON orders;
+DROP POLICY IF EXISTS "Enable insert for anon users only" ON orders;
+DROP POLICY IF EXISTS "Enable insert for all users" ON orders;
+
+DO $$
+DECLARE
+  r RECORD;
+BEGIN
+  FOR r IN
+    SELECT policyname
+    FROM pg_policies
+    WHERE schemaname = 'public'
+      AND tablename = 'orders'
+      AND cmd = 'INSERT'
+      AND replace(replace(lower(trim(coalesce(with_check::text, ''))), '(', ''), ')', '') = 'true'
+  LOOP
+    EXECUTE format('DROP POLICY IF EXISTS %I ON public.orders', r.policyname);
+  END LOOP;
+END $$;
+
+DROP POLICY IF EXISTS "Guest can insert guest orders" ON orders;
 CREATE POLICY "Guest can insert guest orders"
-  ON orders FOR INSERT TO anon
-  WITH CHECK (user_id IS NULL AND is_guest = true);
+  ON orders FOR INSERT TO anon, authenticated
+  WITH CHECK (
+    user_id IS NULL
+    AND is_guest = true
+    AND guest_email IS NOT NULL
+  );
 
 -- ---------- 11. security-admin (is_admin, 정책 교체) ----------
 ALTER TABLE profiles ADD COLUMN IF NOT EXISTS is_admin BOOLEAN DEFAULT false;
@@ -306,18 +346,30 @@ BEGIN
 END;
 $$;
 
-CREATE OR REPLACE FUNCTION withdraw_user()
-RETURNS VOID
+CREATE OR REPLACE FUNCTION public.withdraw_user()
+RETURNS void
 LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = public
 AS $$
 BEGIN
-  UPDATE profiles
-  SET is_withdrawn = true, withdrawn_at = NOW()
-  WHERE id = auth.uid() AND (is_withdrawn IS NULL OR is_withdrawn = false);
+  IF auth.uid() IS NULL THEN
+    RAISE EXCEPTION 'Unauthorized: not authenticated';
+  END IF;
+
+  UPDATE public.profiles
+  SET
+    is_withdrawn = true,
+    withdrawn_at = NOW()
+  WHERE id = auth.uid()
+    AND (is_withdrawn IS NOT true);
 END;
 $$;
+
+REVOKE ALL ON FUNCTION public.withdraw_user() FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.withdraw_user() FROM anon;
+GRANT EXECUTE ON FUNCTION public.withdraw_user() TO authenticated;
+GRANT EXECUTE ON FUNCTION public.withdraw_user() TO service_role;
 
 -- ---------- 14. 게스트 주문/재고 RPC ----------
 CREATE OR REPLACE FUNCTION deduct_stock(p_product_id BIGINT, p_quantity INTEGER)

@@ -12,14 +12,8 @@ COMMENT ON COLUMN products.subcategory IS 'outerwear | top | bottom';
 -- 2. Storage 버킷 "product-images" 생성
 -- Storage는 SQL로 생성할 수 없습니다. Dashboard에서 수동 생성하세요:
 -- Storage > New Bucket > 이름: product-images, Public: true
--- Policies > New Policy > "Allow authenticated uploads" 예시:
---   - Policy name: Allow authenticated uploads
---   - Allowed operation: INSERT
---   - Target roles: authenticated
---   - WITH CHECK: true
---   - Allowed operation: SELECT (Public 읽기용)
---   - Target roles: public
---   - USING: true
+-- RLS 정책은 supabase-storage-product-images-policies.sql (INSERT만, 버킷 전체 SELECT 없음) 실행.
+-- Public 버킷은 객체 URL로 읽기 가능하며, SELECT로 버킷 전체 목록을 열어두면 린터·보안 이슈가 됩니다.
 
 -- 3. (선택) 기존 상품에 subcategory 기본값 설정
 UPDATE products SET subcategory = 'outerwear' WHERE subcategory IS NULL;
