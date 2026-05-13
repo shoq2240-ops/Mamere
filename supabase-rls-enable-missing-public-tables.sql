@@ -1,6 +1,10 @@
 -- ============================================
--- PostgREST 노출 public 테이블: RLS 미적용 조치
+-- PostgREST 노출 public 테이블: RLS 미적용 조치 (경량)
 -- ============================================
+-- Critical 이슈(anon 전면 노출)는 아래를 **우선** 실행하세요.
+--   → supabase-rls-critical-fix-rls-disabled-in-public.sql
+-- (RLS만 켜고 정책이 없으면 API가 막힐 수 있어, 운영 조치는 위 통합 파일 권장)
+--
 -- Supabase Database Linter: "Row level security has not been enabled on tables
 -- in schemas exposed to PostgREST"
 --

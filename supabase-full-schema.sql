@@ -384,5 +384,6 @@ ALTER TABLE inquiries ADD COLUMN IF NOT EXISTS user_id UUID REFERENCES auth.user
 
 -- 완료. Realtime: Database > Replication > products, orders 에서 ON 설정 권장.
 --
--- Supabase Database Linter가 public 테이블 RLS 미적용을 지적하면
--- supabase-rls-enable-missing-public-tables.sql 을 SQL Editor에서 한 번 실행하세요.
+-- Supabase Critical: Table publicly accessible / rls_disabled_in_public
+--   → supabase-rls-critical-fix-rls-disabled-in-public.sql (권장, 한 번에 RLS+정책)
+-- 그 외 RLS만 보강: supabase-rls-enable-missing-public-tables.sql
