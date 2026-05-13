@@ -383,3 +383,6 @@ COMMENT ON COLUMN orders.carrier_id IS '택배사 코드 (예: 04=CJ대한통운
 ALTER TABLE inquiries ADD COLUMN IF NOT EXISTS user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL;
 
 -- 완료. Realtime: Database > Replication > products, orders 에서 ON 설정 권장.
+--
+-- Supabase Database Linter가 public 테이블 RLS 미적용을 지적하면
+-- supabase-rls-enable-missing-public-tables.sql 을 SQL Editor에서 한 번 실행하세요.
